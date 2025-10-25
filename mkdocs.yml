@@ -1,8 +1,31 @@
 site_name: RoundPipe Documentation
+repo_url: https://github.com/ITcarrot/RoundPipe/
 nav:
   - Home: README.md
   - Tutorial: Tutorial.md
   - API:
+      - RunConfig: API/run_config.md
       - Model: API/model.md
       - Optimizer: API/optimizer.md
-theme: readthedocs
+theme: 
+  name: material
+  palette:
+    - media: '(prefers-color-scheme: light)'
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: '(prefers-color-scheme: dark)'
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+            show_root_heading: true
+            show_root_full_path: false

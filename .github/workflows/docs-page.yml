@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - run: pip install mkdocs mkdocs-material
+      - run: pip install mkdocs mkdocs-material mkdocstrings[python]
       - run: mkdocs build
       - uses: peaceiris/actions-gh-pages@v4
         with:

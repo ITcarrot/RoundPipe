@@ -13,7 +13,20 @@ class RoundPipeRunConfig:
                                                    Tuple[List[Tuple], List[Dict[str, Any]]]],
                                     None] = None,
                  merge_output: Union[Any, Callable[[List[Any]], Any], bool, None] = None
-                 ):
+                 ) -> None:
+        """
+        Configuration for running RoundPipe models.
+        User may specify model-level configuration when initializing RoundPipe, and/or function-level configuration when calling forward().
+        
+        Parameters:
+            requires_grad: Whether to enable gradient computation. If None, defaults to the global setting.
+            output_device: The device where the output tensors will be placed. If None, defaults to CPU.
+            preserve_rng_state: Whether to preserve the random number generator state. If None, defaults to True.
+            num_microbatch: The number of microbatches to split the input into. If None, defaults to the number of available CUDA devices plus one.
+            split_input (-): Specifies how to split input arguments into microbatches. If None, defaults to automatic splitting.
+            merge_output (-): Specifies how to merge output microbatches back into a single output. If None, defaults to automatic merging.
+
+        """
         self.requires_grad = requires_grad
         self.output_device = output_device
         self.preserve_rng_state = preserve_rng_state
