@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../run_config/">
+        <link rel="prev" href="../../Tutorial/">
       
       
-        <link rel="next" href="../optimizer/">
+        <link rel="next" href="../model/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -20,7 +20,7 @@
     
     
       
-        <title>Model - RoundPipe Documentation</title>
+        <title>RunConfig - RoundPipe Documentation</title>
       
     
     
@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#model-apis" class="md-skip">
+        <a href="#run-config" class="md-skip">
           Skip to content
         </a>
       
@@ -110,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Model
+              RunConfig
             
           </span>
         </div>
@@ -337,29 +337,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../run_config/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    RunConfig
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -377,7 +354,7 @@
   
   
   <span class="md-ellipsis">
-    Model
+    RunConfig
     
   </span>
   
@@ -390,7 +367,7 @@
   
   
   <span class="md-ellipsis">
-    Model
+    RunConfig
     
   </span>
   
@@ -413,20 +390,92 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#constructor" class="md-nav__link">
+  <a href="#RoundPipe.RunConfig.RoundPipeRunConfig.__init__" class="md-nav__link">
     <span class="md-ellipsis">
-      Constructor
+      __init__
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="__init__">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#split_input" class="md-nav__link">
+    <span class="md-ellipsis">
+      split_input
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="split_input">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#writing-split-specs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Writing Split Specs
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#forward" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#writing-custom-split-functions" class="md-nav__link">
     <span class="md-ellipsis">
-      forward
+      Writing Custom Split Functions
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merge_output" class="md-nav__link">
+    <span class="md-ellipsis">
+      merge_output
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="merge_output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#writing-merge-specs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Writing Merge Specs
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#writing-custom-merge-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Writing Custom Merge Functions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#no-merging-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      No Merging Output
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -434,6 +483,29 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -496,20 +568,92 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#constructor" class="md-nav__link">
+  <a href="#RoundPipe.RunConfig.RoundPipeRunConfig.__init__" class="md-nav__link">
     <span class="md-ellipsis">
-      Constructor
+      __init__
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="__init__">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#split_input" class="md-nav__link">
+    <span class="md-ellipsis">
+      split_input
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="split_input">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#writing-split-specs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Writing Split Specs
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#forward" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#writing-custom-split-functions" class="md-nav__link">
     <span class="md-ellipsis">
-      forward
+      Writing Custom Split Functions
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merge_output" class="md-nav__link">
+    <span class="md-ellipsis">
+      merge_output
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="merge_output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#writing-merge-specs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Writing Merge Specs
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#writing-custom-merge-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Writing Custom Merge Functions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#no-merging-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      No Merging Output
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -532,9 +676,162 @@
   
 
 
-<h1 id="model-apis">Model APIs</h1>
-<h2 id="constructor">Constructor</h2>
-<h2 id="forward">forward</h2>
+<h1 id="run-config">Run Config</h1>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="RoundPipe.RunConfig.RoundPipeRunConfig.__init__" class="doc doc-heading">
+            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">requires_grad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preserve_rng_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_input</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">merge_output</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents first">
+
+        <p>Configuration for running RoundPipe models.
+User may specify model-level configuration when initializing RoundPipe, and/or function-level configuration when calling forward().</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>requires_grad</code>
+            </td>
+            <td>
+                  <code><span title="Optional">Optional</span>[<span title="bool">bool</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether to enable gradient computation. If None, defaults to the global setting.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>output_device</code>
+            </td>
+            <td>
+                  <code><span title="Optional">Optional</span>[<span title="torch.device">device</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The device where the output tensors will be placed. If None, defaults to CPU.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>preserve_rng_state</code>
+            </td>
+            <td>
+                  <code><span title="Optional">Optional</span>[<span title="bool">bool</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether to preserve the random number generator state. If None, defaults to True.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>num_microbatch</code>
+            </td>
+            <td>
+                  <code><span title="Optional">Optional</span>[<span title="int">int</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The number of microbatches to split the input into. If None, defaults to the number of available CUDA devices plus one.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>split_input</code>
+            </td>
+            <td>
+                  <code>-</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Specifies how to split input arguments into microbatches. If None, defaults to automatic splitting.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>merge_output</code>
+            </td>
+            <td>
+                  <code>-</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Specifies how to merge output microbatches back into a single output. If None, defaults to automatic merging.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div><h3 id="split_input">split_input</h3>
+<p>It can take the following forms:</p>
+<ul>
+<li><code>Tuple[Optional[Tuple], Optional[Dict[str, Any]]]</code>: A tuple of specs specifying positional and keyword arguments for splitting. The None value indicates automatic splitting (splitting tensor along the first dimension, replicate others).</li>
+<li><code>Callable[[Tuple, Dict[str, Any], int], Tuple[List[Tuple], List[Dict[str, Any]]]]</code>: A custom function that takes the input arguments (positional and keyword), along with the number of microbatches, and returns a tuple containing lists of split positional and keyword arguments.</li>
+<li><code>None</code>: Defaults to automatic splitting.</li>
+</ul>
+<h4 id="writing-split-specs">Writing Split Specs</h4>
+<p>[TODO]</p>
+<h4 id="writing-custom-split-functions">Writing Custom Split Functions</h4>
+<p>[TODO]</p>
+<h3 id="merge_output">merge_output</h3>
+<p>It can take the following forms:</p>
+<ul>
+<li><code>Any</code>: A spec defining how to merge the output.</li>
+<li><code>Callable[[List[Any]], Any]</code>: A custom function that takes a list of output microbatches and merges them into a single output.</li>
+<li><code>bool</code>: If True, uses default merging (concatenation for tensors along the first dimension, summation for numeric types). If False, returns some RoundPipePackedData objects.</li>
+<li><code>None</code>: Defaults to True (default merging).</li>
+</ul>
+<h4 id="writing-merge-specs">Writing Merge Specs</h4>
+<p>[TODO]</p>
+<h4 id="writing-custom-merge-functions">Writing Custom Merge Functions</h4>
+<p>[TODO]</p>
+<h4 id="no-merging-output">No Merging Output</h4>
+<p>[TODO]</p>
 
 
 
