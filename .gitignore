@@ -205,3 +205,8 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+/data
+
+/example/resnet_cifar100_curves.png
+!/example/resnet_cifar100_ref.log

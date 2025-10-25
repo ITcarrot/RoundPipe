@@ -1,0 +1,108 @@
+from typing import * # type: ignore[reportWildcardImportFromLibrary]
+
+import torch
+from torch.distributed.pipelining.microbatch import TensorChunkSpec, _Replicate, split_args_kwargs_into_chunks, merge_chunks, sum_reducer
+from torch.utils._pytree import tree_flatten, tree_unflatten
+
+from RoundPipe.device import device_tag_detach
+
+if TYPE_CHECKING:
+    from torch.utils._pytree import TreeSpec
+    from RoundPipe.RunConfig import FullRoundPipeRunConfig
+
+class RoundPipePackedData(list):
+    def __init__(self, data: List[Any],
+                 transfer_event: List[Tuple[torch.cuda.Event, Optional[torch.cuda.Event]]]) -> None:
+        super().__init__(data)
+        self.transfer_event = transfer_event
+
+def guess_split_spec(data: Any) -> Any:
+    flatten, flatten_spec = tree_flatten(data)
+    guessed_spec = []
+    for item in flatten:
+        if isinstance(item, torch.Tensor) and item.ndim > 0:
+            guessed_spec.append(TensorChunkSpec(0))
+        else:
+            guessed_spec.append(_Replicate)
+    return tree_unflatten(guessed_spec, flatten_spec)
+
+class Batch:
+    def __init__(self, args: Tuple, kwargs: Dict[str, Any],
+                 run_config: 'FullRoundPipeRunConfig') -> None:
+        if callable(run_config.split_input):
+            args_list, kwargs_list = run_config.split_input(args, kwargs, run_config.num_microbatch)
+        else:
+            args_spec, kwargs_spec = run_config.split_input
+            if args_spec is None:
+                args_spec = guess_split_spec(args)
+            if kwargs_spec is None:
+                kwargs_spec = guess_split_spec(kwargs)
+            args_list, kwargs_list = split_args_kwargs_into_chunks(
+                args, kwargs, run_config.num_microbatch, args_spec, kwargs_spec)
+        run_config.num_microbatch = len(args_list)
+
+        self.flatten_states: List[List[Any]] = []
+        self.flatten_specs: List['TreeSpec'] = []
+        self.transfer_events: List[Tuple[Sequence[torch.cuda.Event], Sequence[Optional[torch.cuda.Event]]]] = []
+        for batch_idx, args_kwargs in enumerate(zip(args_list, kwargs_list)):
+            forward_event: Set[torch.cuda.Event] = set()
+            backward_event: Set[Optional[torch.cuda.Event]] = set()
+            flatten_input, flatten_spec = tree_flatten(args_kwargs)
+            for item in flatten_input:
+                if isinstance(item, torch.Tensor) and item.requires_grad:
+                    backward_event.add(None)
+                    break
+            for idx, item in enumerate(flatten_input):
+                if isinstance(item, RoundPipePackedData):
+                    flatten_input[idx] = item[batch_idx]
+                    forward_event.add(item.transfer_event[batch_idx][0])
+                    backward_event.add(item.transfer_event[batch_idx][1])
+
+            self.flatten_states.append(flatten_input)
+            self.flatten_specs.append(flatten_spec)
+            self.transfer_events.append((list(forward_event), list(backward_event)))
+
+    def dump(self, run_config: 'FullRoundPipeRunConfig') -> Any:
+        if isinstance(run_config.merge_output, bool) and not run_config.merge_output:
+            if run_config.num_microbatch == 1:
+                return tree_unflatten(self.flatten_states[0], self.flatten_specs[0])
+            transfer_events = []
+            for i in range(run_config.num_microbatch):
+                forward_events, backward_events = self.transfer_events[i]
+                assert len(forward_events) == 1
+                assert len(backward_events) == 1
+                transfer_events.append((forward_events[0], backward_events[0]))
+            flatten_output = []
+            for out_idx in range(len(self.flatten_states[0])):
+                batched_out = [self.flatten_states[i][out_idx] for i in range(run_config.num_microbatch)]
+                flatten_output.append(RoundPipePackedData(batched_out, transfer_events))
+            return tree_unflatten(flatten_output, self.flatten_specs[0])
+
+        for forward_events, backward_events in self.transfer_events:
+            for event in forward_events:
+                event.synchronize()
+            for event in backward_events:
+                if event is not None:
+                    event.synchronize()
+        device_tag_detach()
+
+        if callable(run_config.merge_output):
+            hidden_states = [tree_unflatten(state, spec) for state, spec in zip(self.flatten_states, self.flatten_specs)]
+            return run_config.merge_output(hidden_states)
+
+        if isinstance(run_config.merge_output, bool) or run_config.merge_output is None:
+            guessed_spec = []
+            for item in self.flatten_states[0]:
+                if isinstance(item, torch.Tensor):
+                    if item.ndim > 0:
+                        guessed_spec.append(TensorChunkSpec(0))
+                    else:
+                        guessed_spec.append(sum_reducer)
+                else:
+                    guessed_spec.append(None)
+            hidden_states = [tree_unflatten(state, spec) for state, spec in zip(self.flatten_states, self.flatten_specs)]
+            guessed_spec = tree_unflatten(guessed_spec, self.flatten_specs[0])
+            return merge_chunks(hidden_states, guessed_spec)
+        else:
+            hidden_states = [tree_unflatten(state, spec) for state, spec in zip(self.flatten_states, self.flatten_specs)]
+            return merge_chunks(hidden_states, run_config.merge_output)
