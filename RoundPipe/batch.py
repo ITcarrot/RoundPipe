@@ -6,6 +6,7 @@ from torch.distributed.pipelining.microbatch import TensorChunkSpec, _Replicate,
 from torch.utils._pytree import tree_flatten, tree_unflatten
 
 from RoundPipe.device import device_tag_detach
+from RoundPipe.transfer import PinnedUpload
 
 if TYPE_CHECKING:
     from torch.utils._pytree import TreeSpec
@@ -97,13 +98,21 @@ class Batch:
                 flatten_output.append(RoundPipePackedData(batched_out, transfer_events))
             return tree_unflatten(flatten_output, self.flatten_specs[0])
 
-        for forward_events, backward_events in self.transfer_events:
-            for event in forward_events:
-                event.synchronize()
-            for event in backward_events:
-                if event is not None:
-                    event.synchronize()
         device_tag_detach()
+        if run_config.output_device != torch.device('cpu'):
+            flatten_states_on_device = []
+            for flatten_state, ((transfer_event,), _) in zip(self.flatten_states, self.transfer_events):
+                transfer_event.synchronize()
+                flatten_state_on_device = []
+                for arg in flatten_state:
+                    if isinstance(arg, torch.Tensor):
+                        flatten_state_on_device.append(PinnedUpload.apply(arg, run_config.output_device))
+                    else:
+                        flatten_state_on_device.append(arg)
+                flatten_states_on_device.append(flatten_state_on_device)
+            self.flatten_states = flatten_states_on_device
+        else:
+            self.transfer_events[-1][0][0].synchronize()
 
         if callable(run_config.merge_output):
             hidden_states = [tree_unflatten(state, spec) for state, spec in zip(self.flatten_states, self.flatten_specs)]
