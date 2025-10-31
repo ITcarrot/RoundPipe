@@ -11,16 +11,16 @@ from RoundPipe.RunConfig import RoundPipeRunConfig, FullRoundPipeRunConfig
 @pytest.mark.parametrize("num_microbatch, merge_output", itertools.product([2, 3, 4], [True, None]))
 def test_io_auto(num_microbatch, merge_output):
     events: List[List[torch.cuda.Event]] = [[torch.cuda.Event() for _ in range(num_microbatch)] for _ in range(3)] # type: ignore[assignment]
-    packed1 = RoundPipePackedData([torch.randn(12, 14) for i in range(num_microbatch)], [(events[0][i], events[0][i]) for i in range(num_microbatch)])
-    packed2 = RoundPipePackedData([torch.randn(12, 16) for i in range(num_microbatch)], [(events[1][i], events[1][i]) for i in range(num_microbatch)])
-    packed3 = RoundPipePackedData([torch.randn(12, 18) for i in range(num_microbatch)], [(events[2][i], events[2][i]) for i in range(num_microbatch)])
+    packed1 = RoundPipePackedData([torch.randn(12 // num_microbatch, 14) for i in range(num_microbatch)], [(events[0][i], events[0][i]) for i in range(num_microbatch)])
+    packed2 = RoundPipePackedData([torch.randn(12 // num_microbatch, 16) for i in range(num_microbatch)], [(events[1][i], events[1][i]) for i in range(num_microbatch)])
+    packed3 = RoundPipePackedData([torch.randn(12 // num_microbatch, 18) for i in range(num_microbatch)], [(events[2][i], events[2][i]) for i in range(num_microbatch)])
     args = (torch.tensor(233), torch.randn(12, 3, 4), packed1,
             (torch.randn(12, 6), torch.randn(12, 7), 'string in tuple'),
             [torch.randn(12, 6), torch.randn(12, 7), 'string in list'],
             {'a': torch.randn(12, 8), 'packed': packed2, 'string': 'string in dict'},
             'non-tensor argument', 42)
     kwargs = {'x': torch.randn(12, 10), 'y': [torch.randn(12, 11), 'string in list', packed2],
-              'z': {'inner_tensor': torch.randn(12, 12), 'inner_string': 'inner string'},
+              'z': {'inner_tensor': torch.randn(6, 12), 'inner_string': 'inner string'},
               'non_tensor': 3.14, 'tuple_arg': (torch.randn(12, 5, 6), 'string in tuple'),
               'packed_arg': packed3}
 
@@ -52,7 +52,7 @@ def test_io_auto(num_microbatch, merge_output):
     assert torch.allclose(kwargs['y'][0], kwargs_reconstruct['y'][0])
     assert kwargs['y'][1] == kwargs_reconstruct['y'][1]
     assert torch.allclose(torch.cat(kwargs['y'][2]), kwargs_reconstruct['y'][2])
-    assert torch.allclose(kwargs['z']['inner_tensor'], kwargs_reconstruct['z']['inner_tensor'])
+    assert torch.allclose(torch.cat([kwargs['z']['inner_tensor'] for _ in range(num_microbatch)]), kwargs_reconstruct['z']['inner_tensor'])
     assert kwargs['z']['inner_string'] == kwargs_reconstruct['z']['inner_string']
     assert kwargs['non_tensor'] == kwargs_reconstruct['non_tensor']
     assert torch.allclose(kwargs['tuple_arg'][0], kwargs_reconstruct['tuple_arg'][0])
@@ -122,3 +122,42 @@ def test_out_packed(num_microbatch):
             assert torch.allclose(kwargs_reconstruct['x'][batch_idx], kwargs_x_chunk[batch_idx])
             assert torch.allclose(kwargs_reconstruct['packed_arg'][batch_idx], packed[batch_idx])
             assert kwargs_reconstruct['non_tensor'][batch_idx] == kwargs['non_tensor']
+
+def test_wrong_batch_size():
+    events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(4)] # type: ignore[assignment]
+    packed3 = RoundPipePackedData([torch.randn(6, 7) for i in range(3)], [(events[i], events[i]) for i in range(3)])
+    packed4 = RoundPipePackedData([torch.randn(8, 9) for i in range(4)], [(events[i], events[i]) for i in range(4)])
+    args = (packed3, packed4)
+    kwargs = {'packed3': packed3, 'packed4': packed4}
+    
+    spec_config = FullRoundPipeRunConfig(RoundPipeRunConfig(num_microbatch=6), RoundPipeRunConfig())
+    with pytest.warns(UserWarning, match=r"Batch index \d+ out of range for RoundPipePackedData input, downsizing batch size to \d+\."):
+        batch = Batch(args, kwargs, spec_config)
+    assert batch.num_microbatch == 3  # downsized to smallest packed data size
+    for batch_idx in range(3):
+        fwd_events, bwd_events = batch.transfer_events[batch_idx]
+        assert events[batch_idx] in fwd_events
+        assert events[batch_idx] in bwd_events
+    args_reconstruct, kwargs_reconstruct = batch.dump(spec_config)
+    
+    assert torch.allclose(torch.cat(args[0]), args_reconstruct[0])
+    assert torch.allclose(torch.cat(args[1][:3]), args_reconstruct[1])
+    assert torch.allclose(torch.cat(kwargs['packed3']), kwargs_reconstruct['packed3'])
+    assert torch.allclose(torch.cat(kwargs['packed4'][:3]), kwargs_reconstruct['packed4'])
+
+def test_guess_from_packed_data():
+    events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(4)] # type: ignore[assignment]
+    packed4 = RoundPipePackedData([torch.randn(8, 9) for i in range(4)], [(events[i], events[i]) for i in range(4)])
+    args = (packed4,)
+    kwargs = {'to_replicate': torch.randn(5, 6)}
+
+    spec_config = FullRoundPipeRunConfig(RoundPipeRunConfig(num_microbatch=4), RoundPipeRunConfig())
+    batch = Batch(args, kwargs, spec_config)
+    for batch_idx in range(4):
+        fwd_events, bwd_events = batch.transfer_events[batch_idx]
+        assert events[batch_idx] in fwd_events
+        assert events[batch_idx] in bwd_events
+    args_reconstruct, kwargs_reconstruct = batch.dump(spec_config)
+
+    assert torch.allclose(torch.cat(args[0]), args_reconstruct[0])
+    assert torch.allclose(torch.cat([kwargs['to_replicate'] for _ in range(4)]), kwargs_reconstruct['to_replicate'])

@@ -210,3 +210,4 @@ __marimo__/
 
 /example/resnet_cifar100_curves.png
 !/example/resnet_cifar100_ref.log
+!/example/qwen_ref.log

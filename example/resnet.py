@@ -117,6 +117,7 @@ for epoch in range(epochs):
         outputs = model(images)
         loss = criterion(outputs, labels)
         loss.backward()
+        torch.cuda.synchronize()
         optimizer.step()
         running_loss += loss.item() * labels.size(0)
         _, predicted = outputs.max(1)
