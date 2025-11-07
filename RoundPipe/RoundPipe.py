@@ -73,6 +73,7 @@ class RoundPipe(nn.Module):
 
 def wrap_model_to_roundpipe(model: nn.Module,
                             wrap_threshold: Optional[int] = None,
+                            use_sequential_preset: bool = True,
                             **roundpipe_kwargs: Any) -> nn.Module:
     model_name = roundpipe_kwargs.get('name')
     if model_name is None:
@@ -80,8 +81,12 @@ def wrap_model_to_roundpipe(model: nn.Module,
         model_name = f'{filename.split("/")[-1]}:{lineno}'
 
     try:
-        roundpipe_kwargs['name'] = model_name
-        return wrap_model(model, **roundpipe_kwargs)
+        if use_sequential_preset:
+            roundpipe_kwargs['name'] = model_name
+            model = wrap_model(model, **roundpipe_kwargs)
+            print(f'[INFO] Replace model "{model_name}" with a sequential preset from RoundPipe.models')
+            print(f'[INFO] If this is not expected, please call wrap_model_to_roundpipe with use_sequential_preset=False or rename the model class to avoid conflicts.')
+            return model
     except NotImplementedError:
         pass
     if isinstance(model, nn.Sequential):
