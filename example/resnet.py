@@ -113,12 +113,13 @@ for epoch in range(epochs):
     running_loss, correct, total = 0, 0, 0
     for images, labels in trainloader:
         images, labels = images, labels
-        optimizer.zero_grad()
         outputs = model(images)
         loss = criterion(outputs, labels)
         loss.backward()
-        torch.cuda.synchronize()
+        for i in range(torch.cuda.device_count()):
+            torch.cuda.synchronize(i)
         optimizer.step()
+        optimizer.zero_grad()
         running_loss += loss.item() * labels.size(0)
         _, predicted = outputs.max(1)
         correct += predicted.eq(labels).sum().item()

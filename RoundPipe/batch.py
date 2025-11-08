@@ -5,7 +5,6 @@ import torch
 from torch.distributed.pipelining.microbatch import TensorChunkSpec, _Replicate, split_args_kwargs_into_chunks, merge_chunks, sum_reducer
 from torch.utils._pytree import tree_flatten, tree_unflatten
 
-from RoundPipe.device import device_tag_detach
 from RoundPipe.transfer import PinnedUpload
 
 if TYPE_CHECKING:
@@ -57,15 +56,17 @@ class Batch:
 
         self.flatten_states: List[List[Any]] = []
         self.flatten_specs: List['TreeSpec'] = []
-        self.transfer_events: List[Tuple[Sequence[torch.cuda.Event], Sequence[Optional[torch.cuda.Event]]]] = []
+        self.forward_events: List[Sequence[torch.cuda.Event]] = []
+        self.backward_events: List[Sequence[Optional[torch.cuda.Event]]] = []
         for batch_idx, args_kwargs in enumerate(zip(args_list, kwargs_list)):
             forward_event: Set[torch.cuda.Event] = set()
             backward_event: Set[Optional[torch.cuda.Event]] = set()
             flatten_input, flatten_spec = tree_flatten(args_kwargs)
             for item in flatten_input:
-                if isinstance(item, torch.Tensor) and item.requires_grad:
-                    backward_event.add(None)
-                    break
+                if isinstance(item, torch.Tensor):
+                    assert item.is_cpu, 'All inputs to RoundPipe must be on CPU.'
+                    if item.requires_grad:
+                        backward_event.add(None)
             try:
                 for idx, item in enumerate(flatten_input):
                     if isinstance(item, RoundPipePackedData):
@@ -78,7 +79,8 @@ class Batch:
 
             self.flatten_states.append(flatten_input)
             self.flatten_specs.append(flatten_spec)
-            self.transfer_events.append((list(forward_event), list(backward_event)))
+            self.forward_events.append(list(forward_event))
+            self.backward_events.append(list(backward_event))
 
         self.num_microbatch = len(self.flatten_states)
 
@@ -88,7 +90,8 @@ class Batch:
                 return tree_unflatten(self.flatten_states[0], self.flatten_specs[0])
             transfer_events = []
             for i in range(self.num_microbatch):
-                forward_events, backward_events = self.transfer_events[i]
+                forward_events = self.forward_events[i]
+                backward_events = self.backward_events[i]
                 assert len(forward_events) == 1
                 assert len(backward_events) == 1
                 transfer_events.append((forward_events[0], backward_events[0]))
@@ -98,10 +101,9 @@ class Batch:
                 flatten_output.append(RoundPipePackedData(batched_out, transfer_events))
             return tree_unflatten(flatten_output, self.flatten_specs[0])
 
-        device_tag_detach()
         if run_config.output_device != torch.device('cpu'):
             flatten_states_on_device = []
-            for flatten_state, ((transfer_event,), _) in zip(self.flatten_states, self.transfer_events):
+            for flatten_state, (transfer_event,) in zip(self.flatten_states, self.forward_events):
                 transfer_event.synchronize()
                 flatten_state_on_device = []
                 for arg in flatten_state:
@@ -112,7 +114,7 @@ class Batch:
                 flatten_states_on_device.append(flatten_state_on_device)
             self.flatten_states = flatten_states_on_device
         else:
-            self.transfer_events[-1][0][0].synchronize()
+            self.forward_events[-1][0].synchronize()
 
         if callable(run_config.merge_output):
             hidden_states = [tree_unflatten(state, spec) for state, spec in zip(self.flatten_states, self.flatten_specs)]

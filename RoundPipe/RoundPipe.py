@@ -5,11 +5,14 @@ import inspect
 import tqdm
 import torch
 import torch.nn as nn
+from torch.utils._pytree import tree_flatten, tree_unflatten
 
 from RoundPipe.batch import Batch
 from RoundPipe.device import get_next_device
 from RoundPipe.models import wrap_model
+from RoundPipe.run import RoundPipeRunContext, RoundPipeBatchedBackward
 from RoundPipe.RunConfig import RoundPipeRunConfig, FullRoundPipeRunConfig
+from RoundPipe.scheduler import ModelExecutePlan
 from RoundPipe.timer import ModelTimer
 from RoundPipe.utils import get_model_size
 
@@ -64,12 +67,23 @@ class RoundPipe(nn.Module):
     def forward(self, *args,
                 roundpipe_run_config: RoundPipeRunConfig = RoundPipeRunConfig(), **kwargs) -> Any:
         full_run_config = FullRoundPipeRunConfig(roundpipe_run_config, self.model_run_config)
-        hidden_states = Batch(args, kwargs, full_run_config)
-        cur_layer = 0
-        while cur_layer < self.num_layers:
+        batch = Batch(args, kwargs, full_run_config)
+        execute_plan = ModelExecutePlan(self, False)
+        run_context = [RoundPipeRunContext(self, execute_plan, full_run_config.requires_grad,
+                                           i, batch.num_microbatch, full_run_config.preserve_rng_state)
+                       for i in range(batch.num_microbatch)]
+        for layer_ids in execute_plan.fwd_plan:
             device = get_next_device()
-            cur_layer = device.run(self, cur_layer, hidden_states, full_run_config)
-        return hidden_states.dump(full_run_config)
+            device.launch_forward(layer_ids, batch, run_context)
+        
+        if full_run_config.requires_grad:
+            tag = torch.empty(0, requires_grad=True)
+            all_inputs = [item for batch_context in run_context
+                        for item in batch_context.flatten_inputs[0]]
+            output_spec, *all_outputs = RoundPipeBatchedBackward.apply(run_context, batch, tag, *all_inputs) # type: ignore
+            batch.flatten_states = tree_unflatten(all_outputs, output_spec)
+
+        return batch.dump(full_run_config)
 
 def wrap_model_to_roundpipe(model: nn.Module,
                             wrap_threshold: Optional[int] = None,

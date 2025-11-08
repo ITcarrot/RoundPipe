@@ -5,7 +5,8 @@ import torch
 def async_d2h(compute_stream: torch.cuda.Stream,
               transfer_stream: torch.cuda.Stream,
               transfer_finish_event: Iterable[Optional[torch.cuda.Event]],
-              device_tensors: Iterable[Union[torch.Tensor, Any]]
+              device_tensors: Iterable[Union[torch.Tensor, Any]],
+              keep_requires_grad: bool = False
               ) -> List[Union[torch.Tensor, Any]]:
     host_tensors = []
     transfer_stream.wait_stream(compute_stream)
@@ -13,7 +14,9 @@ def async_d2h(compute_stream: torch.cuda.Stream,
         for device_tensor in device_tensors:
             if isinstance(device_tensor, torch.Tensor):
                 device_tensor.record_stream(transfer_stream)
-                host_tensors.append(device_tensor.to(torch.device('cpu'), non_blocking = True))
+                host_tensor = device_tensor.to(torch.device('cpu'), non_blocking = True)
+                host_tensor.requires_grad_(keep_requires_grad and device_tensor.requires_grad)
+                host_tensors.append(host_tensor)
             else:
                 host_tensors.append(device_tensor)
         for event in transfer_finish_event:
@@ -26,7 +29,8 @@ def async_d2h(compute_stream: torch.cuda.Stream,
 def async_h2d(compute_stream: torch.cuda.Stream,
               transfer_stream: torch.cuda.Stream,
               host_ready_event: Iterable[torch.cuda.Event],
-              host_tensors: Iterable[Union[torch.Tensor, Any]]
+              host_tensors: Iterable[Union[torch.Tensor, Any]],
+              keep_requires_grad: bool = False
               ) -> List[Union[torch.Tensor, Any]]:
     device_tensors = []
     with torch.cuda.stream(transfer_stream):
@@ -34,11 +38,13 @@ def async_h2d(compute_stream: torch.cuda.Stream,
             event.wait()
         for host_tensor in host_tensors:
             if isinstance(host_tensor, torch.Tensor):
+                host_tensor_requires_grad = host_tensor.requires_grad
                 if not host_tensor.is_pinned():
                     host_pinned = torch.empty_like(host_tensor, device = torch.device('cpu'), pin_memory = True)
                     host_pinned.copy_(host_tensor)
                     host_tensor = host_pinned
                 device_tensor = host_tensor.to(transfer_stream.device, non_blocking = True)
+                device_tensor.requires_grad_(keep_requires_grad and host_tensor_requires_grad)
                 device_tensor.record_stream(compute_stream)
                 device_tensors.append(device_tensor)
             else:

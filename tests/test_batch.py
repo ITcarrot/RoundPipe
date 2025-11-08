@@ -27,7 +27,8 @@ def test_io_auto(num_microbatch, merge_output):
     auto_config = FullRoundPipeRunConfig(RoundPipeRunConfig(num_microbatch=num_microbatch, merge_output=merge_output), RoundPipeRunConfig())
     batch = Batch(args, kwargs, auto_config)
     for batch_idx in range(num_microbatch):
-        fwd_events, bwd_events = batch.transfer_events[batch_idx]
+        fwd_events = batch.forward_events[batch_idx]
+        bwd_events = batch.backward_events[batch_idx]
         for id in range(3):
             assert events[id][batch_idx] in fwd_events
             assert events[id][batch_idx] in bwd_events
@@ -74,7 +75,8 @@ def test_io_spec(num_microbatch):
                                                             merge_output=merge_spec), RoundPipeRunConfig())
     batch = Batch(args, kwargs, spec_config)
     for batch_idx in range(num_microbatch):
-        fwd_events, bwd_events = batch.transfer_events[batch_idx]
+        fwd_events = batch.forward_events[batch_idx]
+        bwd_events = batch.backward_events[batch_idx]
         assert events[batch_idx] in fwd_events
         assert events[batch_idx] in bwd_events
     args_reconstruct, kwargs_reconstruct = batch.dump(spec_config)
@@ -96,7 +98,8 @@ def test_out_packed(num_microbatch):
                                                             merge_output=False), RoundPipeRunConfig())
     batch = Batch(args, kwargs, spec_config)
     for batch_idx in range(num_microbatch):
-        fwd_events, bwd_events = batch.transfer_events[batch_idx]
+        fwd_events = batch.forward_events[batch_idx]
+        bwd_events = batch.backward_events[batch_idx]
         assert events[batch_idx] in fwd_events
         assert events[batch_idx] in bwd_events
     args_reconstruct, kwargs_reconstruct = batch.dump(spec_config)
@@ -135,7 +138,8 @@ def test_wrong_batch_size():
         batch = Batch(args, kwargs, spec_config)
     assert batch.num_microbatch == 3  # downsized to smallest packed data size
     for batch_idx in range(3):
-        fwd_events, bwd_events = batch.transfer_events[batch_idx]
+        fwd_events = batch.forward_events[batch_idx]
+        bwd_events = batch.backward_events[batch_idx]
         assert events[batch_idx] in fwd_events
         assert events[batch_idx] in bwd_events
     args_reconstruct, kwargs_reconstruct = batch.dump(spec_config)
@@ -154,7 +158,8 @@ def test_guess_from_packed_data():
     spec_config = FullRoundPipeRunConfig(RoundPipeRunConfig(num_microbatch=4), RoundPipeRunConfig())
     batch = Batch(args, kwargs, spec_config)
     for batch_idx in range(4):
-        fwd_events, bwd_events = batch.transfer_events[batch_idx]
+        fwd_events = batch.forward_events[batch_idx]
+        bwd_events = batch.backward_events[batch_idx]
         assert events[batch_idx] in fwd_events
         assert events[batch_idx] in bwd_events
     args_reconstruct, kwargs_reconstruct = batch.dump(spec_config)

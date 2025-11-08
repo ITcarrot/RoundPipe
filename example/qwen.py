@@ -43,9 +43,10 @@ for epoch in range(20):
         loss = model(**input_dict).loss
         print(loss.item())
         epoch_loss.append(loss.item())
-        optim.zero_grad()
         loss.backward()
-        torch.cuda.synchronize()
+        for i in range(torch.cuda.device_count()):
+            torch.cuda.synchronize(i)
         optim.step()
+        optim.zero_grad()
     mean_loss = sum(epoch_loss) / len(epoch_loss)
     print(f"Epoch {epoch+1}, Loss: {mean_loss}")
