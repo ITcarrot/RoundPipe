@@ -88,8 +88,6 @@ class Batch:
 
     def dump(self, run_config: 'FullRoundPipeRunConfig') -> Any:
         if isinstance(run_config.merge_output, bool) and not run_config.merge_output:
-            if self.num_microbatch == 1:
-                return tree_unflatten(self.flatten_states[0], self.flatten_specs[0])
             transfer_events = []
             for i in range(self.num_microbatch):
                 forward_events = self.forward_events[i]
@@ -117,6 +115,11 @@ class Batch:
             self.flatten_states = flatten_states_on_device
         else:
             self.forward_events[-1][0].synchronize()
+        from RoundPipe.scheduler import backward_schedule_simulator
+        backward_schedule_simulator.reset()
+
+        if self.num_microbatch == 1:
+            return tree_unflatten(self.flatten_states[0], self.flatten_specs[0])
 
         if callable(run_config.merge_output):
             hidden_states = [tree_unflatten(state, spec) for state, spec in zip(self.flatten_states, self.flatten_specs)]

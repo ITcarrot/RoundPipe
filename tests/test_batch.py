@@ -104,27 +104,20 @@ def test_out_packed(num_microbatch):
         assert events[batch_idx] in bwd_events
     args_reconstruct, kwargs_reconstruct = batch.dump(spec_config)
 
-    if num_microbatch == 1:
-        assert args[0] == args_reconstruct[0]
-        assert torch.allclose(args[1], args_reconstruct[1])
-        assert torch.allclose(kwargs['x'], kwargs_reconstruct['x'])
-        assert torch.allclose(torch.cat(kwargs['packed_arg']), kwargs_reconstruct['packed_arg'])  # empty tensor
-        assert kwargs['non_tensor'] == kwargs_reconstruct['non_tensor']
-    else:
-        expected_transfer_event = [(events[i], events[i]) for i in range(num_microbatch)]
-        assert args_reconstruct[0].transfer_event == expected_transfer_event
-        assert args_reconstruct[1].transfer_event == expected_transfer_event
-        assert kwargs_reconstruct['x'].transfer_event == expected_transfer_event
-        assert kwargs_reconstruct['packed_arg'].transfer_event == expected_transfer_event
-        assert kwargs_reconstruct['non_tensor'].transfer_event == expected_transfer_event
-        args1_chunk = torch.chunk(args[1], num_microbatch)
-        kwargs_x_chunk = torch.chunk(kwargs['x'], num_microbatch)
-        for batch_idx in range(num_microbatch):
-            assert args_reconstruct[0][batch_idx] == args[0]
-            assert torch.allclose(args_reconstruct[1][batch_idx], args1_chunk[batch_idx])
-            assert torch.allclose(kwargs_reconstruct['x'][batch_idx], kwargs_x_chunk[batch_idx])
-            assert torch.allclose(kwargs_reconstruct['packed_arg'][batch_idx], packed[batch_idx])
-            assert kwargs_reconstruct['non_tensor'][batch_idx] == kwargs['non_tensor']
+    expected_transfer_event = [(events[i], events[i]) for i in range(num_microbatch)]
+    assert args_reconstruct[0].transfer_event == expected_transfer_event
+    assert args_reconstruct[1].transfer_event == expected_transfer_event
+    assert kwargs_reconstruct['x'].transfer_event == expected_transfer_event
+    assert kwargs_reconstruct['packed_arg'].transfer_event == expected_transfer_event
+    assert kwargs_reconstruct['non_tensor'].transfer_event == expected_transfer_event
+    args1_chunk = torch.chunk(args[1], num_microbatch)
+    kwargs_x_chunk = torch.chunk(kwargs['x'], num_microbatch)
+    for batch_idx in range(num_microbatch):
+        assert args_reconstruct[0][batch_idx] == args[0]
+        assert torch.allclose(args_reconstruct[1][batch_idx], args1_chunk[batch_idx])
+        assert torch.allclose(kwargs_reconstruct['x'][batch_idx], kwargs_x_chunk[batch_idx])
+        assert torch.allclose(kwargs_reconstruct['packed_arg'][batch_idx], packed[batch_idx])
+        assert kwargs_reconstruct['non_tensor'][batch_idx] == kwargs['non_tensor']
 
 def test_wrong_batch_size():
     events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(4)] # type: ignore[assignment]
