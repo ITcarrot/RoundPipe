@@ -4,7 +4,7 @@ import torch
 
 def async_d2h(compute_stream: torch.cuda.Stream,
               transfer_stream: torch.cuda.Stream,
-              transfer_finish_event: Iterable[Optional[torch.cuda.Event]],
+              transfer_finish_event: Iterable[torch.cuda.Event],
               device_tensors: Iterable[Union[torch.Tensor, Any]],
               keep_requires_grad: bool = False
               ) -> List[Union[torch.Tensor, Any]]:
@@ -20,9 +20,6 @@ def async_d2h(compute_stream: torch.cuda.Stream,
             else:
                 host_tensors.append(device_tensor)
         for event in transfer_finish_event:
-            if event is None:
-                transfer_stream.synchronize()
-            else:
                 event.record()
     return host_tensors
 
@@ -97,3 +94,15 @@ class PinnedUpload(torch.autograd.Function):
         g_host = torch.empty_like(g, device = torch.device('cpu'), pin_memory = True)
         g_host.copy_(g)
         return g_host, None
+
+class RegisterBackwardEvent(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, input: torch.Tensor, event: torch.cuda.Event) -> torch.Tensor:
+        ctx.event = event
+        return input
+
+    @staticmethod
+    def backward(ctx, grad_outputs: torch.Tensor): # type: ignore[override]
+        event: torch.cuda.Event = ctx.event
+        event.synchronize()
+        return grad_outputs, None

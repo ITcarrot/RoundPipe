@@ -5,7 +5,7 @@ import torch
 from torch.distributed.pipelining.microbatch import TensorChunkSpec, _Replicate, split_args_kwargs_into_chunks, merge_chunks, sum_reducer
 from torch.utils._pytree import tree_flatten, tree_unflatten
 
-from RoundPipe.transfer import PinnedUpload
+from RoundPipe.transfer import PinnedUpload, RegisterBackwardEvent
 
 if TYPE_CHECKING:
     from torch.utils._pytree import TreeSpec
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 class RoundPipePackedData(list):
     def __init__(self, data: List[Any],
-                 transfer_event: List[Tuple[torch.cuda.Event, Optional[torch.cuda.Event]]]) -> None:
+                 transfer_event: List[Tuple[torch.cuda.Event, torch.cuda.Event]]) -> None:
         super().__init__(data)
         self.transfer_event = transfer_event
 
@@ -57,16 +57,18 @@ class Batch:
         self.flatten_states: List[List[Any]] = []
         self.flatten_specs: List['TreeSpec'] = []
         self.forward_events: List[Sequence[torch.cuda.Event]] = []
-        self.backward_events: List[Sequence[Optional[torch.cuda.Event]]] = []
+        self.backward_events: List[Sequence[torch.cuda.Event]] = []
         for batch_idx, args_kwargs in enumerate(zip(args_list, kwargs_list)):
             forward_event: Set[torch.cuda.Event] = set()
-            backward_event: Set[Optional[torch.cuda.Event]] = set()
+            backward_event: Set[torch.cuda.Event] = set()
+            cpu_tensor_backward_event: torch.cuda.Event = torch.cuda.Event() # type: ignore[reportAssignmentType]
             flatten_input, flatten_spec = tree_flatten(args_kwargs)
-            for item in flatten_input:
+            for idx, item in enumerate(flatten_input):
                 if isinstance(item, torch.Tensor):
                     assert item.is_cpu, 'All inputs to RoundPipe must be on CPU.'
                     if item.requires_grad:
-                        backward_event.add(None)
+                        flatten_input[idx] = RegisterBackwardEvent.apply(item, cpu_tensor_backward_event)
+                        backward_event.add(cpu_tensor_backward_event)
             try:
                 for idx, item in enumerate(flatten_input):
                     if isinstance(item, RoundPipePackedData):
@@ -93,8 +95,8 @@ class Batch:
                 forward_events = self.forward_events[i]
                 backward_events = self.backward_events[i]
                 assert len(forward_events) == 1
-                assert len(backward_events) == 1
-                transfer_events.append((forward_events[0], backward_events[0]))
+                assert len(backward_events) <= 1
+                transfer_events.append((forward_events[0], backward_events[0] if len(backward_events) == 1 else torch.cuda.Event()))
             flatten_output = []
             for out_idx in range(len(self.flatten_states[0])):
                 batched_out = [self.flatten_states[i][out_idx] for i in range(self.num_microbatch)]

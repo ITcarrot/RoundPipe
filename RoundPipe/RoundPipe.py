@@ -10,7 +10,7 @@ from torch.utils._pytree import tree_flatten, tree_unflatten
 from RoundPipe.batch import Batch
 from RoundPipe.device import get_next_device
 from RoundPipe.models import wrap_model
-from RoundPipe.run import RoundPipeRunContext, RoundPipeBatchedBackward
+from RoundPipe.run import RoundPipeRunContext, RoundPipeBatchedBackward, RoundPipeMicrobatchBackward
 from RoundPipe.RunConfig import RoundPipeRunConfig, FullRoundPipeRunConfig
 from RoundPipe.scheduler import ModelExecutePlan
 from RoundPipe.timer import ModelTimer
@@ -43,13 +43,12 @@ class RoundPipe(nn.Module):
             self.layer_workload.append(get_model_size(layer))
         self.model_timer = ModelTimer(self.num_layers)
 
-        print(f'Processing parameters in RoundPipe model "{self.name}" ...')
+        print(f'Processing parameters and buffers in RoundPipe model "{self.name}" ...')
         for parm in tqdm.tqdm(self.model.parameters(), total=sum(1 for _ in self.model.parameters())):
             pinned_tensor = torch.empty_like(parm.data, dtype=torch.float16 if use_fp16 and parm.is_floating_point() else None, pin_memory=True)
             pinned_tensor.copy_(parm.data)
             parm.data = pinned_tensor
             parm.data_cpu = pinned_tensor # type: ignore[attr-defined]
-        print(f'Processing buffers in RoundPipe model "{self.name}" ...')
         for buffer in tqdm.tqdm(self.model.buffers(), total=sum(1 for _ in self.model.buffers())):
             pinned_tensor = torch.empty_like(buffer.data, dtype=torch.float16 if use_fp16 and buffer.is_floating_point() else None, pin_memory=True)
             pinned_tensor.copy_(buffer.data)
@@ -77,11 +76,18 @@ class RoundPipe(nn.Module):
             device.launch_forward(layer_ids, batch, run_context)
         
         if full_run_config.requires_grad:
-            tag = torch.empty(0, requires_grad=True)
-            all_inputs = [item for batch_context in run_context
-                        for item in batch_context.flatten_inputs[0]]
-            output_spec, *all_outputs = RoundPipeBatchedBackward.apply(run_context, batch, tag, *all_inputs) # type: ignore
-            batch.flatten_states = tree_unflatten(all_outputs, output_spec)
+            tag = torch.tensor(0.0, dtype=torch.float32, requires_grad=True)
+            if len(execute_plan.bwd_plan) == 1:
+                for context in reversed(run_context):
+                    tag, output_require_grad_idx, *output_require_grad \
+                        = RoundPipeMicrobatchBackward.apply(context, batch, tag, *context.flatten_inputs[0]) # type: ignore
+                    for idx, item in zip(output_require_grad_idx, output_require_grad):
+                        batch.flatten_states[context.microbatch_id][idx] = item
+            else:
+                all_inputs = [item for batch_context in run_context
+                            for item in batch_context.flatten_inputs[0]]
+                output_spec, *all_outputs = RoundPipeBatchedBackward.apply(run_context, batch, tag, *all_inputs) # type: ignore
+                batch.flatten_states = tree_unflatten(all_outputs, output_spec)
 
         return batch.dump(full_run_config)
 
@@ -106,10 +112,6 @@ def wrap_model_to_roundpipe(model: nn.Module,
     if isinstance(model, nn.Sequential):
         roundpipe_kwargs['name'] = model_name
         return RoundPipe(model, **roundpipe_kwargs)
-
-    if hasattr(model, 'loss_function') and inspect.isfunction(model.loss_function):
-        roundpipe_kwargs['name'] = f'{model_name}.loss_function'
-        model.loss_function = wrap_model(model.loss_function, **roundpipe_kwargs)
 
     if wrap_threshold is None:
         wrap_threshold = get_model_size(model) // (torch.cuda.device_count() + 1)

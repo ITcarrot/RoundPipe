@@ -1,7 +1,6 @@
 from typing import * # type: ignore[reportWildcardImportFromLibrary]
 
 SUPPORTED_MODELS = {
-    'function': 'RoundPipe.models.function.wrap_function',
     'Qwen3ForCausalLM': 'RoundPipe.models.qwen3.wrap_Qwen3ForCausalLM',
 }
 

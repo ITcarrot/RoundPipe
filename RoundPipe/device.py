@@ -13,7 +13,8 @@ if TYPE_CHECKING:
     from RoundPipe.RunConfig import FullRoundPipeRunConfig
 
 class DeviceManager:
-    def __init__(self, device: torch.device):
+    def __init__(self, id: int, device: torch.device):
+        self.id = id
         self.device = device
         
         self.upstream: torch.cuda.Stream = torch.cuda.Stream(device) # type: ignore[reportAttributeAccessIssue]
@@ -34,7 +35,7 @@ device_list: List[DeviceManager] = []
 cur_device = 0
 
 for i in range(torch.cuda.device_count()):
-    device = DeviceManager(torch.device(f"cuda:{i}"))
+    device = DeviceManager(i, torch.device(f"cuda:{i}"))
     device_list.append(device)
 
 def get_next_device() -> DeviceManager:
