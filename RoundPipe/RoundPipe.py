@@ -12,7 +12,7 @@ from RoundPipe.device import get_next_device
 from RoundPipe.models import wrap_model
 from RoundPipe.run import RoundPipeRunContext, RoundPipeBatchedBackward, RoundPipeMicrobatchBackward
 from RoundPipe.RunConfig import RoundPipeRunConfig, FullRoundPipeRunConfig
-from RoundPipe.scheduler import ModelExecutePlan
+from RoundPipe.scheduler import ModelExecutePlan, backward_schedule_simulator
 from RoundPipe.timer import ModelTimer
 from RoundPipe.utils import get_model_size
 
@@ -75,18 +75,22 @@ class RoundPipe(nn.Module):
             device = get_next_device()
             device.launch_forward(layer_ids, batch, run_context)
         
-        if full_run_config.requires_grad:
-            tag = torch.tensor(0.0, dtype=torch.float32, requires_grad=True)
+        if any(isinstance(tensor, torch.Tensor) and tensor.requires_grad
+               for batch_output in batch.flatten_states
+               for tensor in batch_output):
             if len(execute_plan.bwd_plan) == 1:
+                tag = backward_schedule_simulator.get_next_tag()
                 for context in reversed(run_context):
                     tag, output_require_grad_idx, *output_require_grad \
                         = RoundPipeMicrobatchBackward.apply(context, batch, tag, *context.flatten_inputs[0]) # type: ignore
                     for idx, item in zip(output_require_grad_idx, output_require_grad):
                         batch.flatten_states[context.microbatch_id][idx] = item
+                backward_schedule_simulator.update_current_tag(tag)
             else:
+                gradient_anchor = torch.tensor(0.0, dtype=torch.float32, requires_grad=True)
                 all_inputs = [item for batch_context in run_context
                             for item in batch_context.flatten_inputs[0]]
-                output_spec, *all_outputs = RoundPipeBatchedBackward.apply(run_context, batch, tag, *all_inputs) # type: ignore
+                output_spec, *all_outputs = RoundPipeBatchedBackward.apply(run_context, batch, gradient_anchor, *all_inputs) # type: ignore
                 batch.flatten_states = tree_unflatten(all_outputs, output_spec)
 
         return batch.dump(full_run_config)
