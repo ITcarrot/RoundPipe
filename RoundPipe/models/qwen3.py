@@ -127,5 +127,5 @@ def wrap_model(model: Qwen3ForCausalLM, **roundpipe_kwargs: Any) -> RoundPipe:
     layers = [Qwen3ForCausalLMWrappedLayer(layer) for layer in model.model.layers]
     postfix = Qwen3ForCausalLMPostfix(model)
     wrapped_model = RoundPipe(nn.Sequential(prefix, *layers, postfix), **roundpipe_kwargs)
-    wrapped_model.original_model = model
+    wrapped_model.set_original_model(model)
     return wrapped_model

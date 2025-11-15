@@ -55,6 +55,8 @@ class RoundPipe(nn.Module):
             buffer.data = pinned_tensor
             buffer.data_cpu = pinned_tensor # type: ignore[attr-defined]
 
+        self.RoundPipe_initialized = True
+
     def __getattr__(self, name: str):
         try:
             return super().__getattr__(name)
@@ -62,6 +64,25 @@ class RoundPipe(nn.Module):
             if self.original_model is not None:
                 return getattr(self.original_model, name)
             return getattr(self.model, name)
+    
+    def __setattr__(self, name: str, value: Any) -> None:
+        if 'RoundPipe_initialized' in self.__dict__:
+            if self.original_model is not None:
+                setattr(self.original_model, name, value)
+            setattr(self.model, name, value)
+        else:
+            super().__setattr__(name, value)
+
+    def __delattr__(self, name):
+        if 'RoundPipe_initialized' in self.__dict__:
+            if self.original_model is not None:
+                delattr(self.original_model, name)
+            delattr(self.model, name)
+        else:
+            return super().__delattr__(name)
+
+    def set_original_model(self, original_model: nn.Module) -> None:
+        object.__setattr__(self, 'original_model', original_model)
 
     def forward(self, *args,
                 roundpipe_run_config: RoundPipeRunConfig = RoundPipeRunConfig(), **kwargs) -> Any:
