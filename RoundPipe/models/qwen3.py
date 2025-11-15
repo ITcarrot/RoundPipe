@@ -86,12 +86,12 @@ class Qwen3ForCausalLMWrappedLayer(nn.Module):
         hidden_states, causal_mask_mapping, position_ids, position_embeddings, kwargs, labels, logits_to_keep = input
         hidden_states = self.layer(
             hidden_states,
-            cattention_mask=causal_mask_mapping[self.layer.attention_type], # type: ignore[reportArgumentType]
-                position_ids=position_ids,
-                past_key_values=None,
-                use_cache=False,
-                cache_position=None,
-                position_embeddings=position_embeddings,
+            attention_mask=causal_mask_mapping[self.layer.attention_type],
+            position_ids=position_ids,
+            past_key_values=None,
+            use_cache=False,
+            cache_position=None,
+            position_embeddings=position_embeddings,
             **kwargs,
         )
         return hidden_states, causal_mask_mapping, position_ids, position_embeddings, kwargs, labels, logits_to_keep
