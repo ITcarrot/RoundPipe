@@ -5,11 +5,10 @@ import inspect
 import tqdm
 import torch
 import torch.nn as nn
-from torch.utils._pytree import tree_flatten, tree_unflatten
+from torch.utils._pytree import tree_unflatten
 
 from RoundPipe.batch import Batch
 from RoundPipe.device import get_next_device
-from RoundPipe.models import wrap_model
 from RoundPipe.run import RoundPipeRunContext, RoundPipeBatchedBackward, RoundPipeMicrobatchBackward
 from RoundPipe.RunConfig import RoundPipeRunConfig, FullRoundPipeRunConfig
 from RoundPipe.scheduler import ModelExecutePlan, backward_schedule_simulator
@@ -95,55 +94,3 @@ class RoundPipe(nn.Module):
                 batch.flatten_states = tree_unflatten(all_outputs, output_spec)
 
         return batch.dump(full_run_config)
-
-def wrap_model_to_roundpipe(model: nn.Module,
-                            wrap_threshold: Optional[int] = None,
-                            use_sequential_preset: bool = True,
-                            **roundpipe_kwargs: Any) -> nn.Module:
-    model_name = roundpipe_kwargs.get('name')
-    if model_name is None:
-        filename, lineno, _, _ = traceback.extract_stack()[-2]
-        model_name = f'{filename.split("/")[-1]}:{lineno}'
-
-    try:
-        if use_sequential_preset:
-            roundpipe_kwargs['name'] = model_name
-            model = wrap_model(model, **roundpipe_kwargs)
-            print(f'[INFO] Replace model "{model_name}" with a sequential preset from RoundPipe.models')
-            print(f'[INFO] If this is not expected, please call wrap_model_to_roundpipe with use_sequential_preset=False or rename the model class to avoid conflicts.')
-            return model
-    except NotImplementedError:
-        pass
-    if isinstance(model, nn.Sequential):
-        roundpipe_kwargs['name'] = model_name
-        return RoundPipe(model, **roundpipe_kwargs)
-
-    if wrap_threshold is None:
-        wrap_threshold = get_model_size(model) // (torch.cuda.device_count() + 1)
-    if get_model_size(model) <= wrap_threshold and model.forward.__name__ != '_forward_unimplemented':
-        modified_run_config: RoundPipeRunConfig = roundpipe_kwargs.get('model_run_config', RoundPipeRunConfig())
-        modified_run_config.num_microbatch = 1
-        roundpipe_kwargs['model_run_config'] = modified_run_config
-        roundpipe_kwargs['name'] = model_name
-        return RoundPipe(model, **roundpipe_kwargs)
-    elif isinstance(model, nn.ModuleList):
-        if len(model) == 0:
-            return model
-        n_layers = len(model)
-        roundpipe_kwargs['name'] = f'{model_name}.{n_layers - 1}'
-        model[n_layers - 1] = RoundPipe(model[n_layers - 1], **roundpipe_kwargs)
-        # do not merge output at non-final layers
-        modified_run_config: RoundPipeRunConfig = roundpipe_kwargs.get('model_run_config', RoundPipeRunConfig())
-        modified_run_config.merge_output = False
-        roundpipe_kwargs['model_run_config'] = modified_run_config
-        for layer_idx in range(n_layers - 1):
-            roundpipe_kwargs['name'] = f'{model_name}.{layer_idx}'
-            model[layer_idx] = RoundPipe(model[layer_idx], **roundpipe_kwargs)
-        return model
-    else:
-        for submodel_name, submodel in model.named_children():
-            roundpipe_kwargs['name'] = f'{model_name}.{submodel_name}'
-            wrapped_submodel = wrap_model_to_roundpipe(submodel, wrap_threshold, **roundpipe_kwargs)
-            if wrapped_submodel is not submodel:
-                setattr(model, submodel_name, wrapped_submodel)
-        return model

@@ -2,7 +2,7 @@ from typing import * # type: ignore[reportWildcardImportFromLibrary]
 import warnings
 
 import torch
-from torch.distributed.pipelining.microbatch import TensorChunkSpec, _Replicate, split_args_kwargs_into_chunks, merge_chunks, sum_reducer
+from torch.distributed.pipelining.microbatch import TensorChunkSpec, _Replicate, split_args_kwargs_into_chunks, merge_chunks, _CustomReducer
 from torch.utils._pytree import tree_flatten, tree_unflatten
 
 from RoundPipe.transfer import PinnedUpload, RegisterBackwardEvent
@@ -36,6 +36,20 @@ def guess_split_spec(data: Any, expected_batchsize: Optional[int] = None) -> Tup
     else:
         guessed_batchsize = maybe_batchsize[0]
     return tree_unflatten(guessed_spec, flatten_spec), guessed_batchsize
+
+def get_avg_reducer_args() -> Tuple[torch.Tensor, Callable[[torch.Tensor, torch.Tensor], torch.Tensor]]:
+    init_val = torch.tensor(0)
+    init_val.roundpipe_avg_reducer_sum = torch.tensor(0) # type: ignore[reportAttributeAccessIssue]
+    init_val.roundpipe_avg_reducer_count = 0 # type: ignore[reportAttributeAccessIssue]
+    def reduce(reduced_val: torch.Tensor, new_val: torch.Tensor) -> torch.Tensor:
+        val_sum = reduced_val.roundpipe_avg_reducer_sum + new_val # type: ignore[reportAttributeAccessIssue]
+        val_count = reduced_val.roundpipe_avg_reducer_count + 1 # type: ignore[reportAttributeAccessIssue]
+        new_reduced = val_sum / val_count
+        new_reduced.roundpipe_avg_reducer_sum = val_sum # type: ignore[reportAttributeAccessIssue]
+        new_reduced.roundpipe_avg_reducer_count = val_count # type: ignore[reportAttributeAccessIssue]
+        return new_reduced
+    return init_val, reduce
+avg_reducer = _CustomReducer(*get_avg_reducer_args())
 
 class Batch:
     def __init__(self, args: Tuple, kwargs: Dict[str, Any],
@@ -132,7 +146,7 @@ class Batch:
                     if item.ndim > 0:
                         guessed_spec.append(TensorChunkSpec(0))
                     else:
-                        guessed_spec.append(sum_reducer)
+                        guessed_spec.append(avg_reducer)
                 else:
                     guessed_spec.append(None)
             hidden_states = [tree_unflatten(state, spec) for state, spec in zip(self.flatten_states, self.flatten_specs)]

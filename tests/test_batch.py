@@ -34,7 +34,7 @@ def test_io_auto(num_microbatch, merge_output):
             assert events[id][batch_idx] in bwd_events
     args_reconstruct, kwargs_reconstruct = batch.dump(auto_config)
     
-    assert args[0] * num_microbatch == args_reconstruct[0]
+    assert args[0] == args_reconstruct[0]
     assert torch.allclose(args[1], args_reconstruct[1])
     assert torch.allclose(torch.cat(args[2]), args_reconstruct[2])
     assert torch.allclose(args[3][0], args_reconstruct[3][0])

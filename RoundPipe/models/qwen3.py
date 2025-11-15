@@ -5,11 +5,9 @@ import torch
 import torch.nn as nn
 from transformers.masking_utils import create_causal_mask, create_sliding_window_causal_mask
 from transformers.modeling_outputs import CausalLMOutputWithPast
+from transformers.models.qwen3.modeling_qwen3 import Qwen3ForCausalLM
 
-from RoundPipe.RoundPipe import RoundPipe, RoundPipeRunConfig
-
-if TYPE_CHECKING:
-    from transformers.models.qwen3.modeling_qwen3 import Qwen3ForCausalLM
+from RoundPipe.RoundPipe import RoundPipe
 
 class Qwen3ForCausalLMPrefix(nn.Module):
     def __init__(self, model: 'Qwen3ForCausalLM') -> None:
@@ -123,24 +121,11 @@ class Qwen3ForCausalLMPostfix(nn.Module):
             logits=logits,
         )
 
-def merge_output(output: List[CausalLMOutputWithPast]):
-    losses = [out.loss for out in output if out.loss is not None]
-    logits = torch.cat([out.logits for out in output]) # type: ignore[reportArgumentType]
-    total_loss = None
-    if len(losses) > 0:
-        total_loss = sum(losses) / len(losses)
-    return CausalLMOutputWithPast(
-        loss=total_loss, # type: ignore[reportArgumentType]
-        logits=logits, # type: ignore[reportArgumentType]
-    )
-
-def wrap_Qwen3ForCausalLM(model: 'Qwen3ForCausalLM', **roundpipe_kwargs: Any) -> RoundPipe:
+EXPECTED_MODEL_CLASS = Qwen3ForCausalLM
+def wrap_model(model: Qwen3ForCausalLM, **roundpipe_kwargs: Any) -> RoundPipe:
     prefix = Qwen3ForCausalLMPrefix(model)
     layers = [Qwen3ForCausalLMWrappedLayer(layer) for layer in model.model.layers]
     postfix = Qwen3ForCausalLMPostfix(model)
-    modified_run_config = roundpipe_kwargs.get('model_run_config', RoundPipeRunConfig())
-    modified_run_config.merge_output = merge_output
-    roundpipe_kwargs['model_run_config'] = modified_run_config
     wrapped_model = RoundPipe(nn.Sequential(prefix, *layers, postfix), **roundpipe_kwargs)
     wrapped_model.original_model = model
     return wrapped_model

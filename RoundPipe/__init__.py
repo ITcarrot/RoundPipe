@@ -1,4 +1,5 @@
-from RoundPipe.RoundPipe import RoundPipe, wrap_model_to_roundpipe
+from RoundPipe.RoundPipe import RoundPipe
+from RoundPipe.wrapper import wrap_model_to_roundpipe
 from RoundPipe.RunConfig import RoundPipeRunConfig
 
 __version__ = '0.1.0'
