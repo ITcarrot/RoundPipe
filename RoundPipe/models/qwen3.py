@@ -1,4 +1,4 @@
-from typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
 import warnings
 
 import torch
@@ -7,10 +7,10 @@ from transformers.masking_utils import create_causal_mask, create_sliding_window
 from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.models.qwen3.modeling_qwen3 import Qwen3ForCausalLM
 
-from RoundPipe.RoundPipe import RoundPipe
+from ..RoundPipe import RoundPipe
 
 class Qwen3ForCausalLMPrefix(nn.Module):
-    def __init__(self, model: 'Qwen3ForCausalLM') -> None:
+    def __init__(self, model: Qwen3ForCausalLM) -> None:
         super().__init__()
         self.embed_tokens = model.model.embed_tokens
         self.rotary_emb = model.model.rotary_emb
@@ -19,12 +19,12 @@ class Qwen3ForCausalLMPrefix(nn.Module):
 
     def forward(
         self,
-        input_ids: Optional[torch.LongTensor] = None,
+        input_ids: Optional[torch.Tensor] = None,
         attention_mask: Optional[torch.Tensor] = None,
         position_ids: Optional[torch.Tensor] = None,
         past_key_values: Optional[Any] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None, # type: ignore[reportRedeclaration]
-        labels: Optional[torch.LongTensor] = None,
+        inputs_embeds: Optional[torch.Tensor] = None, # type: ignore[reportRedeclaration]
+        labels: Optional[torch.Tensor] = None,
         use_cache: Optional[bool] = None,
         cache_position: Optional[torch.Tensor] = None,
         logits_to_keep: Union[int, torch.Tensor] = 0,
@@ -34,7 +34,7 @@ class Qwen3ForCausalLMPrefix(nn.Module):
             raise ValueError("You must specify exactly one of input_ids or inputs_embeds")
 
         if inputs_embeds is None:
-            inputs_embeds: torch.FloatTensor = self.embed_tokens(input_ids)
+            inputs_embeds: torch.Tensor = self.embed_tokens(input_ids)
 
         if use_cache:
             warnings.warn("`use_cache` will set to False. Caching behavior is not supported in RoundPipe.")
@@ -97,7 +97,7 @@ class Qwen3ForCausalLMWrappedLayer(nn.Module):
         return hidden_states, causal_mask_mapping, position_ids, position_embeddings, kwargs, labels, logits_to_keep
 
 class Qwen3ForCausalLMPostfix(nn.Module):
-    def __init__(self, model: 'Qwen3ForCausalLM') -> None:
+    def __init__(self, model: Qwen3ForCausalLM) -> None:
         super().__init__()
         self.norm = model.model.norm
         self.vocab_size = model.config.vocab_size

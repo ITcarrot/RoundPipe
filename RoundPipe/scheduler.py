@@ -1,9 +1,12 @@
-from typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
 
 import torch
 
 if TYPE_CHECKING:
-    from RoundPipe.RoundPipe import RoundPipe
+    from RoundPipe import RoundPipe
+else:
+    from typing_extensions import TypeAliasType
+    RoundPipe = TypeAliasType('RoundPipe', 'RoundPipe.RoundPipe')
 
 class ModelExecutePlan:
     def __init__(self, model: 'RoundPipe', fuse_fwd_bwd: bool) -> None:

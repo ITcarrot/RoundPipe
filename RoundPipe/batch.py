@@ -1,15 +1,12 @@
-from typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
 import warnings
 
 import torch
 from torch.distributed.pipelining.microbatch import TensorChunkSpec, _Replicate, split_args_kwargs_into_chunks, merge_chunks, _CustomReducer
-from torch.utils._pytree import tree_flatten, tree_unflatten
+from torch.utils._pytree import tree_flatten, tree_unflatten, TreeSpec
 
-from RoundPipe.transfer import PinnedUpload, RegisterBackwardEvent
-
-if TYPE_CHECKING:
-    from torch.utils._pytree import TreeSpec
-    from RoundPipe.RunConfig import FullRoundPipeRunConfig
+from .RunConfig import FullRoundPipeRunConfig
+from .transfer import PinnedUpload, RegisterBackwardEvent
 
 class RoundPipePackedData(list):
     def __init__(self, data: List[Any],
@@ -53,7 +50,7 @@ avg_reducer = _CustomReducer(*get_avg_reducer_args())
 
 class Batch:
     def __init__(self, args: Tuple, kwargs: Dict[str, Any],
-                 run_config: 'FullRoundPipeRunConfig') -> None:
+                 run_config: FullRoundPipeRunConfig) -> None:
         if run_config.num_microbatch == 1:
             args_list, kwargs_list = [args], [kwargs]
         elif callable(run_config.split_input):
@@ -69,7 +66,7 @@ class Batch:
                 args, kwargs, run_config.num_microbatch, args_spec, kwargs_spec)
 
         self.flatten_states: List[List[Any]] = []
-        self.flatten_specs: List['TreeSpec'] = []
+        self.flatten_specs: List[TreeSpec] = []
         self.forward_events: List[Sequence[torch.cuda.Event]] = []
         self.backward_events: List[Sequence[torch.cuda.Event]] = []
         for batch_idx, args_kwargs in enumerate(zip(args_list, kwargs_list)):
@@ -100,7 +97,7 @@ class Batch:
 
         self.num_microbatch = len(self.flatten_states)
 
-    def dump(self, run_config: 'FullRoundPipeRunConfig') -> Any:
+    def dump(self, run_config: FullRoundPipeRunConfig) -> Any:
         if isinstance(run_config.merge_output, bool) and not run_config.merge_output:
             transfer_events = []
             for i in range(self.num_microbatch):
@@ -129,7 +126,7 @@ class Batch:
             self.flatten_states = flatten_states_on_device
         else:
             self.forward_events[-1][0].synchronize()
-        from RoundPipe.scheduler import backward_schedule_simulator
+        from .scheduler import backward_schedule_simulator
         backward_schedule_simulator.reset()
 
         if self.num_microbatch == 1:

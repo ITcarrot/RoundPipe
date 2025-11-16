@@ -1,7 +1,9 @@
-from typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype import beartype
 
 import torch
 
+@beartype
 class RoundPipeRunConfig:
     def __init__(self,
                  requires_grad: Optional[bool] = None,
@@ -9,8 +11,8 @@ class RoundPipeRunConfig:
                  preserve_rng_state: Optional[bool] = None,
                  num_microbatch: Optional[int] = None,
                  split_input: Union[Tuple[Optional[Tuple], Optional[Dict[str, Any]]],
-                                          Callable[[Tuple, Dict[str, Any], int],
-                                                   Tuple[List[Tuple], List[Dict[str, Any]]]],
+                                    Callable[[Tuple, Dict[str, Any], int],
+                                              Tuple[List[Tuple], List[Dict[str, Any]]]],
                                     None] = None,
                  merge_output: Union[Any, Callable[[List[Any]], Any], bool, None] = None
                  ) -> None:

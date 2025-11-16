@@ -1,14 +1,14 @@
-from typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
 import importlib
 
 SUPPORTED_MODELS = {
-    'Qwen3ForCausalLM': 'RoundPipe.models.qwen3',
+    'Qwen3ForCausalLM': '.qwen3',
 }
 
 def wrap_model(model: Any, **roundpipe_kwargs: Any) -> Any:
     model_type = type(model).__name__
     if model_type in SUPPORTED_MODELS:
-        module = importlib.import_module(SUPPORTED_MODELS[model_type])
+        module = importlib.import_module(SUPPORTED_MODELS[model_type], package=__package__)
         expected_class = getattr(module, 'EXPECTED_MODEL_CLASS')
         if not isinstance(model, expected_class):
             raise NotImplementedError(f'Model class {type(model)} is not an instance of expected class {expected_class}.')

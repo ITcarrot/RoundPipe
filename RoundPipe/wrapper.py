@@ -1,14 +1,16 @@
-from typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype import beartype
 import traceback
 
 import torch
 import torch.nn as nn
 
-from RoundPipe.models import wrap_model
-from RoundPipe.RoundPipe import RoundPipe
-from RoundPipe.RunConfig import RoundPipeRunConfig
-from RoundPipe.utils import get_model_size
+from .models import wrap_model
+from .RoundPipe import RoundPipe
+from .RunConfig import RoundPipeRunConfig
+from .utils import get_model_size
 
+@beartype
 def wrap_model_to_roundpipe(model: nn.Module,
                             use_sequential_preset: Optional[bool] = None,
                             lower_threshold: int = 16 * 1024,
@@ -21,7 +23,7 @@ def wrap_model_to_roundpipe(model: nn.Module,
 
     model_name = roundpipe_kwargs.get('name')
     if model_name is None:
-        filename, lineno, _, _ = traceback.extract_stack()[-2]
+        filename, lineno, _, _ = traceback.extract_stack()[-3]
         model_name = f'{filename.split("/")[-1]}:{lineno}'
 
     try:

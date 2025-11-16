@@ -1,20 +1,21 @@
-from typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype import beartype
 import traceback
-import inspect
 
 import tqdm
 import torch
 import torch.nn as nn
 from torch.utils._pytree import tree_unflatten
 
-from RoundPipe.batch import Batch
-from RoundPipe.device import get_next_device
-from RoundPipe.run import RoundPipeRunContext, RoundPipeBatchedBackward, RoundPipeMicrobatchBackward
-from RoundPipe.RunConfig import RoundPipeRunConfig, FullRoundPipeRunConfig
-from RoundPipe.scheduler import ModelExecutePlan, backward_schedule_simulator
-from RoundPipe.timer import ModelTimer
-from RoundPipe.utils import get_model_size
+from .batch import Batch
+from .device import get_next_device
+from .run import RoundPipeRunContext, RoundPipeBatchedBackward, RoundPipeMicrobatchBackward
+from .RunConfig import RoundPipeRunConfig, FullRoundPipeRunConfig
+from .scheduler import ModelExecutePlan, backward_schedule_simulator
+from .timer import ModelTimer
+from .utils import get_model_size
 
+@beartype
 class RoundPipe(nn.Module):
     def __init__(self,
                  model: nn.Module,
@@ -22,7 +23,7 @@ class RoundPipe(nn.Module):
                  name: Optional[str] = None,
                  model_run_config: RoundPipeRunConfig = RoundPipeRunConfig()) -> None:
         super().__init__()
-        filename, lineno, _, _ = traceback.extract_stack()[-2]
+        filename, lineno, _, _ = traceback.extract_stack()[-3]
         self.name = name if name else f'{filename.split("/")[-1]}:{lineno}'
         self.model = model
         self.original_model: Optional[nn.Module] = None # placeholder for original model if needing its functions
@@ -57,7 +58,7 @@ class RoundPipe(nn.Module):
 
         self.RoundPipe_initialized = True
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name: str) -> Any:
         try:
             return super().__getattr__(name)
         except AttributeError:
@@ -73,7 +74,7 @@ class RoundPipe(nn.Module):
         else:
             super().__setattr__(name, value)
 
-    def __delattr__(self, name):
+    def __delattr__(self, name: str) -> None:
         if 'RoundPipe_initialized' in self.__dict__:
             if self.original_model is not None:
                 delattr(self.original_model, name)

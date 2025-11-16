@@ -1,19 +1,21 @@
-from typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
 
 import torch
 from torch.utils.checkpoint import _get_autocast_kwargs
-from torch.utils._pytree import tree_unflatten, tree_flatten
+from torch.utils._pytree import tree_unflatten, tree_flatten, TreeSpec
 
-from RoundPipe.profile import annotate
-from RoundPipe.transfer import async_h2d, async_d2h, upload_layer, download_layer, free_layer
+from .batch import Batch
+from .profile import annotate
+from .scheduler import ModelExecutePlan
+from .transfer import async_h2d, async_d2h, upload_layer, download_layer, free_layer
 
 if TYPE_CHECKING:
-    from torch.utils._pytree import TreeSpec
-
-    from RoundPipe.batch import Batch
-    from RoundPipe.device import DeviceManager
-    from RoundPipe.RoundPipe import RoundPipe
-    from RoundPipe.scheduler import ModelExecutePlan
+    from .device import DeviceManager
+    from .RoundPipe import RoundPipe
+else:
+    from typing_extensions import TypeAliasType
+    DeviceManager = TypeAliasType('DeviceManager', 'RoundPipe.device.DeviceManager')
+    RoundPipe = TypeAliasType('RoundPipe', 'RoundPipe.RoundPipe')
 
 class RoundPipeRunContext:
     model: 'RoundPipe'
@@ -242,7 +244,7 @@ class RoundPipeBatchedBackward(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, _, *grad_outputs: Any) -> Any: # type: ignore[reportIncompatibleMethodOverride]
-        from RoundPipe.device import get_next_device
+        from .device import get_next_device
         run_contexts: List[RoundPipeRunContext] = ctx.roundpipe_contexts
         grad_states = tree_unflatten(grad_outputs, ctx.outputs_spec)
         for batch_idx, context in enumerate(run_contexts):
@@ -294,7 +296,7 @@ class RoundPipeMicrobatchBackward(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, device_id: torch.Tensor, _, *grad_outputs: Any) -> Any: # type: ignore[reportIncompatibleMethodOverride]
-        from RoundPipe.device import get_next_device, device_list
+        from .device import get_next_device, device_list
         context: RoundPipeRunContext = ctx.roundpipe_context
         context.grad_states = [None] * ctx.output_len
         for idx, grad_out in zip(ctx.output_require_grad_idx, grad_outputs):

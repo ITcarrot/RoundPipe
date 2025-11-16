@@ -1,15 +1,16 @@
+from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
+
 import os
 import contextlib
-from typing import * # type: ignore[reportWildcardImportFromLibrary]
 
 PROFILER_TYPE = None
 
 if os.environ.get('NSYS_PROFILING_SESSION_ID'):
     PROFILER_TYPE = 'nsys'
-    import nvtx # type: ignore[reportMissingImports]
 
 def annotate(name: str, color: Optional[str] = None):
     if PROFILER_TYPE == 'nsys':
-        return nvtx.annotate(name, color = color) # type: ignore[reportPossiblyUnboundVariable]
+        import nvtx
+        return nvtx.annotate(name, color = color)
     else:
         return contextlib.nullcontext()
