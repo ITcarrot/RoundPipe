@@ -4,15 +4,14 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from transformers.models.qwen3 import Qwen3ForCausalLM
 from transformers.models.qwen2.tokenization_qwen2 import Qwen2Tokenizer
 from datasets import load_dataset
-from RoundPipe import wrap_model_to_roundpipe
+from RoundPipe import wrap_model_to_roundpipe, RoundPipeRunConfig
 
 tokenizer = Qwen2Tokenizer.from_pretrained("/public/huggingface-models/Qwen/Qwen3-0.6B")
 model = Qwen3ForCausalLM.from_pretrained(
     "/public/huggingface-models/Qwen/Qwen3-0.6B",
     use_cache=False,
 )
-# model.__class__.__name__ = 'Dont use replacement preset to test Auto Wrapping'
-model = wrap_model_to_roundpipe(model)
+model = wrap_model_to_roundpipe(model, model_run_config=RoundPipeRunConfig(num_microbatch=4))
 optim = torch.optim.Adam(model.parameters(), lr=1e-5)
 scaler = torch.GradScaler()
 dataset = load_dataset("/data/lyb/AI-MO/NuminaMath-CoT")

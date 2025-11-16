@@ -88,6 +88,8 @@ class RoundPipe(nn.Module):
     def forward(self, *args,
                 roundpipe_run_config: RoundPipeRunConfig = RoundPipeRunConfig(), **kwargs) -> Any:
         full_run_config = FullRoundPipeRunConfig(roundpipe_run_config, self.model_run_config)
+        if full_run_config.requires_grad and not torch.is_grad_enabled():
+            raise RuntimeError("RoundPipe model is set to require gradients, but torch gradients are disabled globally.")
         batch = Batch(args, kwargs, full_run_config)
         execute_plan = ModelExecutePlan(self, False)
         run_context = [RoundPipeRunContext(self, execute_plan, full_run_config.requires_grad,
@@ -112,7 +114,8 @@ class RoundPipe(nn.Module):
                 gradient_anchor = torch.tensor(0.0, dtype=torch.float32, requires_grad=True)
                 all_inputs = [item for batch_context in run_context
                             for item in batch_context.flatten_inputs[0]]
-                output_spec, *all_outputs = RoundPipeBatchedBackward.apply(run_context, batch, gradient_anchor, *all_inputs) # type: ignore
-                batch.flatten_states = tree_unflatten(all_outputs, output_spec)
+                output_require_grad_idx, *output_require_grad = RoundPipeBatchedBackward.apply(run_context, batch, gradient_anchor, *all_inputs) # type: ignore
+                for (batch_idx, idx), item in zip(output_require_grad_idx, output_require_grad):
+                    batch.flatten_states[batch_idx][idx] = item
 
         return batch.dump(full_run_config)

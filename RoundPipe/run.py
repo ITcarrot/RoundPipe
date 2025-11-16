@@ -237,18 +237,26 @@ class RoundPipeBatchedBackward(torch.autograd.Function):
                         context.flatten_inputs[layer_idx][i] = None
         ctx.save_for_backward(*tensor_inputs)
 
-        all_outputs, outputs_spec = tree_flatten(batch.flatten_states)
-        ctx.outputs_spec = outputs_spec
+        ctx.output_len = [len(flatten_outputs) for flatten_outputs in batch.flatten_states]
+        ctx.output_require_grad_idx = []
+        output_require_grad = []
+        for batch_idx, flatten_outputs in enumerate(batch.flatten_states):
+            for idx, item in enumerate(flatten_outputs):
+                if isinstance(item, torch.Tensor) and item.requires_grad:
+                    ctx.output_require_grad_idx.append((batch_idx, idx))
+                    output_require_grad.append(item)
+
         ctx.roundpipe_contexts = roundpipe_context
-        return outputs_spec, *all_outputs
+        return ctx.output_require_grad_idx, *output_require_grad
 
     @staticmethod
     def backward(ctx, _, *grad_outputs: Any) -> Any: # type: ignore[reportIncompatibleMethodOverride]
         from .device import get_next_device
         run_contexts: List[RoundPipeRunContext] = ctx.roundpipe_contexts
-        grad_states = tree_unflatten(grad_outputs, ctx.outputs_spec)
-        for batch_idx, context in enumerate(run_contexts):
-            context.grad_states = grad_states[batch_idx]
+        for context, output_len in zip(run_contexts, ctx.output_len):
+            context.grad_states = [None] * output_len
+        for (batch_idx, idx), grad_out in zip(ctx.output_require_grad_idx, grad_outputs):
+            run_contexts[batch_idx].grad_states[idx] = grad_out
 
         for idx, (batch_idx, layer_idx, item_idx) in enumerate(ctx.tensor_indices):
             run_contexts[batch_idx].flatten_inputs[layer_idx][item_idx] = ctx.saved_tensors[idx]
