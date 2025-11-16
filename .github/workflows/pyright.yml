@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Restore pip cache
+      - name: pip cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
@@ -34,9 +34,3 @@ jobs:
 
       - name: Run Pyright
         run: pyright
-
-      - name: Save pip cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip
