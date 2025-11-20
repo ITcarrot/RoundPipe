@@ -247,10 +247,15 @@ class RoundPipeBatchedBackward(torch.autograd.Function):
                     output_require_grad.append(item)
 
         ctx.roundpipe_contexts = roundpipe_context
+        ctx.launched_backward = False
         return ctx.output_require_grad_idx, *output_require_grad
 
     @staticmethod
     def backward(ctx, _, *grad_outputs: Any) -> Any: # type: ignore[reportIncompatibleMethodOverride]
+        if ctx.launched_backward:
+            raise RuntimeError("RoundPipe do not support double backward.")
+        ctx.launched_backward = True
+
         from .device import get_next_device
         run_contexts: List[RoundPipeRunContext] = ctx.roundpipe_contexts
         for context, output_len in zip(run_contexts, ctx.output_len):
@@ -300,10 +305,15 @@ class RoundPipeMicrobatchBackward(torch.autograd.Function):
                 output_require_grad.append(item)
 
         ctx.roundpipe_context = roundpipe_context
+        ctx.launched_backward = False
         return tag, ctx.output_require_grad_idx, *output_require_grad
 
     @staticmethod
     def backward(ctx, device_id: torch.Tensor, _, *grad_outputs: Any) -> Any: # type: ignore[reportIncompatibleMethodOverride]
+        if ctx.launched_backward:
+            raise RuntimeError("RoundPipe do not support double backward.")
+        ctx.launched_backward = True
+
         from .device import get_next_device, device_list
         context: RoundPipeRunContext = ctx.roundpipe_context
         context.grad_states = [None] * ctx.output_len
