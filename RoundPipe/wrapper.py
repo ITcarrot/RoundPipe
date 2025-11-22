@@ -1,6 +1,7 @@
 from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
 from beartype import beartype
 import traceback
+import copy
 
 import torch
 import torch.nn as nn
@@ -39,6 +40,8 @@ def wrap_model_to_roundpipe(model: nn.Module,
             raise
     if isinstance(model, nn.Sequential):
         roundpipe_kwargs['name'] = model_name
+        if model in override_config:
+            roundpipe_kwargs['model_run_config'] = override_config[model]
         return RoundPipe(model, **roundpipe_kwargs)
 
     if upper_threshold is None:
@@ -48,7 +51,7 @@ def wrap_model_to_roundpipe(model: nn.Module,
         if model in override_config:
             roundpipe_kwargs['model_run_config'] = override_config[model]
         elif get_model_size(model) < lower_threshold:
-            modified_run_config = roundpipe_kwargs.get('model_run_config', RoundPipeRunConfig())
+            modified_run_config = copy.deepcopy(roundpipe_kwargs.get('model_run_config', RoundPipeRunConfig()))
             modified_run_config.num_microbatch = 1
             roundpipe_kwargs['model_run_config'] = modified_run_config
         roundpipe_kwargs['name'] = model_name
@@ -66,7 +69,7 @@ def wrap_model_to_roundpipe(model: nn.Module,
         else:
             model[n_layers - 1] = RoundPipe(model[n_layers - 1], **roundpipe_kwargs)
         # do not merge output at non-final layers
-        modified_run_config: RoundPipeRunConfig = roundpipe_kwargs.get('model_run_config', RoundPipeRunConfig())
+        modified_run_config: RoundPipeRunConfig = copy.deepcopy(roundpipe_kwargs.get('model_run_config', RoundPipeRunConfig()))
         modified_run_config.merge_output = False
         roundpipe_kwargs['model_run_config'] = modified_run_config
         for layer_idx in range(n_layers - 1):

@@ -1,11 +1,11 @@
 from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
 from beartype import beartype
 import traceback
+import copy
 
 import tqdm
 import torch
 import torch.nn as nn
-from torch.utils._pytree import tree_unflatten
 
 from .batch import Batch
 from .device import get_next_device
@@ -28,7 +28,7 @@ class RoundPipe(nn.Module):
         self.model = model
         self.original_model: Optional[nn.Module] = None # placeholder for original model if needing its functions
         self.use_fp16 = use_fp16
-        self.model_run_config = model_run_config
+        self.model_run_config = copy.deepcopy(model_run_config)
 
         if isinstance(model, nn.Sequential):
             self.layers = list(model)

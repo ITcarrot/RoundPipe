@@ -36,6 +36,25 @@ class RoundPipeRunConfig:
         self.split_input = split_input
         self.merge_output = merge_output
 
+    def __str__(self) -> str:
+        string = f'RoundPipeRunConfig('
+        if self.requires_grad is not None:
+            string += f'requires_grad={self.requires_grad}, '
+        if self.output_device is not None:
+            string += f'output_device={self.output_device}, '
+        if self.preserve_rng_state is not None:
+            string += f'preserve_rng_state={self.preserve_rng_state}, '
+        if self.num_microbatch is not None:
+            string += f'num_microbatch={self.num_microbatch}, '
+        if self.split_input is not None:
+            string += f'split_input={self.split_input}, '
+        if self.merge_output is not None:
+            string += f'merge_output={self.merge_output}, '
+        return string[:-2] + ')' if string.endswith(', ') else string + ')'
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
 class FullRoundPipeRunConfig:
     def __init__(self,
                  function_run_config: RoundPipeRunConfig,
