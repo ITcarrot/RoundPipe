@@ -6,6 +6,7 @@ import torch
 
 from .batch import Batch
 from .run import run_forward, run_backward, RoundPipeRunContext
+from .threads import RoundPipeThread, dump_all_active_threads, KeyboardInterruptRoundPipeThreads
 
 class JobType(Enum):
     FORWARD = 1
@@ -23,12 +24,12 @@ class DeviceManager:
         self.is_idle = threading.Semaphore(1)
         self.job_arrived = threading.Semaphore(0)
         self.cur_job: Optional[Tuple[JobType, int, Optional[Batch], List[RoundPipeRunContext]]] = None
-        self.controller_thread = threading.Thread(target=self.controller, daemon=True, name=f'DeviceController-{id}')
-        self.controller_thread.start()
+        self.controller_thread = RoundPipeThread(target=self.controller, name=f'RoundPipe DeviceController-{id}')
 
     def controller(self) -> None:
         while True:
             self.job_arrived.acquire()
+            self.controller_thread.is_active = True
             assert self.cur_job is not None
             job_type, layer_group_id, batch, run_context = self.cur_job
             if job_type == JobType.FORWARD:
@@ -38,17 +39,26 @@ class DeviceManager:
             elif job_type == JobType.BACKWARD:
                 for batch_context in run_context:
                     run_backward(layer_group_id, batch_context, self)
+            self.controller_thread.is_active = False
             self.is_idle.release()
 
     def launch_forward(self, layer_group_id: int, batch: Batch,
                        run_context: List[RoundPipeRunContext]) -> None:
-        self.is_idle.acquire()
+        try:
+            self.is_idle.acquire()
+        except KeyboardInterrupt:
+            dump_all_active_threads()
+            raise KeyboardInterruptRoundPipeThreads from None
         self.cur_job = (JobType.FORWARD, layer_group_id, batch, run_context)
         self.job_arrived.release()
     
     def launch_backward(self, layer_group_id: int,
                         run_context: List[RoundPipeRunContext]) -> None:
-        self.is_idle.acquire()
+        try:
+            self.is_idle.acquire()
+        except KeyboardInterrupt:
+            dump_all_active_threads()
+            raise KeyboardInterruptRoundPipeThreads from None
         self.cur_job = (JobType.BACKWARD, layer_group_id, None, run_context)
         self.job_arrived.release()
 

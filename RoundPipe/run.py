@@ -1,4 +1,5 @@
 from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
+import traceback
 
 import torch
 from torch.utils.checkpoint import _get_autocast_kwargs
@@ -7,6 +8,7 @@ from torch.utils._pytree import tree_unflatten, tree_flatten, TreeSpec
 from .batch import Batch
 from .profile import annotate
 from .scheduler import ModelExecutePlan
+from .threads import thread_exception_print_lock
 from .transfer import async_h2d, async_d2h, upload_layer, download_layer, free_layer
 
 if TYPE_CHECKING:
@@ -130,9 +132,11 @@ def run_forward(layer_group_id: int, batch: Batch,
                     hidden_state = model.layers[layer_id].forward(*args, **kwargs)
                 else:
                     hidden_state = model.layers[layer_id].forward(hidden_state)
-            except Exception as e:
-                e.args = e.args + (f'The above error occurred in {model.name} layer {layer_id} during forward pass.',)
-                raise
+            except Exception:
+                with thread_exception_print_lock:
+                    traceback.print_exc()
+                    print(f'The above error occurred in {model.name} layer {layer_id} during forward pass.')
+                raise SystemExit(1)
         batch.flatten_states[batch_idx], batch.flatten_specs[batch_idx] = tree_flatten(hidden_state)
 
         if context.enable_grad:
@@ -187,9 +191,11 @@ def run_backward(layer_group_id: int,
                         hidden_state = model.layers[layer_id].forward(*args, **kwargs)
                     else:
                         hidden_state = model.layers[layer_id].forward(hidden_state)
-                except Exception as e:
-                    e.args = e.args + (f'The above error occurred in {model.name} layer {layer_id} during recomputation in backward pass.',)
-                    raise
+                except Exception:
+                    with thread_exception_print_lock:
+                        traceback.print_exc()
+                        print(f'The above error occurred in {model.name} layer {layer_id} during recomputation in backward pass.')
+                    raise SystemExit(1)
     
     flatten_outputs_gpu, _ = tree_flatten(hidden_state)
     context.execute_plan.backward_wait_for(layer_group_id - 1)
@@ -206,9 +212,11 @@ def run_backward(layer_group_id: int,
          model.model_timer.time_backward(layer_ids[0], device.compute_stream):
         try:
             torch.autograd.backward(outputs_requires_grad, outputs_grad)
-        except Exception as e:
-            e.args = e.args + (f'The above error occurred in {model.name} layers {layer_ids} during backward pass.',)
-            raise
+        except Exception:
+            with thread_exception_print_lock:
+                traceback.print_exc()
+                print(f'The above error occurred in {model.name} layers {layer_ids} during backward pass.')
+            raise SystemExit(1)
     flatten_grad_inputs_gpu = [
         inp.grad if isinstance(inp, torch.Tensor) else None
         for inp in flatten_inputs_gpu

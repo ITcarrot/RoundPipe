@@ -1,8 +1,9 @@
 from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
 import threading
-import sys
 
 import torch
+
+from .threads import dump_all_active_threads, KeyboardInterruptRoundPipeThreads
 
 if TYPE_CHECKING:
     from RoundPipe import RoundPipe
@@ -31,18 +32,19 @@ class ModelExecutePlan:
     def forward_wait_for(self, layer_group_id: int) -> None:
         if layer_group_id < 0:
             return
-        try:
-            self.fwd_sem[layer_group_id].acquire()
-        except (SystemExit, KeyboardInterrupt):
-            sys.exit(1)
+        self.fwd_sem[layer_group_id].acquire()
 
     def forward_notify(self, layer_group_id: int) -> None:
         self.fwd_sem[layer_group_id].release()
- 
+
     def forward_wait_complete(self, num_microbatch: int) -> None:
-        for _ in range(num_microbatch):
-            self.fwd_sem[-1].acquire()
- 
+        try:
+            for _ in range(num_microbatch):
+                self.fwd_sem[-1].acquire()
+        except KeyboardInterrupt:
+            dump_all_active_threads()
+            raise KeyboardInterruptRoundPipeThreads from None
+
     def backward_wait_for(self, layer_group_id: int) -> None:
         if layer_group_id < 0:
             return
@@ -52,8 +54,12 @@ class ModelExecutePlan:
         self.bwd_sem[layer_group_id].release()
 
     def backward_wait_complete(self, num_microbatch: int) -> None:
-        for _ in range(num_microbatch):
-            self.bwd_sem[-1].acquire()
+        try:
+            for _ in range(num_microbatch):
+                self.bwd_sem[-1].acquire()
+        except KeyboardInterrupt:
+            dump_all_active_threads()
+            raise KeyboardInterruptRoundPipeThreads from None
 
 class BackwardScheduleSimulator:
     def __init__(self):
