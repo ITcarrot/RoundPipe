@@ -1,4 +1,6 @@
 from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
+import threading
+import sys
 
 import torch
 
@@ -20,8 +22,38 @@ class ModelExecutePlan:
             self.fwd_plan = [range(i, i + 1) for i in range(model.num_layers)]
             self.bwd_plan = list(reversed(self.fwd_plan))
 
+        self.fwd_sem = [threading.Semaphore(0) for _ in self.fwd_plan]
+        self.bwd_sem = [threading.Semaphore(0) for _ in self.bwd_plan]
+
     def backward_need_input(self, layer_id: int) -> bool:
         return any(r[0] == layer_id for r in self.bwd_plan)
+
+    def forward_wait_for(self, layer_group_id: int) -> None:
+        if layer_group_id < 0:
+            return
+        try:
+            self.fwd_sem[layer_group_id].acquire()
+        except (SystemExit, KeyboardInterrupt):
+            sys.exit(1)
+
+    def forward_notify(self, layer_group_id: int) -> None:
+        self.fwd_sem[layer_group_id].release()
+ 
+    def forward_wait_complete(self, num_microbatch: int) -> None:
+        for _ in range(num_microbatch):
+            self.fwd_sem[-1].acquire()
+ 
+    def backward_wait_for(self, layer_group_id: int) -> None:
+        if layer_group_id < 0:
+            return
+        self.bwd_sem[layer_group_id].acquire()
+
+    def backward_notify(self, layer_group_id: int) -> None:
+        self.bwd_sem[layer_group_id].release()
+
+    def backward_wait_complete(self, num_microbatch: int) -> None:
+        for _ in range(num_microbatch):
+            self.bwd_sem[-1].acquire()
 
 class BackwardScheduleSimulator:
     def __init__(self):

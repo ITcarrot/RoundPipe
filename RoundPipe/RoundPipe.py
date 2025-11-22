@@ -95,9 +95,10 @@ class RoundPipe(nn.Module):
         run_context = [RoundPipeRunContext(self, execute_plan, full_run_config.requires_grad,
                                            i, batch.num_microbatch, full_run_config.preserve_rng_state)
                        for i in range(batch.num_microbatch)]
-        for layer_ids in execute_plan.fwd_plan:
+        for layer_group_id in range(len(execute_plan.fwd_plan)):
             device = get_next_device()
-            device.launch_forward(layer_ids, batch, run_context)
+            device.launch_forward(layer_group_id, batch, run_context)
+        execute_plan.forward_wait_complete(batch.num_microbatch)
         
         if any(isinstance(tensor, torch.Tensor) and tensor.requires_grad
                for batch_output in batch.flatten_states
