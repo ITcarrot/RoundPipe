@@ -38,6 +38,8 @@ class ModelExecutePlan:
         self.fwd_sem[layer_group_id].release()
 
     def forward_wait_complete(self, num_microbatch: int) -> None:
+        if len(self.fwd_sem) == 0:
+            return
         try:
             for _ in range(num_microbatch):
                 self.fwd_sem[-1].acquire()

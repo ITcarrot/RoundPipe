@@ -11,7 +11,7 @@ model = Qwen3ForCausalLM.from_pretrained(
     "/public/huggingface-models/Qwen/Qwen3-0.6B",
     use_cache=False,
 )
-model = wrap_model_to_roundpipe(model, model_run_config=RoundPipeRunConfig(num_microbatch=4))
+model = wrap_model_to_roundpipe(model, model_run_config=RoundPipeRunConfig(num_microbatch=4), use_sequential_preset=True)
 optim = torch.optim.Adam(model.parameters(), lr=1e-5)
 scaler = torch.GradScaler()
 dataset = load_dataset("/data/lyb/AI-MO/NuminaMath-CoT")
@@ -39,11 +39,10 @@ for epoch in range(20):
     epoch_loss = []
     for data in dataloader:
         input_dict = tokenize(data)
-        labels = input_dict.pop("labels")
-        loss, _ = model.train_iter(input_kwargs=input_dict, label=labels,
-                                loss_fn=lambda outputs, labels: model.loss_function(logits=outputs.logits, labels=labels, vocab_size=model.vocab_size) / 4)
-        print(loss)
+        loss = model(**input_dict).loss
+        print(loss.item())
         epoch_loss.append(loss.item())
+        loss.backward()
         for i in range(torch.cuda.device_count()):
             torch.cuda.synchronize(i)
         optim.step()

@@ -2,6 +2,7 @@ from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
 from beartype import beartype
 import traceback
 import copy
+import threading
 
 import tqdm
 import torch
@@ -9,7 +10,7 @@ import torch.nn as nn
 
 from .batch import Batch
 from .device import get_next_device
-from .run import RoundPipeRunContext, RoundPipeBatchedBackward, RoundPipeMicrobatchBackward
+from .run import RoundPipeRunContext, RoundPipeBatchedBackward, RoundPipeMicrobatchBackward, RoundPipeInputBackward
 from .RunConfig import RoundPipeRunConfig, FullRoundPipeRunConfig
 from .scheduler import ModelExecutePlan, backward_schedule_simulator
 from .timer import ModelTimer
@@ -37,9 +38,8 @@ class RoundPipe(nn.Module):
 
         self.num_layers = len(self.layers)
         self.layer_workload: List[float] = []
-        self.layer_has_param: List[bool] = []
+        self.layer_gradient_ready_events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(self.num_layers)] # type: ignore[reportAttributeAccessIssue]
         for layer in self.layers:
-            self.layer_has_param.append(any(True for _ in layer.parameters()))
             self.layer_workload.append(get_model_size(layer))
         self.model_timer = ModelTimer(self.num_layers)
 
@@ -120,3 +120,47 @@ class RoundPipe(nn.Module):
                     batch.flatten_states[batch_idx][idx] = item
 
         return batch.dump(full_run_config)
+
+    def train_iter(self, input_args: Tuple[Any, ...] = (),
+                   input_kwargs: Dict[str, Any] = {},
+                   label: Any = None,
+                   loss_fn: Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]] = lambda outputs, labels: outputs,
+                   run_config: RoundPipeRunConfig = RoundPipeRunConfig()
+                   ) -> Tuple[Union[List[torch.Tensor], torch.Tensor], Any]:
+        full_run_config = FullRoundPipeRunConfig(run_config, self.model_run_config)
+        assert full_run_config.requires_grad and torch.is_grad_enabled(), \
+               "train_iter requires gradients to be enabled."
+        batch = Batch(input_args, input_kwargs, full_run_config, label)
+        execute_plan = ModelExecutePlan(self, True)
+        run_context = [RoundPipeRunContext(self, execute_plan, full_run_config.requires_grad,
+                                           i, batch.num_microbatch, full_run_config.preserve_rng_state)
+                       for i in range(batch.num_microbatch)]
+        for batch_idx, context in enumerate(run_context):
+            context.input_backward_events = batch.backward_events[batch_idx]
+
+        all_inputs = [item for batch_input in batch.flatten_states for item in batch_input]
+        input_backward_handle: torch.Tensor = RoundPipeInputBackward.apply(run_context, *all_inputs) # type: ignore
+
+        for layer_group_id in range(len(execute_plan.fwd_plan)):
+            device = get_next_device()
+            device.launch_forward(layer_group_id, batch, run_context)
+        execute_plan.forward_wait_complete(batch.num_microbatch)
+        device = get_next_device()
+        device.launch_forward_backward(batch, run_context, loss_fn)
+        for layer_group_id in range(1, len(execute_plan.bwd_plan)):
+            device = get_next_device()
+            device.launch_backward(layer_group_id, run_context)
+        execute_plan.backward_wait_complete(batch.num_microbatch)
+
+        if input_backward_handle.requires_grad:
+            input_backward_handle.backward()
+        if isinstance(batch.loss_list[0], torch.Tensor):
+            loss = torch.zeros_like(batch.loss_list[0], device=torch.device('cpu'))
+            for batch_loss in batch.loss_list:
+                loss = loss + batch_loss.cpu() # type: ignore[reportOperatorIssue]
+        else:
+            loss = [torch.zeros_like(t, device=torch.device('cpu')) for t in batch.loss_list[0]]
+            for batch_loss in batch.loss_list:
+                for idx, t in enumerate(batch_loss):
+                    loss[idx] = loss[idx] + t.cpu()
+        return loss, batch.dump(full_run_config)

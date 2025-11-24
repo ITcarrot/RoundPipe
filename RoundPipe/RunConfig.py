@@ -14,6 +14,7 @@ class RoundPipeRunConfig:
                                     Callable[[Tuple, Dict[str, Any], int],
                                               Tuple[List[Tuple], List[Dict[str, Any]]]],
                                     None] = None,
+                 split_label: Union[Any, Callable[[Any, int], List[Any]], None] = None,
                  merge_output: Union[Any, Callable[[List[Any]], Any], bool, None] = None
                  ) -> None:
         """
@@ -26,6 +27,7 @@ class RoundPipeRunConfig:
             preserve_rng_state: Whether to preserve the random number generator state. If None, defaults to True.
             num_microbatch: The number of microbatches to split the input into. If None, defaults to the number of available CUDA devices plus one.
             split_input (-): Specifies how to split input arguments into microbatches. If None, defaults to automatic splitting.
+            split_label (-): Specifies how to split labels into microbatches. If None, defaults to automatic splitting.
             merge_output (-): Specifies how to merge output microbatches back into a single output. If None, defaults to automatic merging.
 
         """
@@ -34,6 +36,7 @@ class RoundPipeRunConfig:
         self.preserve_rng_state = preserve_rng_state
         self.num_microbatch = num_microbatch
         self.split_input = split_input
+        self.split_label = split_label
         self.merge_output = merge_output
 
     def __str__(self) -> str:
@@ -48,6 +51,8 @@ class RoundPipeRunConfig:
             string += f'num_microbatch={self.num_microbatch}, '
         if self.split_input is not None:
             string += f'split_input={self.split_input}, '
+        if self.split_label is not None:
+            string += f'split_label={self.split_label}, '
         if self.merge_output is not None:
             string += f'merge_output={self.merge_output}, '
         return string[:-2] + ')' if string.endswith(', ') else string + ')'
@@ -79,6 +84,9 @@ class FullRoundPipeRunConfig:
             = (function_run_config.split_input if function_run_config.split_input is not None
                else (model_run_config.split_input if model_run_config.split_input is not None
                      else (None, None)))
+        self.split_label \
+            = (function_run_config.split_label if function_run_config.split_label is not None
+               else model_run_config.split_label)
         self.merge_output \
             = (function_run_config.merge_output if function_run_config.merge_output is not None
                else model_run_config.merge_output)

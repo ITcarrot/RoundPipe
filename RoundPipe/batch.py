@@ -14,6 +14,10 @@ class RoundPipePackedData(list):
         super().__init__(data)
         self.transfer_event = transfer_event
 
+    def synchronize(self) -> None:
+        for forward_event, _ in self.transfer_event:
+            forward_event.synchronize()
+
 def guess_split_spec(data: Any, expected_batchsize: Optional[int] = None) -> Tuple[Any, Optional[int]]:
     flatten, flatten_spec = tree_flatten(data)
     guessed_spec = []
@@ -50,7 +54,8 @@ avg_reducer = _CustomReducer(*get_avg_reducer_args())
 
 class Batch:
     def __init__(self, args: Tuple, kwargs: Dict[str, Any],
-                 run_config: FullRoundPipeRunConfig) -> None:
+                 run_config: FullRoundPipeRunConfig,
+                 label: Any = None) -> None:
         if run_config.num_microbatch == 1:
             args_list, kwargs_list = [args], [kwargs]
         elif callable(run_config.split_input):
@@ -96,6 +101,22 @@ class Batch:
             self.backward_events.append(list(backward_event))
 
         self.num_microbatch = len(self.flatten_states)
+
+        if self.num_microbatch == 1:
+            self.label_list = [label]
+        elif callable(run_config.split_label):
+            label_list = run_config.split_label(label, self.num_microbatch)
+            assert isinstance(label_list, list) and len(label_list) == self.num_microbatch, \
+                   "split_label function must return a list of labels with length equal to num_microbatch."
+            self.label_list = label_list
+        else:
+            label_spec = run_config.split_label
+            if label_spec is None:
+                label_spec, _ = guess_split_spec(label)
+            label_list, _ = split_args_kwargs_into_chunks(
+                (label,), {}, self.num_microbatch, (label_spec,), {})
+            self.label_list = [lbl_tuple[0] for lbl_tuple in label_list]
+        self.loss_list: List[Union[Sequence[torch.Tensor], torch.Tensor]] = [[] for _ in range(self.num_microbatch)]
 
     def dump(self, run_config: FullRoundPipeRunConfig) -> Any:
         if isinstance(run_config.merge_output, bool) and not run_config.merge_output:

@@ -23,9 +23,10 @@ def test_io_auto(num_microbatch, merge_output):
               'z': {'inner_tensor': torch.randn(6, 12), 'inner_string': 'inner string'},
               'non_tensor': 3.14, 'tuple_arg': (torch.randn(12, 5, 6), 'string in tuple'),
               'packed_arg': packed3}
+    label = (torch.tensor(233), torch.randn(12, 3, 4), 42)
 
     auto_config = FullRoundPipeRunConfig(RoundPipeRunConfig(num_microbatch=num_microbatch, merge_output=merge_output), RoundPipeRunConfig())
-    batch = Batch(args, kwargs, auto_config)
+    batch = Batch(args, kwargs, auto_config, label)
     for batch_idx in range(num_microbatch):
         fwd_events = batch.forward_events[batch_idx]
         bwd_events = batch.backward_events[batch_idx]
@@ -60,20 +61,27 @@ def test_io_auto(num_microbatch, merge_output):
     assert kwargs['tuple_arg'][1] == kwargs_reconstruct['tuple_arg'][1]
     assert torch.allclose(torch.cat(kwargs['packed_arg']), kwargs_reconstruct['packed_arg'])
 
+    assert all(batch.label_list[i][0] == label[0] for i in range(num_microbatch))
+    assert all(torch.allclose(batch.label_list[i][1], label[1][i * (12 // num_microbatch):(i + 1) * (12 // num_microbatch)]) for i in range(num_microbatch))
+    assert all(batch.label_list[i][2] == label[2] for i in range(num_microbatch))
+
 @pytest.mark.parametrize("num_microbatch", [2, 3, 4])
 def test_io_spec(num_microbatch):
     events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(num_microbatch)] # type: ignore[assignment]
     packed = RoundPipePackedData([torch.randn(12, 14) for i in range(num_microbatch)], [(events[i], events[i]) for i in range(num_microbatch)])
     args = (torch.tensor(233), torch.randn(3, 12, 4))
     kwargs = {'x': torch.randn(10, 12), 'packed_arg': packed, 'non_tensor': 'hello'}
+    label = (torch.tensor(233), torch.randn(3, 12, 4), 42)
     args_spec = (_Replicate, TensorChunkSpec(1))
     kwargs_spec = {'x': TensorChunkSpec(0), 'packed_arg': TensorChunkSpec(0), 'non_tensor': _Replicate}
+    label_spec = (_Replicate, TensorChunkSpec(1), _Replicate)
     merge_spec = ((sum_reducer, TensorChunkSpec(1)), {'x': TensorChunkSpec(0), 'packed_arg': TensorChunkSpec(0), 'non_tensor': None})
     
     spec_config = FullRoundPipeRunConfig(RoundPipeRunConfig(num_microbatch=num_microbatch,
                                                             split_input=(args_spec, kwargs_spec),
+                                                            split_label=label_spec,
                                                             merge_output=merge_spec), RoundPipeRunConfig())
-    batch = Batch(args, kwargs, spec_config)
+    batch = Batch(args, kwargs, spec_config, label)
     for batch_idx in range(num_microbatch):
         fwd_events = batch.forward_events[batch_idx]
         bwd_events = batch.backward_events[batch_idx]
@@ -86,6 +94,10 @@ def test_io_spec(num_microbatch):
     assert torch.allclose(torch.cat(kwargs['packed_arg']), kwargs_reconstruct['packed_arg'])
     assert torch.allclose(kwargs['x'], kwargs_reconstruct['x'])
     assert kwargs['non_tensor'] == kwargs_reconstruct['non_tensor']
+
+    assert all(batch.label_list[i][0] == label[0] for i in range(num_microbatch))
+    assert all(torch.allclose(batch.label_list[i][1], label[1][:,i * (12 // num_microbatch):(i + 1) * (12 // num_microbatch),:]) for i in range(num_microbatch))
+    assert all(batch.label_list[i][2] == label[2] for i in range(num_microbatch))
 
 @pytest.mark.parametrize("num_microbatch", [1, 2, 3, 4])
 def test_out_packed(num_microbatch):

@@ -113,8 +113,9 @@ for epoch in range(epochs):
     running_loss, correct, total = 0, 0, 0
     for images, labels in trainloader:
         images, labels = images, labels
-        loss, outputs = model.train_iter(input_args=(images,), label=labels,
-                            loss_fn=lambda outputs, labels: criterion(outputs, labels) / (torch.cuda.device_count() + 1))
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+        loss.backward()
         for i in range(torch.cuda.device_count()):
             torch.cuda.synchronize(i)
         optimizer.step()
