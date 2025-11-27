@@ -1,5 +1,6 @@
 from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
 import threading
+import heapq
 
 import torch
 
@@ -82,3 +83,24 @@ class BackwardScheduleSimulator:
         self.tags = [torch.tensor(0., dtype=torch.float32, requires_grad=True) for _ in range(torch.cuda.device_count())]
 
 backward_schedule_simulator = BackwardScheduleSimulator()
+
+def chunk_layer_params(tensor_pair: List[Tuple[torch.Tensor, torch.Tensor]], n_chunks: int
+                       ) -> List[List[Tuple[torch.Tensor, torch.Tensor]]]:
+    def get_tensor_size(pair: Tuple[torch.Tensor, torch.Tensor]) -> int:
+        src, dst = pair
+        return src.numel() * src.element_size()
+    tensor_pair.sort(key=get_tensor_size, reverse=True)
+    chunk_scheme: List[List[Tuple[torch.Tensor, torch.Tensor]]] = [[] for _ in range(n_chunks)]
+    chunk_heap = [(0, i) for i in range(n_chunks)]
+    heapq.heapify(chunk_heap)
+    for pair in tensor_pair:
+        tensor_size = get_tensor_size(pair)
+        cur_size, chunk_id = heapq.heappop(chunk_heap)
+        chunk_scheme[chunk_id].append(pair)
+        cur_size += tensor_size
+        heapq.heappush(chunk_heap, (cur_size, chunk_id))
+    sorted_scheme: List[List[Tuple[torch.Tensor, torch.Tensor]]] = []
+    while chunk_heap:
+        _, chunk_id = heapq.heappop(chunk_heap)
+        sorted_scheme.append(chunk_scheme[chunk_id])
+    return sorted_scheme

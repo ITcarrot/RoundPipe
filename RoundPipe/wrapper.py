@@ -18,7 +18,7 @@ def wrap_model_to_roundpipe(model: nn.Module,
                             upper_threshold: Optional[int] = None,
                             skip_modules: List[nn.Module] = [],
                             override_config: Dict[nn.Module, RoundPipeRunConfig] = {},
-                            **roundpipe_kwargs: Any) -> nn.Module:
+                            **roundpipe_kwargs: Any) -> Union[nn.Module, RoundPipe]:
     if model in skip_modules:
         return model
 

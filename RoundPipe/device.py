@@ -18,15 +18,28 @@ class DeviceManager:
         self.id = id
         self.device = device
         
+        self.param_upstream: torch.cuda.Stream = torch.cuda.Stream(device) # type: ignore[reportAttributeAccessIssue]
         self.upstream: torch.cuda.Stream = torch.cuda.Stream(device) # type: ignore[reportAttributeAccessIssue]
         self.compute_stream = torch.cuda.default_stream(self.device)
         self.downstream: torch.cuda.Stream = torch.cuda.Stream(device) # type: ignore[reportAttributeAccessIssue]
+        self.upload_mark: List[torch.cuda.Event] = []
 
         self.is_idle = threading.Semaphore(1)
         self.job_arrived = threading.Semaphore(0)
         self.cur_job: Optional[Tuple[JobType, int, Optional[Batch], List[RoundPipeRunContext],
                                Optional[Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]]]]] = None
         self.controller_thread = RoundPipeThread(target=self.controller, name=f'RoundPipe DeviceController-{id}')
+
+    def mark_upload(self):
+        event: torch.cuda.Event = torch.cuda.Event() # type: ignore[reportAttributeAccessIssue]
+        with torch.cuda.stream(self.upstream):
+            event.record()
+        self.upload_mark.append(event)
+
+    def flush_upload_marks(self) -> List[torch.cuda.Event]:
+        marks = [mark for mark in self.upload_mark if not mark.query()]
+        self.upload_mark = []
+        return marks
 
     def controller(self) -> None:
         while True:

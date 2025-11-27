@@ -9,7 +9,7 @@ from .batch import Batch
 from .profile import annotate
 from .scheduler import ModelExecutePlan
 from .threads import thread_exception_print_lock
-from .transfer import async_h2d, async_d2h, upload_layer, download_layer, free_layer
+from .transfer import async_h2d, async_d2h, upload_layers, download_layer, free_layer
 
 if TYPE_CHECKING:
     from .device import DeviceManager
@@ -109,14 +109,13 @@ def run_forward(layer_group_id: int, batch: Batch,
     layer_ids = context.execute_plan.fwd_plan[layer_group_id]
     grad_context = torch.enable_grad() if context.enable_grad else torch.no_grad()
     if batch_idx == 0:
-        for layer_id in layer_ids:
-            upload_layer(model.layers[layer_id], device.upstream, device.compute_stream, False)
+        upload_layers([model.layers[layer_id] for layer_id in layer_ids], device, False)
     context.execute_plan.forward_wait_for(layer_group_id - 1)
     for layer_id in layer_ids:
         context.save_input(layer_id, batch, device)
         if layer_id == layer_ids[0]:
             batch.flatten_states[batch_idx] = async_h2d(
-                device.compute_stream, device.upstream, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], context.enable_grad
+                device, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], context.enable_grad
             )
             device.upstream.wait_stream(device.compute_stream)
         hidden_state = tree_unflatten(batch.flatten_states[batch_idx], batch.flatten_specs[batch_idx])
@@ -146,7 +145,7 @@ def run_forward(layer_group_id: int, batch: Batch,
 
     batch.forward_events[batch_idx] = [torch.cuda.Event()] # type: ignore[reportArgumentType]
     batch.flatten_states[batch_idx] = async_d2h(
-        device.compute_stream, device.downstream, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], context.enable_grad
+        device, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], context.enable_grad
     )
     context.execute_plan.forward_notify(layer_group_id)
     if batch_idx == context.num_microbatches - 1:
@@ -166,10 +165,9 @@ def run_backward(layer_group_id: int,
     batch_idx = context.microbatch_id
     layer_ids = context.execute_plan.bwd_plan[layer_group_id]
     if batch_idx == 0:
-        for layer_id in layer_ids:
-            upload_layer(model.layers[layer_id], device.upstream, device.compute_stream, True)
+        upload_layers([model.layers[layer_id] for layer_id in layer_ids], device, True)
     flatten_inputs_gpu = async_h2d(
-        device.compute_stream, device.upstream, [], context.flatten_inputs[layer_ids[0]], True
+        device, [], context.flatten_inputs[layer_ids[0]], True
     )
     context.flatten_inputs[layer_ids[0]].clear() # Free CPU memory
     device.upstream.wait_stream(device.compute_stream)
@@ -200,7 +198,7 @@ def run_backward(layer_group_id: int,
     
     flatten_outputs_gpu, _ = tree_flatten(hidden_state)
     context.execute_plan.backward_wait_for(layer_group_id - 1)
-    flatten_grad_outputs_gpu = async_h2d(device.compute_stream, device.upstream, context.output_backward_events, context.grad_states)
+    flatten_grad_outputs_gpu = async_h2d(device, context.output_backward_events, context.grad_states)
     device.upstream.wait_stream(device.compute_stream)
     
     outputs_requires_grad = []
@@ -225,7 +223,7 @@ def run_backward(layer_group_id: int,
 
     context.output_backward_events = context.input_backward_events if layer_ids[0] == 0 else [torch.cuda.Event()] # type: ignore[reportAttributeAccessIssue]
     context.grad_states = async_d2h(
-        device.compute_stream, device.downstream, context.output_backward_events, flatten_grad_inputs_gpu
+        device, context.output_backward_events, flatten_grad_inputs_gpu
     )
     if batch_idx == context.num_microbatches - 1:
         for layer_id in layer_ids:
@@ -243,10 +241,9 @@ def run_forward_backward(batch: Batch, context: RoundPipeRunContext,
     batch_idx = context.microbatch_id
     layer_ids = context.execute_plan.bwd_plan[0]
     if batch_idx == 0:
-        for layer_id in layer_ids:
-            upload_layer(model.layers[layer_id], device.upstream, device.compute_stream, True)
+        upload_layers([model.layers[layer_id] for layer_id in layer_ids], device, True)
     flatten_inputs_gpu = async_h2d(
-        device.compute_stream, device.upstream, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], True
+        device, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], True
     )
     batch.flatten_states[batch_idx].clear() # Free CPU memory
     device.upstream.wait_stream(device.compute_stream)
@@ -273,12 +270,12 @@ def run_forward_backward(batch: Batch, context: RoundPipeRunContext,
     batch.flatten_states[batch_idx], batch.flatten_specs[batch_idx] = tree_flatten(hidden_state)
     batch.forward_events[batch_idx] = [torch.cuda.Event()] # type: ignore[reportArgumentType]
     batch.flatten_states[batch_idx] = async_d2h(
-        device.compute_stream, device.downstream, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], False
+        device, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], False
     )
 
     flatten_label, flatten_label_spec = tree_flatten(batch.label_list[batch_idx])
     flatten_label_gpu = async_h2d(
-        device.compute_stream, device.upstream, [], flatten_label, False
+        device, [], flatten_label, False
     )
     label_gpu = tree_unflatten(flatten_label_gpu, flatten_label_spec)
     with torch.enable_grad(), torch.cuda.stream(device.compute_stream), \
@@ -306,7 +303,7 @@ def run_forward_backward(batch: Batch, context: RoundPipeRunContext,
 
     context.output_backward_events = context.input_backward_events if layer_ids[0] == 0 else [torch.cuda.Event()] # type: ignore[reportAttributeAccessIssue]
     context.grad_states = async_d2h(
-        device.compute_stream, device.downstream, context.output_backward_events, flatten_grad_inputs_gpu
+        device, context.output_backward_events, flatten_grad_inputs_gpu
     )
     if batch_idx == context.num_microbatches - 1:
         for layer_id in layer_ids:
