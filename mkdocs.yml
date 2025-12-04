@@ -1,4 +1,5 @@
 site_name: RoundPipe Documentation
+site_url: https://itcarrot.github.io/RoundPipe/
 repo_url: https://github.com/ITcarrot/RoundPipe/
 nav:
   - Home: index.md
