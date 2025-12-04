@@ -1,3 +1,14 @@
+"""Utilities for handling microbatches and host/device synchronization.
+
+The helpers in this module are consumed by ``RoundPipe`` to convert arbitrary
+argument trees into iterable structures, split them into microbatches, keep
+track of transfer events, and merge results back on the host once transfers
+finish.
+
+Attributes:
+    avg_reducer: Predefined reducer that averages scalar losses across microbatches.
+"""
+
 from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
 import warnings
 
@@ -9,16 +20,49 @@ from .RunConfig import FullRoundPipeRunConfig
 from .transfer import PinnedUpload, RegisterBackwardEvent
 
 class RoundPipePackedData(list):
+    """Container that couples host tensors with CUDA transfer markers.
+
+    Attributes:
+        transfer_event: List of ``(forward_event, backward_event)`` tuples
+            per microbatch that signals when the data and, optionally,
+            gradients are ready on the host.
+    """
+
     def __init__(self, data: List[Any],
                  transfer_event: List[Tuple[torch.cuda.Event, torch.cuda.Event]]) -> None:
+        """Build the packed container.
+
+        Args:
+            data: Microbatch outputs stored on the host.
+            transfer_event: CUDA events marking forward/ backward readiness for
+                each microbatch result.
+        """
         super().__init__(data)
-        self.transfer_event = transfer_event
+        self.transfer_event: List[Tuple[torch.cuda.Event, torch.cuda.Event]] = transfer_event
 
     def synchronize(self) -> None:
+        """Block until all hosted tensors are fully transferred.
+
+        Returns:
+            The call completes only after forward events finish.
+        """
         for forward_event, _ in self.transfer_event:
             forward_event.synchronize()
 
 def guess_split_spec(data: Any, expected_batchsize: Optional[int] = None) -> Tuple[Any, Optional[int]]:
+    """Infer how ``torch.distributed`` should chunk a nested argument tree.
+
+    Args:
+        data: Arbitrary pytree holding tensors and Python objects.
+        expected_batchsize: Optional batch-size hint used to identify tensors
+            that should be chunked along dimension 0.
+
+    Returns:
+        A tuple ``(spec, inferred_batch_size)`` where ``spec`` mirrors
+            ``data`` and stores ``TensorChunkSpec`` or ``_Replicate`` entries,
+            and ``inferred_batch_size`` is the common chunkable size if one could
+            be identified, otherwise ``None``.
+    """
     flatten, flatten_spec = tree_flatten(data)
     guessed_spec = []
     maybe_batchsize = []
@@ -39,6 +83,12 @@ def guess_split_spec(data: Any, expected_batchsize: Optional[int] = None) -> Tup
     return tree_unflatten(guessed_spec, flatten_spec), guessed_batchsize
 
 def get_avg_reducer_args() -> Tuple[torch.Tensor, Callable[[torch.Tensor, torch.Tensor], torch.Tensor]]:
+    """Build a reducer that averages scalar losses across microbatches.
+
+    Returns:
+        the initial accumulator tensor
+        a reducer callable that updates the running average.
+    """
     init_val = torch.tensor(0)
     init_val.roundpipe_avg_reducer_sum = torch.tensor(0) # type: ignore[reportAttributeAccessIssue]
     init_val.roundpipe_avg_reducer_count = 0 # type: ignore[reportAttributeAccessIssue]
@@ -50,16 +100,42 @@ def get_avg_reducer_args() -> Tuple[torch.Tensor, Callable[[torch.Tensor, torch.
         new_reduced.roundpipe_avg_reducer_count = val_count # type: ignore[reportAttributeAccessIssue]
         return new_reduced
     return init_val, reduce
-avg_reducer = _CustomReducer(*get_avg_reducer_args())
+avg_reducer: _CustomReducer = _CustomReducer(*get_avg_reducer_args())
 
 class Batch:
+    """Holds flattened microbatch state, labels, and CUDA events.
+
+    Attributes:
+        flatten_states: Flattened argument tensors per microbatch.
+        flatten_specs: ``TreeSpec`` objects per microbatch for reconstruction.
+        forward_events: CUDA events signaling when forward transfers complete.
+        backward_events: CUDA events signaling when gradients arrive on host.
+        num_microbatch: Actual number of microbatches generated.
+        label_list: Labels aligned with each microbatch.
+        loss_list: Loss tensors accumulated per microbatch.
+    """
+
     def __init__(self, args: Tuple, kwargs: Dict[str, Any],
                  run_config: FullRoundPipeRunConfig,
                  label: Any = None) -> None:
+        """Split inputs and reconcile chained ``RoundPipePackedData`` sources.
+
+        Args:
+            args: Positional arguments provided to the wrapped model.
+            kwargs: Keyword arguments provided to the wrapped model.
+            run_config: Effective runtime configuration.
+            label: Optional label payload for training flows.
+
+        Raises:
+            AssertionError: If custom splitters return malformed structures.
+        """
         if run_config.num_microbatch == 1:
             args_list, kwargs_list = [args], [kwargs]
         elif callable(run_config.split_input):
             args_list, kwargs_list = run_config.split_input(args, kwargs, run_config.num_microbatch)
+            assert isinstance(args_list, list) and isinstance(kwargs_list, list) \
+                   and len(args_list) == len(kwargs_list), \
+                   "split_input function must return two lists of equal length."
         else:
             args_spec, kwargs_spec = run_config.split_input
             guessed_batchsize = None
@@ -82,12 +158,17 @@ class Batch:
             for idx, item in enumerate(flatten_input):
                 if isinstance(item, torch.Tensor):
                     assert item.is_cpu, 'All inputs to RoundPipe must be on CPU.'
+                    # If the input tensor requires gradients, register a autograd
+                    # graph node to ensure the the gradient is transfered back to
+                    # CPU before using it in the subsequent computation.
                     if item.requires_grad:
                         flatten_input[idx] = RegisterBackwardEvent.apply(item, cpu_tensor_backward_event)
                         backward_event.add(cpu_tensor_backward_event)
             try:
                 for idx, item in enumerate(flatten_input):
                     if isinstance(item, RoundPipePackedData):
+                        # Each packed tensor carries the CUDA event pair for that
+                        # microbatch, so reuse them to synchronize hand-offs.
                         flatten_input[idx] = item[batch_idx]
                         forward_event.add(item.transfer_event[batch_idx][0])
                         backward_event.add(item.transfer_event[batch_idx][1])
@@ -100,10 +181,10 @@ class Batch:
             self.forward_events.append(list(forward_event))
             self.backward_events.append(list(backward_event))
 
-        self.num_microbatch = len(self.flatten_states)
+        self.num_microbatch: int = len(self.flatten_states)
 
         if self.num_microbatch == 1:
-            self.label_list = [label]
+            self.label_list: List[Any] = [label]
         elif callable(run_config.split_label):
             label_list = run_config.split_label(label, self.num_microbatch)
             assert isinstance(label_list, list) and len(label_list) == self.num_microbatch, \
@@ -119,6 +200,21 @@ class Batch:
         self.loss_list: List[Union[Sequence[torch.Tensor], torch.Tensor]] = [[] for _ in range(self.num_microbatch)]
 
     def dump(self, run_config: FullRoundPipeRunConfig) -> Any:
+        """Merge microbatch outputs according to the provided config.
+
+        When ``merge_output`` is ``False`` a ``RoundPipePackedData`` is
+        returned so downstream RoundPipe models can pipeline directly without
+        synchronizing to CPU. Otherwise this method blocks until the last CUDA
+        event has completed and merges the flattened outputs.
+
+        Args:
+            run_config: Effective runtime configuration controlling merging.
+
+        Returns:
+            Pytree produced by merging the flattened buffers or the packed
+                data wrapper in the same pytree structure when passthrough
+                is requested.
+        """
         if isinstance(run_config.merge_output, bool) and not run_config.merge_output:
             transfer_events = []
             for i in range(self.num_microbatch):
@@ -147,6 +243,9 @@ class Batch:
             self.flatten_states = flatten_states_on_device
         else:
             self.forward_events[-1][0].synchronize()
+        # No out of order backward will happen arcoss the sync boundary.
+        # Reset the backward scheduler to avoid connecting two unrelated
+        # runs into a single backward graph.
         from .scheduler import backward_schedule_simulator
         backward_schedule_simulator.reset()
 
@@ -164,6 +263,7 @@ class Batch:
                     if item.ndim > 0:
                         guessed_spec.append(TensorChunkSpec(0))
                     else:
+                        # Scalar tensors are averaged to approximate per-microbatch reductions.
                         guessed_spec.append(avg_reducer)
                 else:
                     guessed_spec.append(None)

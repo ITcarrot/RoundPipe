@@ -1,14 +1,19 @@
 site_name: RoundPipe Documentation
 repo_url: https://github.com/ITcarrot/RoundPipe/
 nav:
-  - Home: README.md
+  - Home: index.md
   - Tutorial: Tutorial.md
   - API:
       - RunConfig: API/run_config.md
       - Model: API/model.md
       - Optimizer: API/optimizer.md
+  - Developer:
+      - Internal APIs: Developer/internal_apis.md
 theme: 
   name: material
+  language: en
+  features:
+    - navigation.tabs
   palette:
     - media: '(prefers-color-scheme: light)'
       scheme: default
@@ -22,6 +27,8 @@ theme:
         name: Switch to light mode
 plugins:
   - search
+  - autorefs:
+      resolve_closest: true
   - mkdocstrings:
       handlers:
         python:
@@ -29,3 +36,22 @@ plugins:
             show_source: false
             show_root_heading: true
             show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            docstring_section_style: list
+  - i18n:
+      languages:
+        - locale: en
+          name: English
+          default: true
+        - locale: zh
+          name: 中文
+          site_name: RoundPipe 文档
+          nav_translations:
+            Home: 主页
+            Tutorial: 教程
+            Developer: 开发者
+            Internal APIs: 内部 API
+            RunConfig: 运行设置
+            Model: 模型
+            Optimizer: 优化器

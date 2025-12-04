@@ -1,3 +1,5 @@
+"""Utilities that wrap user models with RoundPipe sequential presets."""
+
 from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
 from beartype import beartype
 import traceback
@@ -19,6 +21,27 @@ def wrap_model_to_roundpipe(model: nn.Module,
                             skip_modules: List[nn.Module] = [],
                             override_config: Dict[nn.Module, RoundPipeRunConfig] = {},
                             **roundpipe_kwargs: Any) -> Union[nn.Module, RoundPipe]:
+    """Recursively wrap modules in ``RoundPipe`` using heuristics/presets.
+
+    Args:
+        model: Root module to evaluate.
+        use_sequential_preset: ``None``/``True`` attempts to replace with a
+            packaged sequential preset, ``False`` skips the preset lookup.
+        lower_threshold: Minimum size (bytes) to consider wrapping directly.
+        upper_threshold: Maximum size before splitting submodules. Defaults to
+            model size divided by ``num_devices + 1``.
+        skip_modules: Modules that should remain untouched.
+        override_config: Mapping from module objects to specific configs.
+        **roundpipe_kwargs: Additional kwargs forwarded to ``RoundPipe``.
+
+    Returns:
+        Either the original module (possibly modified in-place) or a ``RoundPipe``
+            instance wrapping the selected submodules.
+
+    Raises:
+        NotImplementedError: If ``use_sequential_preset`` is explicitly ``True``
+            but no preset exists for the model type.
+    """
     if model in skip_modules:
         return model
 

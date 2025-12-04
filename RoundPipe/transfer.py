@@ -1,3 +1,10 @@
+"""Tensor transfer helpers that move activations/params between host/DEVICE.
+
+Attributes:
+    chunked_upload: Whether to split large params into chunks during upload.
+    CHUNK_UPLOAD_SIZE: Size threshold (in bytes) for chunked uploads.
+"""
+
 from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
 import math
 
@@ -11,14 +18,25 @@ else:
     from typing_extensions import TypeAliasType
     DeviceManager = TypeAliasType('DeviceManager', 'RoundPipe.device.DeviceManager')
 
-chunked_upload = True
-CHUNK_UPLOAD_SIZE = 256 * 1024 * 1024 # 256 MB
+chunked_upload: bool = True
+CHUNK_UPLOAD_SIZE: int = 256 * 1024 * 1024 # 256 MB
 
 def async_d2h(device: 'DeviceManager',
               transfer_finish_event: Iterable[torch.cuda.Event],
               device_tensors: Iterable[Union[torch.Tensor, Any]],
               keep_requires_grad: bool = False
               ) -> List[Union[torch.Tensor, Any]]:
+    """Copy tensors from device to host streams while preserving ordering.
+
+    Args:
+        device: Device manager owning the downstream stream.
+        transfer_finish_event: Events to record when the copy completes.
+        device_tensors: Iterable of tensors/objects residing on the device.
+        keep_requires_grad: Whether to preserve ``requires_grad`` flags.
+
+    Returns:
+        List of tensors/objects now resident on the host.
+    """
     host_tensors = []
     device.downstream.wait_stream(device.compute_stream)
     with torch.cuda.stream(device.downstream):
@@ -39,6 +57,17 @@ def async_h2d(device: 'DeviceManager',
               host_tensors: Iterable[Union[torch.Tensor, Any]],
               keep_requires_grad: bool = False
               ) -> List[Union[torch.Tensor, Any]]:
+    """Copy tensors from host to device using the device's upload stream.
+
+    Args:
+        device: Device manager orchestrating the upload.
+        host_ready_event: Events the host waited on before the copy.
+        host_tensors: Iterable of host tensors/objects.
+        keep_requires_grad: Whether to preserve ``requires_grad`` flags.
+
+    Returns:
+        List of tensors/objects now resident on the device.
+    """
     device_tensors = []
     with torch.cuda.stream(device.upstream):
         for event in host_ready_event:
@@ -47,6 +76,8 @@ def async_h2d(device: 'DeviceManager',
             if isinstance(host_tensor, torch.Tensor):
                 host_tensor_requires_grad = host_tensor.requires_grad
                 if not host_tensor.is_pinned():
+                    # Re-mirror user tensors through a pinned buffer so CUDA can
+                    # launch non-blocking copies even if the original tensor is pageable.
                     host_pinned = torch.empty_like(host_tensor, device = torch.device('cpu'), pin_memory = True)
                     host_pinned.copy_(host_tensor)
                     host_tensor = host_pinned
@@ -62,6 +93,16 @@ def async_h2d(device: 'DeviceManager',
 
 def create_upload_pair(tensor_pair: List[Tuple[torch.Tensor, torch.Tensor]],
                          src: torch.Tensor, device: torch.device) -> torch.Tensor:
+    """Allocate destination buffers and register chunk copies when needed.
+
+    Args:
+        tensor_pair: Collector that receives ``(src, dst)`` pairs.
+        src: Source tensor currently resident in host memory.
+        device: Target CUDA device.
+
+    Returns:
+        Destination tensor allocated on ``device``.
+    """
     size = src.element_size() * src.nelement()
     dst = torch.empty_like(src, device = device)
     try:
@@ -77,6 +118,13 @@ def create_upload_pair(tensor_pair: List[Tuple[torch.Tensor, torch.Tensor]],
 
 def upload_layers(layers: List[torch.nn.Module],
                   device: 'DeviceManager', upload_grad: bool):
+    """Move parameters/buffers (and optionally grads) onto the target device.
+
+    Args:
+        layers: Sequence of layers to upload.
+        device: Device manager orchestrating the transfer.
+        upload_grad: Whether to copy gradient buffers alongside parameters.
+    """
     chunk_events = device.flush_upload_marks()
     if len(chunk_events) == 0:
         chunk_events.append(torch.cuda.Event())  # type: ignore[reportAttributeAccessIssue]
@@ -104,12 +152,23 @@ def upload_layers(layers: List[torch.nn.Module],
     device.compute_stream.wait_stream(device.param_upstream)
 
 def free_layer(layer: torch.nn.Module):
+    """Swap layer tensors back to their CPU storage to free GPU memory.
+
+    Args:
+        layer: Module whose parameters/buffers should be restored to CPU.
+    """
     for param in layer.parameters():
         param.data = param.data_cpu # type: ignore[attr-defined]
     for buffer in layer.buffers():
         buffer.data = buffer.data_cpu # type: ignore[attr-defined]
 
 def download_layer(layer: torch.nn.Module, transfer_stream: torch.cuda.Stream):
+    """Copy layer params/buffers (and grads) back to the host asynchronously.
+
+    Args:
+        layer: Module whose tensors should be copied to host memory.
+        transfer_stream: Stream used to issue download copies.
+    """
     with torch.cuda.stream(transfer_stream):
         for param in layer.parameters():
             param.data = param.data_cpu # type: ignore[attr-defined]
@@ -122,8 +181,19 @@ def download_layer(layer: torch.nn.Module, transfer_stream: torch.cuda.Stream):
             buffer.data = buffer.data_cpu # type: ignore[attr-defined]
 
 class PinnedUpload(torch.autograd.Function):
+    """Autograd helper that enforces pinned host tensors before H2D copies."""
     @staticmethod
-    def forward(ctx, t: torch.Tensor, d: torch.device):
+    def forward(ctx: Any, t: torch.Tensor, d: torch.device) -> Any:
+        """Ensure ``t`` resides in pinned memory before copying to device.
+
+        Args:
+            ctx: Autograd context (unused).
+            t: Host tensor to transfer.
+            d: Destination device.
+
+        Returns:
+            Tensor residing on device ``d``.
+        """
         if not t.is_pinned():
             t_pinned = torch.empty_like(t, device = torch.device('cpu'), pin_memory = True)
             t_pinned.copy_(t)
@@ -131,19 +201,48 @@ class PinnedUpload(torch.autograd.Function):
         return t.to(d, non_blocking = True)
 
     @staticmethod
-    def backward(ctx, g: torch.Tensor): # type: ignore[override]
+    def backward(ctx: Any, g: torch.Tensor) -> Any: # type: ignore[override]
+        """Move gradients back to pinned host memory.
+
+        Args:
+            ctx: Autograd context (unused).
+            g: Gradient tensor on the device.
+
+        Returns:
+            Gradient tensor on CPU and ``None`` for the device argument.
+        """
         g_host = torch.empty_like(g, device = torch.device('cpu'), pin_memory = True)
         g_host.copy_(g)
         return g_host, None
 
 class RegisterBackwardEvent(torch.autograd.Function):
+    """Records an event so backward consumers can synchronize on it."""
     @staticmethod
-    def forward(ctx, input: torch.Tensor, event: torch.cuda.Event) -> torch.Tensor:
+    def forward(ctx: Any, input: torch.Tensor, event: torch.cuda.Event) -> torch.Tensor:
+        """Stash ``event`` so its completion gates backward consumption.
+
+        Args:
+            ctx: Autograd context storing the event handle.
+            input: Tensor passed through untouched.
+            event: CUDA event to signal when backward starts.
+
+        Returns:
+            The original ``input`` tensor.
+        """
         ctx.event = event
         return input
 
     @staticmethod
-    def backward(ctx, grad_outputs: torch.Tensor): # type: ignore[override]
+    def backward(ctx: Any, grad_outputs: torch.Tensor) -> Any: # type: ignore[override]
+        """Synchronize on the recorded event before returning gradients.
+
+        Args:
+            ctx: Autograd context containing the event handle.
+            grad_outputs: Incoming gradient tensor.
+
+        Returns:
+            Tuple containing the guarded gradient and ``None`` for ``event``.
+        """
         event: torch.cuda.Event = ctx.event
         event.synchronize()
         return grad_outputs, None

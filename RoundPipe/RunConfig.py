@@ -1,3 +1,5 @@
+"""Runtime configuration objects shared across RoundPipe components."""
+
 from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
 from beartype import beartype
 
@@ -5,6 +7,7 @@ import torch
 
 @beartype
 class RoundPipeRunConfig:
+    """Shallow user-facing configuration applied per forward/train call."""
     def __init__(self,
                  requires_grad: Optional[bool] = None,
                  output_device: Optional[torch.device] = None,
@@ -61,9 +64,20 @@ class RoundPipeRunConfig:
         return self.__str__()
 
 class FullRoundPipeRunConfig:
+    """Resolved configuration combining model defaults and call overrides.
+
+    See ``RoundPipeRunConfig`` for parameter details.
+    """
+
     def __init__(self,
                  function_run_config: RoundPipeRunConfig,
                  model_run_config: RoundPipeRunConfig):
+        """Merge a per-call config with the model's baseline config.
+
+        Args:
+            function_run_config: Configuration passed to ``RoundPipe.forward``.
+            model_run_config: Baseline configuration stored on the model.
+        """
         self.requires_grad \
             = (function_run_config.requires_grad if function_run_config.requires_grad is not None
                else (model_run_config.requires_grad if model_run_config.requires_grad is not None

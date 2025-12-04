@@ -1,3 +1,5 @@
+"""Core runtime helpers for executing RoundPipe forward/backward passes."""
+
 from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
 import traceback
 
@@ -20,6 +22,25 @@ else:
     RoundPipe = TypeAliasType('RoundPipe', 'RoundPipe.RoundPipe')
 
 class RoundPipeRunContext:
+    """Per-microbatch state shared between forward and backward passes.
+
+    Attributes:
+        model: The running ``RoundPipe`` instance.
+        execute_plan: Plan describing fwd/bwd ordering.
+        enable_grad: Whether to store data for backward pass.
+        microbatch_id: Index of the microbatch this context tracks.
+        num_microbatches: Total number of microbatches scheduled.
+        preserve_rng_state: Whether to snapshot/restore RNG streams.
+        device_autocast_kwargs: Settings applied to CUDA autocast.
+        cpu_autocast_kwargs: Settings applied to CPU autocast.
+        flatten_inputs: Cached flattened inputs for recompute.
+        flatten_specs: Tree specs that rebuild flattened inputs.
+        device_rng_states: Saved CUDA RNG states per layer when requested.
+        cpu_rng_states: Saved CPU RNG states per layer when requested.
+        input_backward_events: Events to record when gradients are ready.
+        output_backward_events: Events to wait on before backward compute.
+        grad_states: Gradient tensors for current backward pass.
+    """
     model: 'RoundPipe'
     execute_plan: ModelExecutePlan
     enable_grad: bool
@@ -42,6 +63,16 @@ class RoundPipeRunContext:
                  microbatch_id: int,
                  num_microbatches: int,
                  preserve_rng_state: bool) -> None:
+        """Initialize per-microbatch caches and RNG bookkeeping.
+
+        Args:
+            model: The running ``RoundPipe`` instance.
+            execute_plan: Plan describing fwd/bwd ordering.
+            enable_grad: Whether to store data for backward pass.
+            microbatch_id: Microbatch index for this context.
+            num_microbatches: Total number of microbatches in the batch.
+            preserve_rng_state: Whether to snapshot RNG for recomputation.
+        """
         self.model = model
         self.execute_plan = execute_plan
         self.enable_grad = enable_grad
@@ -71,6 +102,16 @@ class RoundPipeRunContext:
         self.cpu_rng_states = [None for _ in range(model.num_layers)]
 
     def save_input(self, layer_id: int, batch: Batch, device: 'DeviceManager') -> None:
+        """Stash flattened inputs (and optionally RNG) for backward recompute.
+        
+        If gradients are not enabled or the layer is not the first layer of a 
+        backward stage, this is a no-op.
+
+        Args:
+            layer_id: Layer index whose inputs should be cached.
+            batch: Batch holding the flattened tensors to snapshot.
+            device: Device manager whose streams guard the transfer.
+        """
         if not (self.enable_grad and self.execute_plan.backward_need_input(layer_id)):
             return
 
@@ -90,6 +131,15 @@ class RoundPipeRunContext:
             self.cpu_rng_states[layer_id] = torch.get_rng_state()
 
     def restore_rng_state(self, layer_id: int, device: 'DeviceManager') -> None:
+        """Restore the RNG snapshot captured during `save_input`.
+
+        Args:
+            layer_id: Layer index whose RNG states should be restored.
+            device: Device manager that owns the CUDA stream.
+
+        Raises:
+            AssertionError: If RNG state was not captured as expected.
+        """
         if not self.preserve_rng_state:
             return
 
@@ -104,6 +154,17 @@ class RoundPipeRunContext:
 @torch.no_grad()
 def run_forward(layer_group_id: int, batch: Batch,
                 context: RoundPipeRunContext, device: 'DeviceManager') -> None:
+    """Upload layers, execute forward compute, and copy outputs back to host.
+
+    Args:
+        layer_group_id: Index of the layer group being executed.
+        batch: Batch object containing flattened microbatch inputs.
+        context: Microbatch-specific execution context.
+        device: Device manager that streams data and compute.
+
+    Returns:
+        Results are written into ``batch.flatten_states`` in-place.
+    """
     model = context.model
     batch_idx = context.microbatch_id
     layer_ids = context.execute_plan.fwd_plan[layer_group_id]
@@ -147,14 +208,27 @@ def run_forward(layer_group_id: int, batch: Batch,
     batch.flatten_states[batch_idx] = async_d2h(
         device, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], context.enable_grad
     )
-    context.execute_plan.forward_notify(layer_group_id)
     if batch_idx == context.num_microbatches - 1:
         for layer_id in layer_ids:
             free_layer(model.layers[layer_id])
+    context.execute_plan.forward_notify(layer_group_id)
 
 @torch.no_grad()
 def run_backward(layer_group_id: int,
                  context: RoundPipeRunContext, device: 'DeviceManager') -> None:
+    """Recompute saved inputs, propagate gradients, and ship grads to CPU.
+
+    Args:
+        layer_group_id: Index of the backward layer group to execute.
+        context: Microbatch-specific execution context.
+        device: Device manager providing streams for recompute/backward.
+
+    Returns:
+        Results are written into ``context.grad_states`` in-place.
+
+    Raises:
+        RuntimeError: If checkpoint semantics are violated by the caller.
+    """
     if not torch.autograd._is_checkpoint_valid():
         raise RuntimeError(
             "The behavior of RoundPipe is consistent with "
@@ -237,6 +311,18 @@ def run_backward(layer_group_id: int,
 def run_forward_backward(batch: Batch, context: RoundPipeRunContext,
                          loss_fn: Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]],
                          device: 'DeviceManager') -> None:
+    """Execute a fused forward/backward pass for training workloads.
+
+    Args:
+        batch: Batch object containing flattened activations and labels.
+        context: Microbatch-specific execution context.
+        loss_fn: Callable that calculates loss from outputs and labels.
+        device: Device manager providing compute/transfer streams.
+
+    Returns:
+        Results are written into ``batch.flatten_states``, ``batch.loss_list``
+            and ``context.grad_states`` in-place.
+    """
     model = context.model
     batch_idx = context.microbatch_id
     layer_ids = context.execute_plan.bwd_plan[0]
@@ -314,9 +400,22 @@ def run_forward_backward(batch: Batch, context: RoundPipeRunContext,
     context.execute_plan.backward_notify(0)
 
 class RoundPipeBatchedBackward(torch.autograd.Function):
+    """Autograd node that launches backward passes for all microbatches."""
     @staticmethod
-    def forward(ctx, roundpipe_context: List[RoundPipeRunContext],
+    def forward(ctx: Any, roundpipe_context: List[RoundPipeRunContext],
                 batch: Batch, tag: torch.Tensor, *all_inputs: Any) -> Any:
+        """Prepare shared backward state for all microbatches.
+
+        Args:
+            ctx: Autograd context (provided by PyTorch).
+            roundpipe_context: Execution contexts per microbatch.
+            batch: Batch object carrying flattened outputs and events.
+            tag: Gradient anchor tensor to ensure output requires grad.
+            *all_inputs: Flattened tensors produced during forward.
+
+        Returns:
+            Tuple with gradient indices followed by tensors requiring grad.
+        """
         for batch_idx, context in enumerate(roundpipe_context):
             context.input_backward_events = batch.backward_events[batch_idx]
             context.output_backward_events = [torch.cuda.Event()] # type: ignore[reportAttributeAccessIssue]
@@ -347,7 +446,19 @@ class RoundPipeBatchedBackward(torch.autograd.Function):
         return ctx.output_require_grad_idx, *output_require_grad
 
     @staticmethod
-    def backward(ctx, _, *grad_outputs: Any) -> Any: # type: ignore[reportIncompatibleMethodOverride]
+    def backward(ctx: Any, _, *grad_outputs: Any) -> Any: # type: ignore[reportIncompatibleMethodOverride]
+        """Launch backward passes for all microbatches from saved state.
+
+        Args:
+            ctx: Autograd context populated in ``forward``.
+            *grad_outputs: Gradients for the outputs that required grad.
+
+        Returns:
+            Gradients mapping back to ``all_inputs`` in the forward path.
+
+        Raises:
+            RuntimeError: If a double backward is attempted.
+        """
         if ctx.launched_backward:
             raise RuntimeError("RoundPipe do not support double backward.")
         ctx.launched_backward = True
@@ -374,9 +485,23 @@ class RoundPipeBatchedBackward(torch.autograd.Function):
         return (None, None, None, *grad_inputs)
 
 class RoundPipeMicrobatchBackward(torch.autograd.Function):
+    """Autograd node that launches backward pass for a single microbatch."""
     @staticmethod
-    def forward(ctx, roundpipe_context: RoundPipeRunContext,
+    def forward(ctx: Any, roundpipe_context: RoundPipeRunContext,
                 batch: Batch, tag: torch.Tensor, *all_inputs: Any) -> Any:
+        """Prepare backward state for a single microbatch.
+
+        Args:
+            ctx: Autograd context (provided by PyTorch).
+            roundpipe_context: Execution context tied to one microbatch.
+            batch: Batch with flattened outputs + events for this microbatch.
+            tag: Gradient anchor to create dependency between microbatches
+                thus ensuring correct backward order.
+            *all_inputs: Flattened arguments provided during forward.
+
+        Returns:
+            Tuple ``(tag, grad_indices, *output_tensors)`` consumed later.
+        """
         roundpipe_context.input_backward_events = batch.backward_events[roundpipe_context.microbatch_id]
         roundpipe_context.output_backward_events = [torch.cuda.Event()] # type: ignore[reportAttributeAccessIssue]
         batch.backward_events[roundpipe_context.microbatch_id] = roundpipe_context.output_backward_events
@@ -404,7 +529,20 @@ class RoundPipeMicrobatchBackward(torch.autograd.Function):
         return tag, ctx.output_require_grad_idx, *output_require_grad
 
     @staticmethod
-    def backward(ctx, device_id: torch.Tensor, _, *grad_outputs: Any) -> Any: # type: ignore[reportIncompatibleMethodOverride]
+    def backward(ctx: Any, device_id: torch.Tensor, _, *grad_outputs: Any) -> Any: # type: ignore[reportIncompatibleMethodOverride]
+        """Kick off backward recomputation for a single microbatch.
+
+        Args:
+            ctx: Autograd context populated in ``forward``.
+            device_id: Tensor encoding which CUDA device to reuse.
+            *grad_outputs: Gradients for the tracked outputs.
+
+        Returns:
+            Gradients corresponding to the saved forward inputs.
+
+        Raises:
+            RuntimeError: If a double backward is attempted.
+        """
         if ctx.launched_backward:
             raise RuntimeError("RoundPipe do not support double backward.")
         ctx.launched_backward = True
@@ -430,13 +568,34 @@ class RoundPipeMicrobatchBackward(torch.autograd.Function):
         return (None, None, device_id, *grad_inputs)
 
 class RoundPipeInputBackward(torch.autograd.Function):
+    """Autograd node that reconnects RoundPipe gradients to user inputs."""
     @staticmethod
-    def forward(ctx, roundpipe_context: List[RoundPipeRunContext], *all_inputs: Any) -> Any:
+    def forward(ctx: Any, roundpipe_context: List[RoundPipeRunContext], *all_inputs: Any) -> Any:
+        """Anchor upstream gradients spanning multiple microbatches.
+
+        Args:
+            ctx: Autograd context provided by PyTorch.
+            roundpipe_context: List of contexts participating in training.
+            *all_inputs: Flattened inputs to track gradients for.
+
+        Returns:
+            Dummy scalar tensor that participates in autograd graphs.
+        """
         ctx.roundpipe_contexts = roundpipe_context
         return torch.tensor(0.0)
 
     @staticmethod
-    def backward(ctx, *grad_outputs: Any) -> Any: # type: ignore[reportIncompatibleMethodOverride]
+    def backward(ctx: Any, *grad_outputs: Any) -> Any: # type: ignore[reportIncompatibleMethodOverride]
+        """Return gradients captured in each ``RoundPipeRunContext``.
+
+        Args:
+            ctx: Autograd context populated during ``forward``.
+            *grad_outputs: Gradients w.r.t. the dummy scalar (unused).
+
+        Returns:
+            Tuple matching ``(None, *flattened_input_grads)`` so that upstream
+                PyTorch graphs receive gradients for their original inputs.
+        """
         run_contexts: List[RoundPipeRunContext] = ctx.roundpipe_contexts
         grad_inputs = [item for context in run_contexts
                        for item in context.grad_states]

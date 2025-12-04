@@ -1,44 +1,104 @@
+"""CUDA event helpers for measuring per-layer forward/backward latency."""
+
 from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
 
 import torch
 
 class LayerTimingContext:
+    """Context manager that records CUDA events around a code block.
+
+    Attributes:
+        start_event: CUDA event recorded on entry.
+        end_event: CUDA event recorded on exit.
+        stream: Optional stream used for event recording.
+    """
+
     def __init__(self,
                  start_event: torch.cuda.Event, end_event: torch.cuda.Event,
                  stream: Optional[torch.cuda.Stream]):
-        self.start_event = start_event
-        self.end_event = end_event
-        self.stream = stream
+        """Store events/stream for later use.
+
+        Args:
+            start_event: Event recorded at context entry.
+            end_event: Event recorded at context exit.
+            stream: CUDA stream on which to record events.
+        """
+        self.start_event: torch.cuda.Event = start_event
+        self.end_event: torch.cuda.Event = end_event
+        self.stream: Optional[torch.cuda.Stream] = stream
         
     def __enter__(self):
+        """Record ``start_event`` on the configured stream."""
         self.start_event.record(self.stream) # type: ignore[reportArgumentType]
     
     def __exit__(self, *args):
+        """Record ``end_event`` when the context exits."""
         self.end_event.record(self.stream) # type: ignore[reportArgumentType]
 
 class ModelTimer:
+    """Persistent tracker for smoothed per-layer timings.
+
+    Attributes:
+        fwd_timing_events: Per-layer queues of recorded forward events.
+        bwd_timing_events: Per-layer queues of recorded backward events.
+        fwd_history: Smoothed forward timing history.
+        bwd_history: Smoothed backward timing history.
+        num_records: Number of timing updates applied so far.
+    """
+
     def __init__(self, num_layers: int):
+        """Allocate timing event queues for ``num_layers`` entries.
+
+        Args:
+            num_layers: Number of logical layers being timed.
+        """
         self.fwd_timing_events: List[List[Tuple[torch.cuda.Event, torch.cuda.Event]]] \
             = [[] for _ in range(num_layers)]
         self.bwd_timing_events: List[List[Tuple[torch.cuda.Event, torch.cuda.Event]]] \
             = [[] for _ in range(num_layers)]
-        self.fwd_history = [0. for _ in range(num_layers)]
-        self.bwd_history = [0. for _ in range(num_layers)]
-        self.num_records = -1
+        self.fwd_history: List[float] = [0. for _ in range(num_layers)]
+        self.bwd_history: List[float] = [0. for _ in range(num_layers)]
+        self.num_records: int = -1
 
     def time_forward(self, layer_id: int, stream: Optional[torch.cuda.Stream] = None) -> LayerTimingContext:
+        """Create a timing context for a forward pass.
+
+        Args:
+            layer_id: Index of the layer being measured.
+            stream: Optional CUDA stream to associate with the events.
+
+        Returns:
+            ``LayerTimingContext`` that records start/end events upon use.
+        """
         start_event: torch.cuda.Event = torch.cuda.Event(enable_timing = True)  # type: ignore[reportAssignmentType]
         end_event: torch.cuda.Event = torch.cuda.Event(enable_timing = True)  # type: ignore[reportAssignmentType]
         self.fwd_timing_events[layer_id].append((start_event, end_event))
         return LayerTimingContext(start_event, end_event, stream)
     
     def time_backward(self, layer_id: int, stream: Optional[torch.cuda.Stream] = None) -> LayerTimingContext:
+        """Create a timing context for a backward pass.
+
+        Args:
+            layer_id: Index of the layer being measured.
+            stream: Optional CUDA stream to associate with the events.
+
+        Returns:
+            ``LayerTimingContext`` that records start/end events upon use.
+        """
         start_event: torch.cuda.Event = torch.cuda.Event(enable_timing = True)  # type: ignore[reportAssignmentType]
         end_event: torch.cuda.Event = torch.cuda.Event(enable_timing = True)  # type: ignore[reportAssignmentType]
         self.bwd_timing_events[layer_id].append((start_event, end_event))
         return LayerTimingContext(start_event, end_event, stream)
 
     def update_workload(self, workload: List[float]) -> bool:
+        """Convert recorded events into smoothed timing estimates.
+
+        Args:
+            workload: Mutable list updated in-place with averaged timings.
+
+        Returns:
+            ``True`` once at least two records exist (ignoring warm-up).
+        """
         for idx, (layer_events, layer_history) in enumerate(zip(self.fwd_timing_events, self.fwd_history)):
             new_time = 0.
             for start_event, end_event in layer_events:
