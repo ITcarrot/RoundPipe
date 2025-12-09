@@ -8,6 +8,7 @@ Attributes:
 from beartype.typing import * # type: ignore[reportWildcardImport]
 from enum import Enum
 import threading
+import itertools
 
 import torch
 
@@ -22,8 +23,99 @@ class JobType(Enum):
     BACKWARD = 2
     FORWARD_BACKWARD = 3
 
+class InterStreamMemManager:
+    """Handles tensor deallocation across multiple CUDA streams.
+    
+    Attributes:
+        free_queue: Maps stream pairs to lists of tensor storage
+            waiting to be freed after synchronization.
+        in_use: Maps tensor storages to the list of streams that
+            have used them.
+    """
+    def __init__(self, *streams: torch.cuda.Stream):
+        """Initialize tracking structures for inter-stream memory management.
+        
+        Args:
+            streams: Streams that will be used by tensors.
+        """
+        self.free_queue: Dict[Tuple[torch.cuda.Stream, torch.cuda.Stream],
+                              List[Tuple[torch.UntypedStorage,
+                                         Tuple[torch.cuda.Stream, ...]
+                                         ]]] = {}
+        self.in_use: Dict[torch.UntypedStorage, List[torch.cuda.Stream]] = {}
+        for src, dst in itertools.product(streams, streams):
+            if src is not dst:
+                self.free_queue[(src, dst)] = []
+
+    def record_stream(self, tensor: torch.Tensor,
+                      from_stream: torch.cuda.Stream,
+                      use_stream: torch.cuda.Stream) -> None:
+        """Record that ``tensor`` is used on ``use_stream`` after being
+        used on ``from_stream``.
+        
+        Args:
+            tensor: Tensor whose usage is being tracked.
+            from_stream: Stream where the tensor was last used.
+            use_stream: Stream where the tensor will be used next.
+        
+        Raises:
+            AssertionError: If the last recorded stream for ``tensor``
+                does not match ``from_stream``.
+        """
+        storage = tensor.untyped_storage()
+        if storage not in self.in_use:
+            self.in_use[storage] = [from_stream, use_stream]
+        elif from_stream in self.in_use[storage] and use_stream in self.in_use[storage]:
+            return
+        else:
+            assert self.in_use[storage][-1] is from_stream, \
+                "Tensor usage tracking: expected last stream to match from_stream."
+            self.in_use[storage].append(use_stream)
+
+    def stream_synced(self, waiter: torch.cuda.Stream,
+                      wait_for: torch.cuda.Stream) -> None:
+        """When ``waiter`` stream has synchronized on ``wait_for``,
+        release all tensors waiting on this synchronization.
+        
+        Args:
+            waiter: Stream that has synchronized.
+            wait_for: Stream that ``waiter`` has synchronized on.
+        """
+        for storage, use_streams in self.free_queue[(waiter, wait_for)]:
+            if len(use_streams) > 2:
+                self.free_queue[(use_streams[-3], use_streams[-2])] \
+                    .append((storage, use_streams[:-1]))
+        self.free_queue[(waiter, wait_for)].clear()
+
+    def free(self, storage: torch.UntypedStorage, *use_streams: torch.cuda.Stream) -> None:
+        """Hold tensor ``storage`` reference before all streams
+        used this storage synchronize back to the owning stream.
+        
+        Args:
+            storage: Tensor storage to be freed.
+            use_streams: Ordered streams that have used ``storage``.
+        """
+        if len(use_streams) < 2:
+            return
+        self.free_queue[(use_streams[-2], use_streams[-1])].append((storage, use_streams))
+
+    def flush(self) -> None:
+        """Flush all tracked tensors into free queues."""
+        for storage, use_streams in self.in_use.items():
+            self.free(storage, *use_streams)
+        self.in_use = {}
+
+    def free_all(self) -> None:
+        """Clear all tracked tensors from free queues"""
+        for _, track_list in self.free_queue.items():
+            for storage, streams in track_list:
+                tensor = torch.empty(0, device=storage.device).set_(storage)
+                for stream in streams:
+                    tensor.record_stream(stream)
+        self.free_queue = {k: [] for k in self.free_queue}
+
 class DeviceManager:
-    """Owns CUDA streams and a controller thread for a single device.
+    """Manages memory, CUDA streams and kernel launch of a single device.
 
     Attributes:
         id: Integer identifier matching ``cuda:{id}``.
@@ -32,6 +124,7 @@ class DeviceManager:
         upstream: Stream handling activation uploads.
         compute_stream: Default compute stream bound to ``device``.
         downstream: Stream used for downloads to host.
+        mem_manager: Inter-stream memory manager for this device.
         upload_mark: Outstanding events that track chunked transfers.
         is_idle: Semaphore indicating when the controller can accept work.
         job_arrived: Semaphore signaled when a new job is queued.
@@ -51,8 +144,11 @@ class DeviceManager:
         
         self.param_upstream: torch.cuda.Stream = torch.cuda.Stream(device) # type: ignore[reportAttributeAccessIssue]
         self.upstream: torch.cuda.Stream = torch.cuda.Stream(device) # type: ignore[reportAttributeAccessIssue]
-        self.compute_stream = torch.cuda.default_stream(self.device)
+        self.compute_stream: torch.cuda.Stream = torch.cuda.default_stream(self.device)
         self.downstream: torch.cuda.Stream = torch.cuda.Stream(device) # type: ignore[reportAttributeAccessIssue]
+        self.mem_manager: InterStreamMemManager = InterStreamMemManager(
+            self.param_upstream, self.upstream, self.compute_stream, self.downstream
+        )
         self.upload_mark: List[torch.cuda.Event] = []
 
         self.is_idle: threading.Semaphore = threading.Semaphore(1)
@@ -60,6 +156,17 @@ class DeviceManager:
         self.cur_job: Optional[Tuple[JobType, int, Optional[Batch], List[RoundPipeRunContext],
                                Optional[Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]]]]] = None
         self.controller_thread: RoundPipeThread = RoundPipeThread(target=self.controller, name=f'RoundPipe DeviceController-{id}')
+
+    def wait_stream(self, waiter: torch.cuda.Stream,
+                    wait_for: torch.cuda.Stream) -> None:
+        """Make ``waiter`` stream wait on ``wait_for`` stream.
+
+        Args:
+            waiter: Stream that will wait.
+            wait_for: Stream to wait on.
+        """
+        waiter.wait_stream(wait_for)
+        self.mem_manager.stream_synced(waiter, wait_for)
 
     def mark_upload(self) -> None:
         """Record an event on the upload stream after enqueuing H2D copies.
@@ -180,3 +287,11 @@ def get_next_device() -> DeviceManager:
     device = device_list[cur_device]
     cur_device = (cur_device + 1) % len(device_list)
     return device
+
+def gc_collect() -> None:
+    """Release all tracked tensors from inter-stream memory
+    managers on all devices.
+    """
+    for device in device_list:
+        device.mem_manager.flush()
+        device.mem_manager.free_all()

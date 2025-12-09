@@ -243,6 +243,10 @@ class Batch:
             self.flatten_states = flatten_states_on_device
         else:
             self.forward_events[-1][0].synchronize()
+            # When CPU is synchonized, it's ok to hand over the tensors
+            # back to pytorch allocator.
+            from .device import gc_collect
+            gc_collect()
         # No out of order backward will happen arcoss the sync boundary.
         # Reset the backward scheduler to avoid connecting two unrelated
         # runs into a single backward graph.

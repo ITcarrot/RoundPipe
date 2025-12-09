@@ -118,11 +118,11 @@ class RoundPipeRunContext:
         self.flatten_inputs[layer_id] = batch.flatten_states[self.microbatch_id]
         self.flatten_specs[layer_id] = batch.flatten_specs[self.microbatch_id]
 
-        device.downstream.wait_stream(device.compute_stream)
+        device.wait_stream(device.downstream, device.compute_stream)
         with torch.cuda.stream(device.downstream):
             for idx, item in enumerate(self.flatten_inputs[layer_id]):
                 if isinstance(item, torch.Tensor) and item.device != torch.device('cpu'):
-                    item.record_stream(device.downstream)
+                    device.mem_manager.record_stream(item, device.compute_stream, device.downstream)
                     self.flatten_inputs[layer_id][idx] = item.to('cpu', non_blocking=True)
 
         if self.preserve_rng_state:
@@ -178,7 +178,6 @@ def run_forward(layer_group_id: int, batch: Batch,
             batch.flatten_states[batch_idx] = async_h2d(
                 device, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], context.enable_grad
             )
-            device.upstream.wait_stream(device.compute_stream)
         hidden_state = tree_unflatten(batch.flatten_states[batch_idx], batch.flatten_specs[batch_idx])
         with grad_context, \
              torch.cuda.stream(device.compute_stream), \
@@ -208,9 +207,10 @@ def run_forward(layer_group_id: int, batch: Batch,
     batch.flatten_states[batch_idx] = async_d2h(
         device, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], context.enable_grad
     )
+    device.mem_manager.flush()
     if batch_idx == context.num_microbatches - 1:
         for layer_id in layer_ids:
-            free_layer(model.layers[layer_id])
+            free_layer(model.layers[layer_id], device) 
     context.execute_plan.forward_notify(layer_group_id)
 
 @torch.no_grad()
@@ -244,7 +244,6 @@ def run_backward(layer_group_id: int,
         device, [], context.flatten_inputs[layer_ids[0]], True
     )
     context.flatten_inputs[layer_ids[0]].clear() # Free CPU memory
-    device.upstream.wait_stream(device.compute_stream)
     hidden_state = tree_unflatten(flatten_inputs_gpu, context.flatten_specs[layer_ids[0]]) # type: ignore[reportArgumentType]
     
     with torch.random.fork_rng(
@@ -273,7 +272,6 @@ def run_backward(layer_group_id: int,
     flatten_outputs_gpu, _ = tree_flatten(hidden_state)
     context.execute_plan.backward_wait_for(layer_group_id - 1)
     flatten_grad_outputs_gpu = async_h2d(device, context.output_backward_events, context.grad_states)
-    device.upstream.wait_stream(device.compute_stream)
     
     outputs_requires_grad = []
     outputs_grad = []
@@ -299,9 +297,10 @@ def run_backward(layer_group_id: int,
     context.grad_states = async_d2h(
         device, context.output_backward_events, flatten_grad_inputs_gpu
     )
+    device.mem_manager.flush()
     if batch_idx == context.num_microbatches - 1:
         for layer_id in layer_ids:
-            download_layer(model.layers[layer_id], device.downstream)
+            download_layer(model.layers[layer_id], device)
             download_finish_event: torch.cuda.Event = torch.cuda.Event() # type: ignore[reportAssignmentType]
             download_finish_event.record(device.downstream)
             model.layer_gradient_ready_events[layer_id] = download_finish_event
@@ -332,7 +331,6 @@ def run_forward_backward(batch: Batch, context: RoundPipeRunContext,
         device, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], True
     )
     batch.flatten_states[batch_idx].clear() # Free CPU memory
-    device.upstream.wait_stream(device.compute_stream)
     hidden_state = tree_unflatten(flatten_inputs_gpu, batch.flatten_specs[batch_idx]) # type: ignore[reportArgumentType]
 
     for layer_id in layer_ids:
@@ -391,9 +389,10 @@ def run_forward_backward(batch: Batch, context: RoundPipeRunContext,
     context.grad_states = async_d2h(
         device, context.output_backward_events, flatten_grad_inputs_gpu
     )
+    device.mem_manager.flush()
     if batch_idx == context.num_microbatches - 1:
         for layer_id in layer_ids:
-            download_layer(model.layers[layer_id], device.downstream)
+            download_layer(model.layers[layer_id], device)
             download_finish_event: torch.cuda.Event = torch.cuda.Event() # type: ignore[reportAssignmentType]
             download_finish_event.record(device.downstream)
             model.layer_gradient_ready_events[layer_id] = download_finish_event
