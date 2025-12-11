@@ -1,4 +1,4 @@
-from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
 import types
 import math
 
@@ -28,7 +28,7 @@ class ChunkedCrossEntropy(torch.autograd.Function):
         return loss
 
     @staticmethod
-    def backward(ctx: Any, grad_loss: torch.Tensor) -> Tuple[Optional[torch.Tensor], ...]: # type: ignore[override]
+    def backward(ctx: Any, grad_loss: torch.Tensor) -> Tuple[Optional[torch.Tensor], ...]: # pyright: ignore[reportIncompatibleMethodOverride]
         logits, labels, num_items_in_batch = ctx.saved_tensors
         grad_logits = torch.empty_like(logits)
 

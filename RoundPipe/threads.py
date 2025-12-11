@@ -7,7 +7,7 @@ Attributes:
         waits for its worker threads to finish.
 """
 
-from beartype.typing import * # type: ignore[reportWildcardImport]
+from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
 
 import threading
 import traceback

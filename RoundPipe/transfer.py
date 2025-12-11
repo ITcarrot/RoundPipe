@@ -5,7 +5,7 @@ Attributes:
     CHUNK_UPLOAD_SIZE: Size threshold (in bytes) for chunked uploads.
 """
 
-from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
 import math
 
 import torch
@@ -129,19 +129,19 @@ def upload_layers(layers: List[torch.nn.Module],
     """
     chunk_events = device.flush_upload_marks()
     if len(chunk_events) == 0:
-        chunk_events.append(torch.cuda.Event())  # type: ignore[reportAttributeAccessIssue]
+        chunk_events.append(torch.cuda.Event())  # pyright: ignore[reportArgumentType]
     tensor_pair: List[Tuple[torch.Tensor, torch.Tensor]] = []
     with torch.cuda.stream(device.param_upstream):
         for layer in layers:
             for param in layer.parameters():
-                param.data = create_upload_pair(tensor_pair, param.data_cpu, device.device) # type: ignore[attr-defined]
+                param.data = create_upload_pair(tensor_pair, param.data_cpu, device.device) # pyright: ignore[reportAttributeAccessIssue]
                 if upload_grad and param.grad is not None:
                     param.grad = create_upload_pair(tensor_pair, param.grad, device.device)
-                    param.is_uploaded_grad = True # type: ignore[attr-defined]
+                    param.is_uploaded_grad = True # pyright: ignore[reportAttributeAccessIssue]
                 else:
-                    param.is_uploaded_grad = False # type: ignore[attr-defined]
+                    param.is_uploaded_grad = False # pyright: ignore[reportAttributeAccessIssue]
             for buffer in layer.buffers():
-                buffer.data = create_upload_pair(tensor_pair, buffer.data_cpu, device.device) # type: ignore[attr-defined]
+                buffer.data = create_upload_pair(tensor_pair, buffer.data_cpu, device.device) # pyright: ignore[reportAttributeAccessIssue]
     if len(tensor_pair) == 0:
         return
     chunked_tensor_pairs = chunk_layer_params(tensor_pair, len(chunk_events))
@@ -162,10 +162,10 @@ def free_layer(layer: torch.nn.Module, device: 'DeviceManager'):
     """
     for param in layer.parameters():
         device.mem_manager.free(param.data.untyped_storage(), device.param_upstream, device.compute_stream)
-        param.data = param.data_cpu # type: ignore[attr-defined]
+        param.data = param.data_cpu # pyright: ignore[reportAttributeAccessIssue]
     for buffer in layer.buffers():
         device.mem_manager.free(buffer.data.untyped_storage(), device.param_upstream, device.compute_stream)
-        buffer.data = buffer.data_cpu # type: ignore[attr-defined]
+        buffer.data = buffer.data_cpu # pyright: ignore[reportAttributeAccessIssue]
 
 def download_layer(layer: torch.nn.Module, device: 'DeviceManager'):
     """Copy layer params/buffers (and grads) back to the host asynchronously.
@@ -179,9 +179,9 @@ def download_layer(layer: torch.nn.Module, device: 'DeviceManager'):
     with torch.cuda.stream(device.downstream):
         for param in layer.parameters():
             device.mem_manager.free(param.data.untyped_storage(), device.param_upstream, device.compute_stream)
-            param.data = param.data_cpu # type: ignore[attr-defined]
+            param.data = param.data_cpu # pyright: ignore[reportAttributeAccessIssue]
             if param.grad is not None:
-                if param.is_uploaded_grad: # type: ignore[attr-defined]
+                if param.is_uploaded_grad: # pyright: ignore[reportAttributeAccessIssue]
                     device.mem_manager.free(param.grad.untyped_storage(), device.param_upstream,
                                             device.compute_stream, device.downstream)
                 else:
@@ -190,8 +190,8 @@ def download_layer(layer: torch.nn.Module, device: 'DeviceManager'):
         for buffer in layer.buffers():
             device.mem_manager.free(buffer.data.untyped_storage(), device.param_upstream,
                                     device.compute_stream, device.downstream)
-            buffer.data_cpu.copy_(buffer.data, non_blocking = True) # type: ignore[attr-defined]
-            buffer.data = buffer.data_cpu # type: ignore[attr-defined]
+            buffer.data_cpu.copy_(buffer.data, non_blocking = True) # pyright: ignore[reportAttributeAccessIssue]
+            buffer.data = buffer.data_cpu # pyright: ignore[reportAttributeAccessIssue]
 
 class PinnedUpload(torch.autograd.Function):
     """Autograd helper that enforces pinned host tensors before H2D copies."""
@@ -214,7 +214,7 @@ class PinnedUpload(torch.autograd.Function):
         return t.to(d, non_blocking = True)
 
     @staticmethod
-    def backward(ctx: Any, g: torch.Tensor) -> Any: # type: ignore[override]
+    def backward(ctx: Any, g: torch.Tensor) -> Any: # pyright: ignore[reportIncompatibleMethodOverride]
         """Move gradients back to pinned host memory.
 
         Args:
@@ -246,7 +246,7 @@ class RegisterBackwardEvent(torch.autograd.Function):
         return input
 
     @staticmethod
-    def backward(ctx: Any, grad_outputs: torch.Tensor) -> Any: # type: ignore[override]
+    def backward(ctx: Any, grad_outputs: torch.Tensor) -> Any: # pyright: ignore[reportIncompatibleMethodOverride]
         """Synchronize on the recorded event before returning gradients.
 
         Args:

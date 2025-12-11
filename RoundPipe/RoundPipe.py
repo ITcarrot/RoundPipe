@@ -1,6 +1,6 @@
 """The RoundPipe model wrapper and execution runtime."""
 
-from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
 from beartype import beartype
 import traceback
 import copy
@@ -66,7 +66,7 @@ class RoundPipe(nn.Module):
 
         self.num_layers: int = len(self.layers)
         self.layer_workload: List[float] = []
-        self.layer_gradient_ready_events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(self.num_layers)] # type: ignore[reportAttributeAccessIssue]
+        self.layer_gradient_ready_events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(self.num_layers)] # pyright: ignore[reportAttributeAccessIssue]
         for layer in self.layers:
             self.layer_workload.append(get_model_size(layer))
         self.model_timer: ModelTimer = ModelTimer(self.num_layers)
@@ -76,13 +76,13 @@ class RoundPipe(nn.Module):
             pinned_tensor = torch.empty_like(parm.data, dtype=torch.float16 if use_fp16 and parm.is_floating_point() else None, pin_memory=True)
             pinned_tensor.copy_(parm.data)
             parm.data = pinned_tensor
-            parm.data_cpu = pinned_tensor # type: ignore[attr-defined]
+            parm.data_cpu = pinned_tensor # pyright: ignore[reportAttributeAccessIssue]
         for buffer in tqdm.tqdm(self.model.buffers(), total=sum(1 for _ in self.model.buffers()),
                                 desc=f'Roundpipe: Process buffers in {self.name}', leave=False):
             pinned_tensor = torch.empty_like(buffer.data, dtype=torch.float16 if use_fp16 and buffer.is_floating_point() else None, pin_memory=True)
             pinned_tensor.copy_(buffer.data)
             buffer.data = pinned_tensor
-            buffer.data_cpu = pinned_tensor # type: ignore[attr-defined]
+            buffer.data_cpu = pinned_tensor # pyright: ignore[reportAttributeAccessIssue]
 
         self.RoundPipe_initialized: bool = True
 
@@ -157,7 +157,7 @@ class RoundPipe(nn.Module):
                 tag = backward_schedule_simulator.get_next_tag()
                 for context in reversed(run_context):
                     tag, output_require_grad_idx, *output_require_grad \
-                        = RoundPipeMicrobatchBackward.apply(context, batch, tag, *context.flatten_inputs[0]) # type: ignore
+                        = RoundPipeMicrobatchBackward.apply(context, batch, tag, *context.flatten_inputs[0]) # pyright: ignore[reportGeneralTypeIssues]
                     for idx, item in zip(output_require_grad_idx, output_require_grad):
                         batch.flatten_states[context.microbatch_id][idx] = item
                 backward_schedule_simulator.update_current_tag(tag)
@@ -166,7 +166,7 @@ class RoundPipe(nn.Module):
                 # ensuring gradients to be calculated even if inputs do not require grad.
                 all_inputs = [item for batch_context in run_context
                             for item in batch_context.flatten_inputs[0]]
-                output_require_grad_idx, *output_require_grad = RoundPipeBatchedBackward.apply(run_context, batch, gradient_anchor, *all_inputs) # type: ignore
+                output_require_grad_idx, *output_require_grad = RoundPipeBatchedBackward.apply(run_context, batch, gradient_anchor, *all_inputs) # pyright: ignore[reportGeneralTypeIssues]
                 for (batch_idx, idx), item in zip(output_require_grad_idx, output_require_grad):
                     batch.flatten_states[batch_idx][idx] = item
 
@@ -207,7 +207,7 @@ class RoundPipe(nn.Module):
             context.input_backward_events = batch.backward_events[batch_idx]
 
         all_inputs = [item for batch_input in batch.flatten_states for item in batch_input]
-        input_backward_handle: torch.Tensor = RoundPipeInputBackward.apply(run_context, *all_inputs) # type: ignore
+        input_backward_handle: torch.Tensor = RoundPipeInputBackward.apply(run_context, *all_inputs) # pyright: ignore[reportAssignmentType]
 
         for layer_group_id in range(len(execute_plan.fwd_plan)):
             device = get_next_device()
@@ -225,7 +225,9 @@ class RoundPipe(nn.Module):
         if isinstance(batch.loss_list[0], torch.Tensor):
             loss = torch.zeros_like(batch.loss_list[0], device=torch.device('cpu'))
             for batch_loss in batch.loss_list:
-                loss = loss + batch_loss.cpu() # type: ignore[reportOperatorIssue]
+                assert isinstance(batch_loss, torch.Tensor), \
+                    "Inconsistent loss types across microbatches."
+                loss = loss + batch_loss.cpu()
         else:
             loss = [torch.zeros_like(t, device=torch.device('cpu')) for t in batch.loss_list[0]]
             for batch_loss in batch.loss_list:

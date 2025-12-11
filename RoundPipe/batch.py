@@ -9,7 +9,7 @@ Attributes:
     avg_reducer: Predefined reducer that averages scalar losses across microbatches.
 """
 
-from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
 import warnings
 
 import torch
@@ -90,14 +90,14 @@ def get_avg_reducer_args() -> Tuple[torch.Tensor, Callable[[torch.Tensor, torch.
         a reducer callable that updates the running average.
     """
     init_val = torch.tensor(0)
-    init_val.roundpipe_avg_reducer_sum = torch.tensor(0) # type: ignore[reportAttributeAccessIssue]
-    init_val.roundpipe_avg_reducer_count = 0 # type: ignore[reportAttributeAccessIssue]
+    init_val.roundpipe_avg_reducer_sum = torch.tensor(0) # pyright: ignore[reportAttributeAccessIssue]
+    init_val.roundpipe_avg_reducer_count = 0 # pyright: ignore[reportAttributeAccessIssue]
     def reduce(reduced_val: torch.Tensor, new_val: torch.Tensor) -> torch.Tensor:
-        val_sum = reduced_val.roundpipe_avg_reducer_sum + new_val # type: ignore[reportAttributeAccessIssue]
-        val_count = reduced_val.roundpipe_avg_reducer_count + 1 # type: ignore[reportAttributeAccessIssue]
+        val_sum = reduced_val.roundpipe_avg_reducer_sum + new_val # pyright: ignore[reportAttributeAccessIssue]
+        val_count = reduced_val.roundpipe_avg_reducer_count + 1 # pyright: ignore[reportAttributeAccessIssue]
         new_reduced = val_sum / val_count
-        new_reduced.roundpipe_avg_reducer_sum = val_sum # type: ignore[reportAttributeAccessIssue]
-        new_reduced.roundpipe_avg_reducer_count = val_count # type: ignore[reportAttributeAccessIssue]
+        new_reduced.roundpipe_avg_reducer_sum = val_sum # pyright: ignore[reportAttributeAccessIssue]
+        new_reduced.roundpipe_avg_reducer_count = val_count # pyright: ignore[reportAttributeAccessIssue]
         return new_reduced
     return init_val, reduce
 avg_reducer: _CustomReducer = _CustomReducer(*get_avg_reducer_args())
@@ -153,7 +153,7 @@ class Batch:
         for batch_idx, args_kwargs in enumerate(zip(args_list, kwargs_list)):
             forward_event: Set[torch.cuda.Event] = set()
             backward_event: Set[torch.cuda.Event] = set()
-            cpu_tensor_backward_event: torch.cuda.Event = torch.cuda.Event() # type: ignore[reportAssignmentType]
+            cpu_tensor_backward_event: torch.cuda.Event = torch.cuda.Event() # pyright: ignore[reportAssignmentType]
             flatten_input, flatten_spec = tree_flatten(args_kwargs)
             for idx, item in enumerate(flatten_input):
                 if isinstance(item, torch.Tensor):

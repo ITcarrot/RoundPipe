@@ -1,6 +1,6 @@
 """Runtime configuration objects shared across RoundPipe components."""
 
-from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
 from beartype import beartype
 
 import torch

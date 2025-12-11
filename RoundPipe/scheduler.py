@@ -4,7 +4,7 @@ Attributes:
     backward_schedule_simulator: Global simulator for pipelined backward scheduling.
 """
 
-from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
 import threading
 import heapq
 

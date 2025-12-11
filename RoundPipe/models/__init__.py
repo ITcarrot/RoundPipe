@@ -9,7 +9,7 @@ Attributes:
         to their corresponding wrapper module paths.
 """
 
-from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
 import importlib
 
 from ..RoundPipe import RoundPipe

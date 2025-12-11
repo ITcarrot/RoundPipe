@@ -1,4 +1,4 @@
-from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
 import warnings
 
 import torch
@@ -24,7 +24,7 @@ class Qwen3ForCausalLMPrefix(nn.Module):
         attention_mask: Optional[torch.Tensor] = None,
         position_ids: Optional[torch.Tensor] = None,
         past_key_values: Optional[Any] = None,
-        inputs_embeds: Optional[torch.Tensor] = None, # type: ignore[reportRedeclaration]
+        inputs_embeds: Optional[torch.Tensor] = None, # pyright: ignore[reportRedeclaration]
         labels: Optional[torch.Tensor] = None,
         use_cache: Optional[bool] = None,
         cache_position: Optional[torch.Tensor] = None,

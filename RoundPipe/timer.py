@@ -1,6 +1,6 @@
 """CUDA event helpers for measuring per-layer forward/backward latency."""
 
-from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
 
 import torch
 
@@ -29,11 +29,11 @@ class LayerTimingContext:
         
     def __enter__(self):
         """Record ``start_event`` on the configured stream."""
-        self.start_event.record(self.stream) # type: ignore[reportArgumentType]
+        self.start_event.record(self.stream) # pyright: ignore[reportArgumentType]
     
     def __exit__(self, *args):
         """Record ``end_event`` when the context exits."""
-        self.end_event.record(self.stream) # type: ignore[reportArgumentType]
+        self.end_event.record(self.stream) # pyright: ignore[reportArgumentType]
 
 class ModelTimer:
     """Persistent tracker for smoothed per-layer timings.
@@ -70,8 +70,8 @@ class ModelTimer:
         Returns:
             ``LayerTimingContext`` that records start/end events upon use.
         """
-        start_event: torch.cuda.Event = torch.cuda.Event(enable_timing = True)  # type: ignore[reportAssignmentType]
-        end_event: torch.cuda.Event = torch.cuda.Event(enable_timing = True)  # type: ignore[reportAssignmentType]
+        start_event: torch.cuda.Event = torch.cuda.Event(enable_timing = True)  # pyright: ignore[reportAssignmentType]
+        end_event: torch.cuda.Event = torch.cuda.Event(enable_timing = True)  # pyright: ignore[reportAssignmentType]
         self.fwd_timing_events[layer_id].append((start_event, end_event))
         return LayerTimingContext(start_event, end_event, stream)
     
@@ -85,8 +85,8 @@ class ModelTimer:
         Returns:
             ``LayerTimingContext`` that records start/end events upon use.
         """
-        start_event: torch.cuda.Event = torch.cuda.Event(enable_timing = True)  # type: ignore[reportAssignmentType]
-        end_event: torch.cuda.Event = torch.cuda.Event(enable_timing = True)  # type: ignore[reportAssignmentType]
+        start_event: torch.cuda.Event = torch.cuda.Event(enable_timing = True)  # pyright: ignore[reportAssignmentType]
+        end_event: torch.cuda.Event = torch.cuda.Event(enable_timing = True)  # pyright: ignore[reportAssignmentType]
         self.bwd_timing_events[layer_id].append((start_event, end_event))
         return LayerTimingContext(start_event, end_event, stream)
 
