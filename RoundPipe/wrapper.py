@@ -7,6 +7,10 @@ import copy
 
 import torch
 import torch.nn as nn
+try:
+    from transformers.modeling_utils import PreTrainedModel as HFPreTrainedModel
+except ImportError:
+    HFPreTrainedModel = None
 
 from .models import wrap_model
 from .RoundPipe import RoundPipe
@@ -117,4 +121,11 @@ def wrap_model_to_roundpipe(model: nn.Module,
                                                        **roundpipe_kwargs)
             if wrapped_submodel is not submodel:
                 setattr(model, submodel_name, wrapped_submodel)
+
+        # Override loss function for HuggingFace models
+        # Check only when this layer is not wrapped as a hole
+        if HFPreTrainedModel is not None and isinstance(model, HFPreTrainedModel):
+            roundpipe_kwargs['name'] = model_name + '.loss_function'
+            model._loss_function = wrap_model(model.loss_function, **roundpipe_kwargs)
+
         return model

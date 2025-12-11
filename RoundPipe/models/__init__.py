@@ -15,6 +15,7 @@ import importlib
 from ..RoundPipe import RoundPipe
 
 SUPPORTED_MODELS = {
+    'function': '.function',
     'Qwen3ForCausalLM': '.qwen3',
 }
 
