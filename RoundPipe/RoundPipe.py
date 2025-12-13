@@ -11,6 +11,7 @@ import torch.nn as nn
 
 from .batch import Batch
 from .device import get_next_device
+from .param import ParamAttribute
 from .run import RoundPipeRunContext, RoundPipeBatchedBackward, RoundPipeMicrobatchBackward, RoundPipeInputBackward
 from .RunConfig import RoundPipeRunConfig, FullRoundPipeRunConfig
 from .scheduler import ModelExecutePlan, backward_schedule_simulator
@@ -76,13 +77,13 @@ class RoundPipe(nn.Module):
             pinned_tensor = torch.empty_like(parm.data, dtype=torch.float16 if use_fp16 and parm.is_floating_point() else None, pin_memory=True)
             pinned_tensor.copy_(parm.data)
             parm.data = pinned_tensor
-            parm.data_cpu = pinned_tensor # pyright: ignore[reportAttributeAccessIssue]
+            ParamAttribute.set(parm)
         for buffer in tqdm.tqdm(self.model.buffers(), total=sum(1 for _ in self.model.buffers()),
                                 desc=f'Roundpipe: Process buffers in {self.name}', leave=False):
             pinned_tensor = torch.empty_like(buffer.data, dtype=torch.float16 if use_fp16 and buffer.is_floating_point() else None, pin_memory=True)
             pinned_tensor.copy_(buffer.data)
             buffer.data = pinned_tensor
-            buffer.data_cpu = pinned_tensor # pyright: ignore[reportAttributeAccessIssue]
+            ParamAttribute.set(buffer)
 
         self.RoundPipe_initialized: bool = True
 

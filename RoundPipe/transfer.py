@@ -10,6 +10,7 @@ import math
 
 import torch
 
+from .param import ParamAttribute
 from .scheduler import chunk_layer_params
 
 if TYPE_CHECKING:
@@ -134,14 +135,16 @@ def upload_layers(layers: List[torch.nn.Module],
     with torch.cuda.stream(device.param_upstream):
         for layer in layers:
             for param in layer.parameters():
-                param.data = create_upload_pair(tensor_pair, param.data_cpu, device.device) # pyright: ignore[reportAttributeAccessIssue]
+                param_attr = ParamAttribute.get(param)
+                param.data = create_upload_pair(tensor_pair, param_attr.data_cpu, device.device)
                 if upload_grad and param.grad is not None:
                     param.grad = create_upload_pair(tensor_pair, param.grad, device.device)
-                    param.is_uploaded_grad = True # pyright: ignore[reportAttributeAccessIssue]
+                    param_attr.uploaded_grad = True
                 else:
-                    param.is_uploaded_grad = False # pyright: ignore[reportAttributeAccessIssue]
+                    param_attr.uploaded_grad = False
             for buffer in layer.buffers():
-                buffer.data = create_upload_pair(tensor_pair, buffer.data_cpu, device.device) # pyright: ignore[reportAttributeAccessIssue]
+                buffer_attr = ParamAttribute.get(buffer)
+                buffer.data = create_upload_pair(tensor_pair, buffer_attr.data_cpu, device.device)
     if len(tensor_pair) == 0:
         return
     chunked_tensor_pairs = chunk_layer_params(tensor_pair, len(chunk_events))
@@ -162,10 +165,12 @@ def free_layer(layer: torch.nn.Module, device: 'DeviceManager'):
     """
     for param in layer.parameters():
         device.mem_manager.free(param.data.untyped_storage(), device.param_upstream, device.compute_stream)
-        param.data = param.data_cpu # pyright: ignore[reportAttributeAccessIssue]
+        param_attr = ParamAttribute.get(param)
+        param.data = param_attr.data_cpu
     for buffer in layer.buffers():
         device.mem_manager.free(buffer.data.untyped_storage(), device.param_upstream, device.compute_stream)
-        buffer.data = buffer.data_cpu # pyright: ignore[reportAttributeAccessIssue]
+        buffer_attr = ParamAttribute.get(buffer)
+        buffer.data = buffer_attr.data_cpu
 
 def download_layer(layer: torch.nn.Module, device: 'DeviceManager'):
     """Copy layer params/buffers (and grads) back to the host asynchronously.
@@ -179,9 +184,10 @@ def download_layer(layer: torch.nn.Module, device: 'DeviceManager'):
     with torch.cuda.stream(device.downstream):
         for param in layer.parameters():
             device.mem_manager.free(param.data.untyped_storage(), device.param_upstream, device.compute_stream)
-            param.data = param.data_cpu # pyright: ignore[reportAttributeAccessIssue]
+            param_attr = ParamAttribute.get(param)
+            param.data = param_attr.data_cpu
             if param.grad is not None:
-                if param.is_uploaded_grad: # pyright: ignore[reportAttributeAccessIssue]
+                if param_attr.uploaded_grad:
                     device.mem_manager.free(param.grad.untyped_storage(), device.param_upstream,
                                             device.compute_stream, device.downstream)
                 else:
@@ -190,8 +196,9 @@ def download_layer(layer: torch.nn.Module, device: 'DeviceManager'):
         for buffer in layer.buffers():
             device.mem_manager.free(buffer.data.untyped_storage(), device.param_upstream,
                                     device.compute_stream, device.downstream)
-            buffer.data_cpu.copy_(buffer.data, non_blocking = True) # pyright: ignore[reportAttributeAccessIssue]
-            buffer.data = buffer.data_cpu # pyright: ignore[reportAttributeAccessIssue]
+            buffer_attr = ParamAttribute.get(buffer)
+            buffer_attr.data_cpu.copy_(buffer.data, non_blocking = True)
+            buffer.data = buffer_attr.data_cpu
 
 class PinnedUpload(torch.autograd.Function):
     """Autograd helper that enforces pinned host tensors before H2D copies."""
