@@ -1,4 +1,4 @@
-from beartype.typing import * # type: ignore[reportWildcardImportFromLibrary]
+from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
 import itertools
 
 import pytest
@@ -10,7 +10,7 @@ from RoundPipe.RunConfig import RoundPipeRunConfig, FullRoundPipeRunConfig
 
 @pytest.mark.parametrize("num_microbatch, merge_output", itertools.product([2, 3, 4], [True, None]))
 def test_io_auto(num_microbatch, merge_output):
-    events: List[List[torch.cuda.Event]] = [[torch.cuda.Event() for _ in range(num_microbatch)] for _ in range(3)] # type: ignore[assignment]
+    events: List[List[torch.cuda.Event]] = [[torch.cuda.Event() for _ in range(num_microbatch)] for _ in range(3)] # pyright: ignore[reportAssignmentType]
     packed1 = RoundPipePackedData([torch.randn(12 // num_microbatch, 14) for i in range(num_microbatch)], [(events[0][i], events[0][i]) for i in range(num_microbatch)])
     packed2 = RoundPipePackedData([torch.randn(12 // num_microbatch, 16) for i in range(num_microbatch)], [(events[1][i], events[1][i]) for i in range(num_microbatch)])
     packed3 = RoundPipePackedData([torch.randn(12 // num_microbatch, 18) for i in range(num_microbatch)], [(events[2][i], events[2][i]) for i in range(num_microbatch)])
@@ -67,7 +67,7 @@ def test_io_auto(num_microbatch, merge_output):
 
 @pytest.mark.parametrize("num_microbatch", [2, 3, 4])
 def test_io_spec(num_microbatch):
-    events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(num_microbatch)] # type: ignore[assignment]
+    events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(num_microbatch)] # pyright: ignore[reportAssignmentType]
     packed = RoundPipePackedData([torch.randn(12, 14) for i in range(num_microbatch)], [(events[i], events[i]) for i in range(num_microbatch)])
     args = (torch.tensor(233), torch.randn(3, 12, 4))
     kwargs = {'x': torch.randn(10, 12), 'packed_arg': packed, 'non_tensor': 'hello'}
@@ -101,7 +101,7 @@ def test_io_spec(num_microbatch):
 
 @pytest.mark.parametrize("num_microbatch", [1, 2, 3, 4])
 def test_out_packed(num_microbatch):
-    events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(num_microbatch)] # type: ignore[assignment]
+    events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(num_microbatch)] # pyright: ignore[reportAssignmentType]
     packed = RoundPipePackedData([torch.randn(12, i) for i in range(num_microbatch)], [(events[i], events[i]) for i in range(num_microbatch)])
     args = (torch.tensor(233), torch.randn(12, 3, 4))
     kwargs = {'x': torch.randn(12, 10), 'packed_arg': packed, 'non_tensor': 'hello'}
@@ -132,7 +132,7 @@ def test_out_packed(num_microbatch):
         assert kwargs_reconstruct['non_tensor'][batch_idx] == kwargs['non_tensor']
 
 def test_wrong_batch_size():
-    events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(4)] # type: ignore[assignment]
+    events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(4)] # pyright: ignore[reportAssignmentType]
     packed3 = RoundPipePackedData([torch.randn(6, 7) for i in range(3)], [(events[i], events[i]) for i in range(3)])
     packed4 = RoundPipePackedData([torch.randn(8, 9) for i in range(4)], [(events[i], events[i]) for i in range(4)])
     args = (packed3, packed4)
@@ -155,7 +155,7 @@ def test_wrong_batch_size():
     assert torch.allclose(torch.cat(kwargs['packed4'][:3]), kwargs_reconstruct['packed4'])
 
 def test_guess_from_packed_data():
-    events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(4)] # type: ignore[assignment]
+    events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(4)] # pyright: ignore[reportAssignmentType]
     packed4 = RoundPipePackedData([torch.randn(8, 9) for i in range(4)], [(events[i], events[i]) for i in range(4)])
     args = (packed4,)
     kwargs = {'to_replicate': torch.randn(5, 6)}

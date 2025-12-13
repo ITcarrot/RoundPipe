@@ -18,74 +18,29 @@ from .scheduler import ModelExecutePlan, backward_schedule_simulator
 from .timer import ModelTimer
 from .utils import get_model_size
 
-@beartype
-class RoundPipe(nn.Module):
-    """Wraps an ``nn.Module`` with RoundPipe's pipelined execution runtime.
+class RoundPipeBase(nn.Module):
+    """Common attributes and methods of RoundPipe and AutoRoundPipe
 
     Attributes:
         name: Human-readable identifier shown in traces/logs.
         model: The provided module wrapped for RoundPipe execution.
         original_model: Reference to the pre-wrapped module when shimming
             attribute access.
-        use_fp16: Flag indicating whether weights/buffers are stored as FP16.
-        model_run_config: Default run configuration used when callers do not
-            override parameters per invocation.
-        layers: Sequence of logical pipeline stages.
-        num_layers: Total number of layer groups in the pipeline.
-        layer_workload: Estimated byte size per layer, used for scheduling.
-        layer_gradient_ready_events: CUDA events used to gate gradient reads.
-        model_timer: ``ModelTimer`` measuring per-layer latency.
-        RoundPipe_initialized: Guard marker to customize attribute behavior.
     """
-    def __init__(self,
-                 model: nn.Module,
-                 use_fp16: bool = False,
-                 name: Optional[str] = None,
-                 model_run_config: RoundPipeRunConfig = RoundPipeRunConfig()) -> None:
-        """Convert model storage to pinned tensors and determine pipeline cuts.
+    def __init__(self, model: nn.Module,
+                 name: Optional[str] = None) -> None:
+        '''Initialize the RoundPipe base wrapper.
         
-        A nn.Sequential model is split into layers directly. Arbitrary models
-        are wrapped as a single layer.
-
         Args:
-            model: Module to wrap. Can be ``nn.Sequential`` or arbitrary model.
-            use_fp16: Whether to store floating parameters/buffers in FP16.
+            model: Module to wrap.
             name: Optional friendly identifier. Defaults to ``file:line``.
-            model_run_config: Baseline configuration inherited by invocations.
-        """
+        '''
         super().__init__()
-        filename, lineno, _, _ = traceback.extract_stack()[-3]
+        # call stack: beartype -> (Auto)RoundPipe -> beartype -> RoundPipeBase
+        filename, lineno, _, _ = traceback.extract_stack()[-5]
         self.name: str = name if name else f'{filename.split("/")[-1]}:{lineno}'
         self.model: nn.Module = model
         self.original_model: Optional[nn.Module] = None # placeholder for original model if needing its functions
-        self.use_fp16: bool = use_fp16
-        self.model_run_config: RoundPipeRunConfig = copy.deepcopy(model_run_config)
-        if isinstance(model, nn.Sequential):
-            self.layers: List[nn.Module] = list(model)
-        else:
-            self.layers = [model]
-
-        self.num_layers: int = len(self.layers)
-        self.layer_workload: List[float] = []
-        self.layer_gradient_ready_events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(self.num_layers)] # pyright: ignore[reportAttributeAccessIssue]
-        for layer in self.layers:
-            self.layer_workload.append(get_model_size(layer))
-        self.model_timer: ModelTimer = ModelTimer(self.num_layers)
-
-        for parm in tqdm.tqdm(self.model.parameters(), total=sum(1 for _ in self.model.parameters()),
-                              desc=f'Roundpipe: Process params in {self.name}', leave=False):
-            pinned_tensor = torch.empty_like(parm.data, dtype=torch.float16 if use_fp16 and parm.is_floating_point() else None, pin_memory=True)
-            pinned_tensor.copy_(parm.data)
-            parm.data = pinned_tensor
-            ParamAttribute.set(parm)
-        for buffer in tqdm.tqdm(self.model.buffers(), total=sum(1 for _ in self.model.buffers()),
-                                desc=f'Roundpipe: Process buffers in {self.name}', leave=False):
-            pinned_tensor = torch.empty_like(buffer.data, dtype=torch.float16 if use_fp16 and buffer.is_floating_point() else None, pin_memory=True)
-            pinned_tensor.copy_(buffer.data)
-            buffer.data = pinned_tensor
-            ParamAttribute.set(buffer)
-
-        self.RoundPipe_initialized: bool = True
 
     def __getattr__(self, name: str) -> Any:
         """Delegate missing attributes to the wrapped or original module."""
@@ -121,6 +76,66 @@ class RoundPipe(nn.Module):
             original_model: Module that should mirror attribute updates.
         """
         object.__setattr__(self, 'original_model', original_model)
+
+@beartype
+class RoundPipe(RoundPipeBase):
+    """Wraps an ``nn.Module`` with RoundPipe's pipelined execution runtime.
+
+    Attributes:
+        use_fp16: Flag indicating whether weights/buffers are stored as FP16.
+        model_run_config: Default run configuration used when callers do not
+            override parameters per invocation.
+        layers: Sequence of logical pipeline stages.
+        num_layers: Total number of layer groups in the pipeline.
+        layer_workload: Estimated byte size per layer, used for scheduling.
+        layer_gradient_ready_events: CUDA events used to gate gradient reads.
+        model_timer: ``ModelTimer`` measuring per-layer latency.
+    """
+    def __init__(self,
+                 model: nn.Module,
+                 use_fp16: bool = False,
+                 name: Optional[str] = None,
+                 model_run_config: RoundPipeRunConfig = RoundPipeRunConfig()) -> None:
+        """Convert model storage to pinned tensors and determine pipeline cuts.
+        
+        A nn.Sequential model is split into layers directly. Arbitrary models
+        are wrapped as a single layer.
+
+        Args:
+            model: Module to wrap. Can be ``nn.Sequential`` or arbitrary model.
+            use_fp16: Whether to store floating parameters/buffers in FP16.
+            name: Optional friendly identifier. Defaults to ``file:line``.
+            model_run_config: Baseline configuration inherited by invocations.
+        """
+        super().__init__(model, name)
+        self.use_fp16: bool = use_fp16
+        self.model_run_config: RoundPipeRunConfig = copy.deepcopy(model_run_config)
+        if isinstance(model, nn.Sequential):
+            self.layers: List[nn.Module] = list(model)
+        else:
+            self.layers = [model]
+
+        self.num_layers: int = len(self.layers)
+        self.layer_workload: List[float] = []
+        self.layer_gradient_ready_events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(self.num_layers)] # pyright: ignore[reportAttributeAccessIssue]
+        for layer in self.layers:
+            self.layer_workload.append(get_model_size(layer))
+        self.model_timer: ModelTimer = ModelTimer(self.num_layers)
+
+        for parm in tqdm.tqdm(self.model.parameters(), total=sum(1 for _ in self.model.parameters()),
+                              desc=f'Roundpipe: Process params in {self.name}', leave=False):
+            pinned_tensor = torch.empty_like(parm.data, dtype=torch.float16 if use_fp16 and parm.is_floating_point() else None, pin_memory=True)
+            pinned_tensor.copy_(parm.data)
+            parm.data = pinned_tensor
+            ParamAttribute.set(parm)
+        for buffer in tqdm.tqdm(self.model.buffers(), total=sum(1 for _ in self.model.buffers()),
+                                desc=f'Roundpipe: Process buffers in {self.name}', leave=False):
+            pinned_tensor = torch.empty_like(buffer.data, dtype=torch.float16 if use_fp16 and buffer.is_floating_point() else None, pin_memory=True)
+            pinned_tensor.copy_(buffer.data)
+            buffer.data = pinned_tensor
+            ParamAttribute.set(buffer)
+
+        self.RoundPipe_initialized: bool = True
 
     def forward(self, *args: Any,
                 roundpipe_run_config: RoundPipeRunConfig = RoundPipeRunConfig(), **kwargs: Any) -> Any:
