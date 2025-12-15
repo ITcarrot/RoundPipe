@@ -4,6 +4,7 @@ import itertools
 import pytest
 import torch
 from torch.distributed.pipelining.microbatch import TensorChunkSpec, _Replicate, sum_reducer
+from torch.utils._pytree import tree_flatten
 
 from RoundPipe.batch import Batch, RoundPipePackedData
 from RoundPipe.RunConfig import RoundPipeRunConfig, FullRoundPipeRunConfig
@@ -171,3 +172,20 @@ def test_guess_from_packed_data():
 
     assert torch.allclose(torch.cat(args[0]), args_reconstruct[0])
     assert torch.allclose(torch.cat([kwargs['to_replicate'] for _ in range(4)]), kwargs_reconstruct['to_replicate'])
+
+def test_none():
+    args = (None,)
+    kwargs = {}
+    cfg = FullRoundPipeRunConfig(RoundPipeRunConfig(num_microbatch=3), RoundPipeRunConfig())
+    batch = Batch(args, kwargs, cfg)
+    event: torch.cuda.Event = torch.cuda.Event() # pyright: ignore[reportAssignmentType]
+    for i in range(3):
+        batch.forward_events[i] = [event] 
+        batch.backward_events[i] = [event] 
+    args_reconstruct, kwargs_reconstruct = batch.dump(cfg)
+    assert args_reconstruct[0] is None
+    assert kwargs_reconstruct == {}
+    
+    for i in range(3):
+        batch.flatten_states[i], batch.flatten_specs[i] = tree_flatten(None)
+    assert batch.dump(cfg) is None

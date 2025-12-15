@@ -270,7 +270,7 @@ class Batch:
                         # Scalar tensors are averaged to approximate per-microbatch reductions.
                         guessed_spec.append(avg_reducer)
                 else:
-                    guessed_spec.append(None)
+                    guessed_spec.append(_Replicate)
             hidden_states = [tree_unflatten(state, spec) for state, spec in zip(self.flatten_states, self.flatten_specs)]
             guessed_spec = tree_unflatten(guessed_spec, self.flatten_specs[0])
             return merge_chunks(hidden_states, guessed_spec)
