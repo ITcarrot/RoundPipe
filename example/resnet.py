@@ -86,7 +86,7 @@ testloader = DataLoader(testset, batch_size=128, shuffle=False, num_workers=2)
 
 # Training setup
 model = RoundPipe(ResNet().seq)
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.optim_parameters(), lr=0.001)
 criterion = nn.CrossEntropyLoss()
 
 train_losses, test_losses = [], []
@@ -107,18 +107,18 @@ def evaluate(loader):
     return loss_sum / total, correct / total
 
 # Training loop
+def step_fn():
+    optimizer.step()
+    optimizer.zero_grad()
 epochs = 20
 for epoch in range(epochs):
     model.train()
     running_loss, correct, total = 0, 0, 0
     for images, labels in trainloader:
         images, labels = images, labels
-        loss, outputs = model.train_iter(input_args=(images,), label=labels,
+        loss, outputs = model.forward_backward(input_args=(images,), label=labels,
                             loss_fn=lambda outputs, labels: criterion(outputs, labels) / (torch.cuda.device_count() + 1))
-        for i in range(torch.cuda.device_count()):
-            torch.cuda.synchronize(i)
-        optimizer.step()
-        optimizer.zero_grad()
+        model.step(step_fn)
         running_loss += loss.item() * labels.size(0)
         _, predicted = outputs.max(1)
         correct += predicted.eq(labels).sum().item()

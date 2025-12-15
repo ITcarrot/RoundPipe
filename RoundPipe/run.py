@@ -79,15 +79,15 @@ class RoundPipeRunContext:
         self.microbatch_id = microbatch_id
         self.num_microbatches = num_microbatches
         self.preserve_rng_state = preserve_rng_state
-        if model.use_fp16:
+        if model.param_dtype:
             self.device_autocast_kwargs = {
                 'enabled': True,
-                'dtype': torch.float16,
+                'dtype': model.param_dtype,
                 'cache_enabled': False
             }
             self.cpu_autocast_kwargs = {
                 'enabled': True,
-                'dtype': torch.float16,
+                'dtype': model.param_dtype,
                 'cache_enabled': False
             }
         else:
@@ -172,7 +172,9 @@ def run_forward(layer_group_id: int, batch: Batch,
     layer_ids = context.execute_plan.fwd_plan[layer_group_id]
     grad_context = torch.enable_grad() if context.enable_grad else torch.no_grad()
     if batch_idx == 0:
-        upload_layers([model.layers[layer_id] for layer_id in layer_ids], device, False)
+        finish_event = upload_layers([model.layers[layer_id] for layer_id in layer_ids], device, False)
+        for layer_id in layer_ids:
+            model.layer_param_uploaded_events[layer_id] = finish_event
     context.execute_plan.forward_wait_for(layer_group_id - 1)
     for layer_id in layer_ids:
         context.save_input(layer_id, batch, device)
@@ -241,7 +243,9 @@ def run_backward(layer_group_id: int,
     batch_idx = context.microbatch_id
     layer_ids = context.execute_plan.bwd_plan[layer_group_id]
     if batch_idx == 0:
-        upload_layers([model.layers[layer_id] for layer_id in layer_ids], device, True)
+        finish_event = upload_layers([model.layers[layer_id] for layer_id in layer_ids], device, True)
+        for layer_id in layer_ids:
+            model.layer_param_uploaded_events[layer_id] = finish_event
     flatten_inputs_gpu = async_h2d(
         device, [], context.flatten_inputs[layer_ids[0]], True
     )
@@ -328,7 +332,9 @@ def run_forward_backward(batch: Batch, context: RoundPipeRunContext,
     batch_idx = context.microbatch_id
     layer_ids = context.execute_plan.bwd_plan[0]
     if batch_idx == 0:
-        upload_layers([model.layers[layer_id] for layer_id in layer_ids], device, True)
+        finish_event = upload_layers([model.layers[layer_id] for layer_id in layer_ids], device, True)
+        for layer_id in layer_ids:
+            model.layer_param_uploaded_events[layer_id] = finish_event
     flatten_inputs_gpu = async_h2d(
         device, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], True
     )

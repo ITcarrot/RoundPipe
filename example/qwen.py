@@ -12,7 +12,7 @@ model = Qwen3ForCausalLM.from_pretrained(
     use_cache=False,
 )
 model = wrap_model_to_roundpipe(model, model_run_config=RoundPipeRunConfig(num_microbatch=4))
-optim = torch.optim.Adam(model.parameters(), lr=1e-5)
+optim = torch.optim.Adam(model.optim_parameters(), lr=1e-5)
 scaler = torch.GradScaler()
 dataset = load_dataset("/data/lyb/AI-MO/NuminaMath-CoT")
 
@@ -40,13 +40,10 @@ for epoch in range(20):
     for data in dataloader:
         input_dict = tokenize(data)
         labels = input_dict.pop("labels")
-        loss, _ = model.train_iter(input_kwargs=input_dict, label=labels,
-                                loss_fn=lambda outputs, labels: model.loss_function(logits=outputs.logits, labels=labels, vocab_size=model.vocab_size) / 4)
+        loss, _ = model.forward_backward(input_kwargs=input_dict, label=labels,
+                    loss_fn=lambda outputs, labels: model.loss_function(logits=outputs.logits, labels=labels, vocab_size=model.vocab_size) / 4)
         print(loss)
         epoch_loss.append(loss.item())
-        for i in range(torch.cuda.device_count()):
-            torch.cuda.synchronize(i)
-        optim.step()
-        optim.zero_grad()
+        model.step(lambda: (optim.step(), optim.zero_grad(), None)[-1])
     mean_loss = sum(epoch_loss) / len(epoch_loss)
     print(f"Epoch {epoch+1}, Loss: {mean_loss}")

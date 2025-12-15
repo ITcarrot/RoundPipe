@@ -119,14 +119,17 @@ def create_upload_pair(tensor_pair: List[Tuple[torch.Tensor, torch.Tensor]],
         tensor_pair.append((src, dst))
     return dst
 
-def upload_layers(layers: List[torch.nn.Module],
-                  device: 'DeviceManager', upload_grad: bool):
+def upload_layers(layers: List[torch.nn.Module], device: 'DeviceManager',
+                  upload_grad: bool) -> torch.cuda.Event:
     """Move parameters/buffers (and optionally grads) onto the target device.
 
     Args:
         layers: Sequence of layers to upload.
         device: Device manager orchestrating the transfer.
         upload_grad: Whether to copy gradient buffers alongside parameters.
+
+    Returns:
+        Event that signals when the upload is complete.
     """
     chunk_events = device.flush_upload_marks()
     if len(chunk_events) == 0:
@@ -146,7 +149,7 @@ def upload_layers(layers: List[torch.nn.Module],
                 buffer_attr = ParamAttribute.get(buffer)
                 buffer.data = create_upload_pair(tensor_pair, buffer_attr.data_cpu, device.device)
     if len(tensor_pair) == 0:
-        return
+        return torch.cuda.Event() # pyright: ignore[reportReturnType]
     chunked_tensor_pairs = chunk_layer_params(tensor_pair, len(chunk_events))
 
     with torch.cuda.stream(device.param_upstream):
@@ -154,8 +157,11 @@ def upload_layers(layers: List[torch.nn.Module],
             chunk_event.wait()
             for src, dst in tensor_chunk:
                 dst.copy_(src, non_blocking = True)
+    finish_event: torch.cuda.Event = torch.cuda.Event()  # pyright: ignore[reportAssignmentType]
+    finish_event.record(device.param_upstream)
     device.wait_stream(device.compute_stream, device.param_upstream)
     device.wait_stream(device.param_upstream, device.compute_stream)
+    return finish_event
 
 def free_layer(layer: torch.nn.Module, device: 'DeviceManager'):
     """Swap layer tensors back to their CPU storage to free GPU memory.

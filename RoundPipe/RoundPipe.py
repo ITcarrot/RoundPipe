@@ -4,6 +4,8 @@ from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
 from beartype import beartype
 import traceback
 import copy
+import warnings
+import threading
 
 import tqdm
 import torch
@@ -11,6 +13,7 @@ import torch.nn as nn
 
 from .batch import Batch
 from .device import get_next_device
+from .optim import launch_optim_kernel
 from .param import ParamAttribute
 from .run import RoundPipeRunContext, RoundPipeBatchedBackward, RoundPipeMicrobatchBackward, RoundPipeInputBackward
 from .RunConfig import RoundPipeRunConfig, FullRoundPipeRunConfig
@@ -26,14 +29,18 @@ class RoundPipeBase(nn.Module):
         model: The provided module wrapped for RoundPipe execution.
         original_model: Reference to the pre-wrapped module when shimming
             attribute access.
+        optim_dtype: Data type for optimizer parameters.
+        optim_updated: Event signaling optimizer have updated.
     """
-    def __init__(self, model: nn.Module,
-                 name: Optional[str] = None) -> None:
+    def __init__(self, model: nn.Module, name: Optional[str] = None,
+                 optim_dtype: Optional[torch.dtype] = None) -> None:
         '''Initialize the RoundPipe base wrapper.
         
         Args:
             model: Module to wrap.
             name: Optional friendly identifier. Defaults to ``file:line``.
+            optim_dtype: Data type for optimizer parameters. Defaults to the same
+                as the parameter data type.
         '''
         super().__init__()
         # call stack: beartype -> (Auto)RoundPipe -> beartype -> RoundPipeBase
@@ -41,6 +48,10 @@ class RoundPipeBase(nn.Module):
         self.name: str = name if name else f'{filename.split("/")[-1]}:{lineno}'
         self.model: nn.Module = model
         self.original_model: Optional[nn.Module] = None # placeholder for original model if needing its functions
+
+        self.optim_dtype: Optional[torch.dtype] = optim_dtype
+        self.optim_updated: threading.Event = threading.Event()
+        self.optim_updated.set()
 
     def __getattr__(self, name: str) -> Any:
         """Delegate missing attributes to the wrapped or original module."""
@@ -77,23 +88,113 @@ class RoundPipeBase(nn.Module):
         """
         object.__setattr__(self, 'original_model', original_model)
 
+    def named_parameters(self, prefix: str = "", recurse: bool = True,
+                         remove_duplicate: bool = True) -> Iterator[tuple[str, nn.Parameter]]:
+        warnings.warn("RoundPipe will manage parameter location and dtype internally. "
+                      "\nAccessing parameters() or named_parameters() directly may "
+                      "lead to unexpected behavior. \nIf you intend to get parameters "
+                      "for optimization, please use optim_parameters() or "
+                      "optim_named_parameters() instead.", UserWarning)
+        return super().named_parameters(prefix, recurse, remove_duplicate)
+
+    def optim_named_parameters(self, prefix: str = "", remove_duplicate: bool = True
+                               ) -> Iterator[tuple[str, torch.Tensor]]:
+        """Iterator over named parameters suitable for optimizer consumption.
+
+        Args:
+            prefix: Prefix to prepend to parameter names.
+            remove_duplicate: Whether to skip duplicate parameters.
+
+        Yields:
+            Tuples of parameter names and their optimizer-ready tensors.
+        """
+        for name, parm in super().named_parameters(prefix, True, remove_duplicate):
+            if not ParamAttribute.has(parm):
+                ParamAttribute.set(parm)
+            parm_attr = ParamAttribute.get(parm)
+            if not parm_attr.optim_inited() and parm.requires_grad:
+                parm_attr.data_optim = parm_attr.data_cpu.to(dtype=self.optim_dtype, copy=True)
+                parm_attr.data_version = parm_attr.data_optim._version
+            yield name, parm_attr.data_optim
+ 
+    def optim_parameters(self) -> Iterator[torch.Tensor]:
+        """Iterator over parameters suitable for optimizer consumption.
+
+        Yields:
+            Parameters stored in their optimizer-ready format.
+        """
+        for _, parm in self.optim_named_parameters():
+            yield parm
+
+    def sync_optim_param(self) -> None:
+        """Ensure optimizer updated results are copied back to parameters."""
+        raise NotImplementedError("sync_optim_param must be implemented in subclasses.")
+    
+    def move_grad_to_optim(self) -> None:
+        """Move parameter gradients to optimizer parameters."""
+        raise NotImplementedError("move_grad_to_optim must be implemented in subclasses.")
+
+    def step(self, step_fn: Callable[..., None], is_async: bool = True,
+             *args: Any, **kwargs: Any) -> None:
+        """Run an optimizer step using the provided step function.
+        The non-async version ensures optimizer updates are complete before returning.
+        This ensures every training iteration uses the latest parameters.
+        But it will greatly reduce performance, usually not recommended.
+        The async version returns immediately after scheduling the step function.
+        The training iteration will use 1-step-old parameters, which usually works fine in practice.
+
+        Args:
+            step_fn: Callable that performs an optimization step.
+            is_async: Whether to run the step asynchronously.
+            *args: Positional arguments forwarded to ``step_fn``.
+            **kwargs: Keyword arguments forwarded to ``step_fn``.
+        """
+        for name, param in super().named_parameters():
+            if not ParamAttribute.has(param):
+                ParamAttribute.set(param)
+            param_attr = ParamAttribute.get(param)
+            if param.grad is not None and not param_attr.optim_inited():
+                raise RuntimeError(f"Parameter {name} has gradient but optimizer data is not "
+                                   "initialized. This is likely because you did not use "
+                                   "optim_parameters() to create your optimizer, or you changed "
+                                   "parameter requires_grad after optimizer creation. "
+                                   "Please make sure to create optimizer with optim_parameters().")
+            # Move grad reference away from param to avoid being overwritten by next backward
+            param_attr.data_grad = param.grad
+            param.grad = None
+
+        if is_async:
+            launch_optim_kernel(self.move_grad_to_optim)
+            self.sync_optim_param()
+            self.optim_updated.clear()
+            launch_optim_kernel(step_fn, *args, **kwargs)
+            launch_optim_kernel(lambda: self.optim_updated.set())
+        else:
+            launch_optim_kernel(self.move_grad_to_optim)
+            self.optim_updated.clear()
+            launch_optim_kernel(step_fn, *args, **kwargs)
+            launch_optim_kernel(lambda: self.optim_updated.set())
+            self.sync_optim_param()
+
 @beartype
 class RoundPipe(RoundPipeBase):
     """Wraps an ``nn.Module`` with RoundPipe's pipelined execution runtime.
 
     Attributes:
-        use_fp16: Flag indicating whether weights/buffers are stored as FP16.
+        param_dtype: Data type for storing floating parameters/buffers.
         model_run_config: Default run configuration used when callers do not
             override parameters per invocation.
         layers: Sequence of logical pipeline stages.
         num_layers: Total number of layer groups in the pipeline.
         layer_workload: Estimated byte size per layer, used for scheduling.
-        layer_gradient_ready_events: CUDA events used to gate gradient reads.
+        layer_param_uploaded_events: Event signaling params is copied to gpu.
+        layer_gradient_ready_events: Event signaling gradient is copied to cpu.
         model_timer: ``ModelTimer`` measuring per-layer latency.
     """
     def __init__(self,
                  model: nn.Module,
-                 use_fp16: bool = False,
+                 param_dtype: Optional[torch.dtype] = None,
+                 optim_dtype: Optional[torch.dtype] = None,
                  name: Optional[str] = None,
                  model_run_config: RoundPipeRunConfig = RoundPipeRunConfig()) -> None:
         """Convert model storage to pinned tensors and determine pipeline cuts.
@@ -103,12 +204,15 @@ class RoundPipe(RoundPipeBase):
 
         Args:
             model: Module to wrap. Can be ``nn.Sequential`` or arbitrary model.
-            use_fp16: Whether to store floating parameters/buffers in FP16.
+            param_dtype: Data type for storing floating parameters/buffers. Defaults to
+                the original dtype.
+            optim_dtype: Data type for optimizer parameters. Defaults to the same
+                as ``param_dtype``.
             name: Optional friendly identifier. Defaults to ``file:line``.
             model_run_config: Baseline configuration inherited by invocations.
         """
-        super().__init__(model, name)
-        self.use_fp16: bool = use_fp16
+        super().__init__(model, name, optim_dtype)
+        self.param_dtype: Optional[torch.dtype] = param_dtype
         self.model_run_config: RoundPipeRunConfig = copy.deepcopy(model_run_config)
         if isinstance(model, nn.Sequential):
             self.layers: List[nn.Module] = list(model)
@@ -117,25 +221,53 @@ class RoundPipe(RoundPipeBase):
 
         self.num_layers: int = len(self.layers)
         self.layer_workload: List[float] = []
-        self.layer_gradient_ready_events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(self.num_layers)] # pyright: ignore[reportAttributeAccessIssue]
         for layer in self.layers:
             self.layer_workload.append(get_model_size(layer))
         self.model_timer: ModelTimer = ModelTimer(self.num_layers)
 
+        self.layer_param_uploaded_events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(self.num_layers)] # pyright: ignore[reportAttributeAccessIssue]
+        self.layer_gradient_ready_events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(self.num_layers)] # pyright: ignore[reportAttributeAccessIssue]
+
         for parm in tqdm.tqdm(self.model.parameters(), total=sum(1 for _ in self.model.parameters()),
                               desc=f'Roundpipe: Process params in {self.name}', leave=False):
-            pinned_tensor = torch.empty_like(parm.data, dtype=torch.float16 if use_fp16 and parm.is_floating_point() else None, pin_memory=True)
+            pinned_tensor = torch.empty_like(parm.data, dtype=self.param_dtype if parm.is_floating_point() else None, pin_memory=True)
             pinned_tensor.copy_(parm.data)
             parm.data = pinned_tensor
             ParamAttribute.set(parm)
         for buffer in tqdm.tqdm(self.model.buffers(), total=sum(1 for _ in self.model.buffers()),
                                 desc=f'Roundpipe: Process buffers in {self.name}', leave=False):
-            pinned_tensor = torch.empty_like(buffer.data, dtype=torch.float16 if use_fp16 and buffer.is_floating_point() else None, pin_memory=True)
+            pinned_tensor = torch.empty_like(buffer.data, dtype=self.param_dtype if buffer.is_floating_point() else None, pin_memory=True)
             pinned_tensor.copy_(buffer.data)
             buffer.data = pinned_tensor
             ParamAttribute.set(buffer)
 
         self.RoundPipe_initialized: bool = True
+
+    @override
+    def sync_optim_param(self) -> None:
+        """Ensure optimizer updated results are copied back to parameters."""
+        self.optim_updated.wait()
+        for layer, event in zip(reversed(self.layers), reversed(self.layer_param_uploaded_events)):
+            event.synchronize()
+            for parm in layer.parameters():
+                parm_attr = ParamAttribute.get(parm)
+                if parm_attr.optim_inited() and parm_attr.data_version != parm_attr.data_optim._version:
+                    parm_attr.data_cpu.copy_(parm_attr.data_optim)
+                    parm_attr.data_version = parm_attr.data_optim._version
+
+    @override
+    def move_grad_to_optim(self) -> None:
+        """Move parameter gradients to optimizer parameters."""
+        for layer, event in zip(reversed(self.layers), reversed(self.layer_gradient_ready_events)):
+            event.synchronize()
+            for param in layer.parameters():
+                param_attr = ParamAttribute.get(param)
+                if param_attr.data_grad is not None:
+                    if param_attr.data_optim.grad is None:
+                        param_attr.data_optim.grad = param_attr.data_grad.to(dtype=param_attr.data_optim.dtype)
+                    else:
+                        param_attr.data_optim.grad.add_(param_attr.data_grad.to(dtype=param_attr.data_optim.dtype))
+                    param_attr.data_grad = None
 
     def forward(self, *args: Any,
                 roundpipe_run_config: RoundPipeRunConfig = RoundPipeRunConfig(), **kwargs: Any) -> Any:
@@ -188,13 +320,13 @@ class RoundPipe(RoundPipeBase):
 
         return batch.dump(full_run_config)
 
-    def train_iter(self, input_args: Tuple[Any, ...] = (),
-                   input_kwargs: Dict[str, Any] = {},
-                   label: Any = None,
-                   loss_fn: Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]] = lambda outputs, labels: outputs,
-                   run_config: RoundPipeRunConfig = RoundPipeRunConfig()
-                   ) -> Tuple[Union[List[torch.Tensor], torch.Tensor], Any]:
-        """Run one training iteration.
+    def forward_backward(self, input_args: Tuple[Any, ...] = (),
+                         input_kwargs: Dict[str, Any] = {},
+                         label: Any = None,
+                         loss_fn: Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]] = lambda outputs, labels: outputs,
+                         run_config: RoundPipeRunConfig = RoundPipeRunConfig()
+                         ) -> Tuple[Union[List[torch.Tensor], torch.Tensor], Any]:
+        """Run a fused forward and backward pass over all microbatches.
 
         Args:
             input_args: Positional forward arguments.
