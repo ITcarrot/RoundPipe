@@ -107,9 +107,6 @@ def evaluate(loader):
     return loss_sum / total, correct / total
 
 # Training loop
-def step_fn():
-    optimizer.step()
-    optimizer.zero_grad()
 epochs = 20
 for epoch in range(epochs):
     model.train()
@@ -117,8 +114,9 @@ for epoch in range(epochs):
     for images, labels in trainloader:
         images, labels = images, labels
         loss, outputs = model.forward_backward(input_args=(images,), label=labels,
-                            loss_fn=lambda outputs, labels: criterion(outputs, labels) / (torch.cuda.device_count() + 1))
-        model.step(step_fn)
+                            loss_fn=lambda outputs, labels: criterion(outputs, labels) / (torch.cuda.device_count() + 1),
+                            return_outputs=True)
+        model.step(lambda: (optimizer.step(), optimizer.zero_grad(), None)[2])
         running_loss += loss.item() * labels.size(0)
         _, predicted = outputs.max(1)
         correct += predicted.eq(labels).sum().item()

@@ -324,8 +324,10 @@ class RoundPipe(RoundPipeBase):
                          input_kwargs: Dict[str, Any] = {},
                          label: Any = None,
                          loss_fn: Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]] = lambda outputs, labels: outputs,
+                         return_outputs: bool = False,
                          run_config: RoundPipeRunConfig = RoundPipeRunConfig()
-                         ) -> Tuple[Union[List[torch.Tensor], torch.Tensor], Any]:
+                         ) -> Union[Tuple[Union[List[torch.Tensor], torch.Tensor], Any],
+                                    List[torch.Tensor], torch.Tensor]:
         """Run a fused forward and backward pass over all microbatches.
 
         Args:
@@ -334,11 +336,16 @@ class RoundPipe(RoundPipeBase):
             label: Label payload aligned with ``loss_fn`` expectations.
             loss_fn: Callable that consumes ``(outputs, labels)`` and produces
                 a loss tensor or sequence of loss tensors.
+            return_outputs: Whether to return the model outputs along with loss.
             run_config: Optional per-call overrides for runtime behavior.
 
         Returns:
-            The sum of all microbatch losses used for backward
-            The merged or packed outputs from all microbatches.
+            If ``return_outputs`` is ``False``, returns the sum of loss
+                tensor(s) across all microbatches.
+
+                If ``return_outputs`` is ``True``, returns a tuple of
+                ``(loss_sum, merged_outputs)`` where ``merged_outputs``
+                is the output pytree produced by merging or packing all microbatches.
 
         Raises:
             AssertionError: If gradients are not enabled.
@@ -362,7 +369,7 @@ class RoundPipe(RoundPipeBase):
             device.launch_forward(layer_group_id, batch, run_context)
         execute_plan.forward_wait_complete(batch.num_microbatch)
         device = get_next_device()
-        device.launch_forward_backward(batch, run_context, loss_fn)
+        device.launch_forward_backward(batch, run_context, loss_fn, return_outputs)
         for layer_group_id in range(1, len(execute_plan.bwd_plan)):
             device = get_next_device()
             device.launch_backward(layer_group_id, run_context)
@@ -381,4 +388,7 @@ class RoundPipe(RoundPipeBase):
             for batch_loss in batch.loss_list:
                 for idx, t in enumerate(batch_loss):
                     loss[idx] = loss[idx] + t.cpu()
-        return loss, batch.dump(full_run_config)
+        if return_outputs:
+            return loss, batch.dump(full_run_config)
+        else:
+            return loss

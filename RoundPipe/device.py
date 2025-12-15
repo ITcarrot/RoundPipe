@@ -6,7 +6,6 @@ Attributes:
 """
 
 from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
-from enum import Enum
 import threading
 import itertools
 
@@ -15,13 +14,6 @@ import torch
 from .batch import Batch
 from .run import run_forward, run_backward, run_forward_backward, RoundPipeRunContext
 from .threads import RoundPipeThread, dump_all_active_threads, KeyboardInterruptRoundPipeThreads
-
-class JobType(Enum):
-    """Execution type scheduled onto a ``DeviceManager``."""
-
-    FORWARD = 1
-    BACKWARD = 2
-    FORWARD_BACKWARD = 3
 
 class InterStreamMemManager:
     """Handles tensor deallocation across multiple CUDA streams.
@@ -153,8 +145,7 @@ class DeviceManager:
 
         self.is_idle: threading.Semaphore = threading.Semaphore(1)
         self.job_arrived: threading.Semaphore = threading.Semaphore(0)
-        self.cur_job: Optional[Tuple[JobType, int, Optional[Batch], List[RoundPipeRunContext],
-                               Optional[Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]]]]] = None
+        self.cur_job: Optional[Tuple[Callable[..., None], List[RoundPipeRunContext], Tuple]] = None
         self.controller_thread: RoundPipeThread = RoundPipeThread(target=self.controller, name=f'RoundPipe DeviceController-{id}')
 
     def wait_stream(self, waiter: torch.cuda.Stream,
@@ -200,23 +191,14 @@ class DeviceManager:
             self.job_arrived.acquire()
             self.controller_thread.is_active = True
             assert self.cur_job is not None
-            job_type, layer_group_id, batch, run_context, loss_fn = self.cur_job
+            fn, run_context, args = self.cur_job
 
-            if job_type == JobType.FORWARD:
-                assert batch is not None
-                for batch_context in run_context:
-                    run_forward(layer_group_id, batch, batch_context, self)
-            elif job_type == JobType.BACKWARD:
-                for batch_context in run_context:
-                    run_backward(layer_group_id, batch_context, self)
-            elif job_type == JobType.FORWARD_BACKWARD:
-                assert batch is not None and loss_fn is not None
-                for batch_context in run_context:
-                    run_forward_backward(batch, batch_context, loss_fn, self)
+            for batch_context in run_context:
+                fn(self, batch_context, *args)
 
             # clear variables references to avoid memory waste
             self.cur_job = None
-            del job_type, layer_group_id, batch, run_context, loss_fn
+            del fn, run_context, args
             self.controller_thread.is_active = False
             self.is_idle.release()
 
@@ -234,7 +216,7 @@ class DeviceManager:
         except KeyboardInterrupt:
             dump_all_active_threads()
             raise KeyboardInterruptRoundPipeThreads from None
-        self.cur_job = (JobType.FORWARD, layer_group_id, batch, run_context, None)
+        self.cur_job = (run_forward, run_context, (layer_group_id, batch))
         self.job_arrived.release()
     
     def launch_backward(self, layer_group_id: int,
@@ -250,24 +232,26 @@ class DeviceManager:
         except KeyboardInterrupt:
             dump_all_active_threads()
             raise KeyboardInterruptRoundPipeThreads from None
-        self.cur_job = (JobType.BACKWARD, layer_group_id, None, run_context, None)
+        self.cur_job = run_backward, run_context, (layer_group_id,)
         self.job_arrived.release()
 
     def launch_forward_backward(self, batch: Batch, run_context: List[RoundPipeRunContext],
-                                loss_fn: Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]]) -> None:
+                                loss_fn: Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]],
+                                return_outputs: bool) -> None:
         """Run forward + backward in the same pass for final layers.
 
         Args:
             batch: Batch object generated for the training iteration.
             run_context: Per-microbatch execution contexts.
             loss_fn: Callable that consumes outputs + labels and returns loss.
+            return_outputs: Whether to return model outputs from forward pass.
         """
         try:
             self.is_idle.acquire()
         except KeyboardInterrupt:
             dump_all_active_threads()
             raise KeyboardInterruptRoundPipeThreads from None
-        self.cur_job = (JobType.FORWARD_BACKWARD, 0, batch, run_context, loss_fn)
+        self.cur_job = (run_forward_backward, run_context, (batch, loss_fn, return_outputs))
         self.job_arrived.release()
 
 device_list: List[DeviceManager] = []

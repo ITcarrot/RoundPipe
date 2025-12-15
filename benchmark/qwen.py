@@ -22,14 +22,16 @@ with torch.no_grad():
     loss = model(input_ids=input_tensor, attention_mask=mask, labels=input_tensor).loss
     print(f'Initial loss: {loss.item()}')
 
+torch.cuda.memory._record_memory_history()
 for iter in tqdm(range(2)):
-    loss, _ = model.forward_backward(input_kwargs={'input_ids': input_tensor, 'attention_mask': mask}, label=input_tensor,
+    loss = model.forward_backward(input_kwargs={'input_ids': input_tensor, 'attention_mask': mask}, label=input_tensor,
                     loss_fn=lambda outputs, labels: model.loss_function(logits=outputs.logits, labels=labels, vocab_size=model.vocab_size) / (torch.cuda.device_count() + 1))
     model.step(lambda: (optim.step(), optim.zero_grad(), None)[-1])
+torch.cuda.memory._dump_snapshot('./my_snapshot.pickle')
 
 start = time.perf_counter()
 for iter in tqdm(range(5)):
-    loss, _ = model.forward_backward(input_kwargs={'input_ids': input_tensor, 'attention_mask': mask}, label=input_tensor,
+    loss = model.forward_backward(input_kwargs={'input_ids': input_tensor, 'attention_mask': mask}, label=input_tensor,
                     loss_fn=lambda outputs, labels: model.loss_function(logits=outputs.logits, labels=labels, vocab_size=model.vocab_size) / (torch.cuda.device_count() + 1))
     model.step(lambda: (optim.step(), optim.zero_grad(), None)[-1])
 

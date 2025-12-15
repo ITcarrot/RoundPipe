@@ -40,7 +40,7 @@ for epoch in range(20):
     for data in dataloader:
         input_dict = tokenize(data)
         labels = input_dict.pop("labels")
-        loss, _ = model.forward_backward(input_kwargs=input_dict, label=labels,
+        loss = model.forward_backward(input_kwargs=input_dict, label=labels,
                     loss_fn=lambda outputs, labels: model.loss_function(logits=outputs.logits, labels=labels, vocab_size=model.vocab_size) / 4)
         print(loss)
         epoch_loss.append(loss.item())
