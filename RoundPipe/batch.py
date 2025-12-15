@@ -82,25 +82,50 @@ def guess_split_spec(data: Any, expected_batchsize: Optional[int] = None) -> Tup
         guessed_batchsize = maybe_batchsize[0]
     return tree_unflatten(guessed_spec, flatten_spec), guessed_batchsize
 
-def get_avg_reducer_args() -> Tuple[torch.Tensor, Callable[[torch.Tensor, torch.Tensor], torch.Tensor]]:
-    """Build a reducer that averages scalar losses across microbatches.
+class AvgReducer(_CustomReducer):
+    """Reducer that averages scalar losses across microbatches.
 
-    Returns:
-        the initial accumulator tensor
-        a reducer callable that updates the running average.
+    Attributes:
+        sum: Running sum of scalar losses.
+        count: Number of scalar losses accumulated.
     """
-    init_val = torch.tensor(0)
-    init_val.roundpipe_avg_reducer_sum = torch.tensor(0) # pyright: ignore[reportAttributeAccessIssue]
-    init_val.roundpipe_avg_reducer_count = 0 # pyright: ignore[reportAttributeAccessIssue]
-    def reduce(reduced_val: torch.Tensor, new_val: torch.Tensor) -> torch.Tensor:
-        val_sum = reduced_val.roundpipe_avg_reducer_sum + new_val # pyright: ignore[reportAttributeAccessIssue]
-        val_count = reduced_val.roundpipe_avg_reducer_count + 1 # pyright: ignore[reportAttributeAccessIssue]
-        new_reduced = val_sum / val_count
-        new_reduced.roundpipe_avg_reducer_sum = val_sum # pyright: ignore[reportAttributeAccessIssue]
-        new_reduced.roundpipe_avg_reducer_count = val_count # pyright: ignore[reportAttributeAccessIssue]
-        return new_reduced
-    return init_val, reduce
-avg_reducer: _CustomReducer = _CustomReducer(*get_avg_reducer_args())
+    def __repr__(self) -> str:
+        return 'AvgReducer'
+
+    def __init__(self) -> None:
+        super().__init__(None, self.reduce)
+        self.sum: torch.Tensor = torch.tensor(0)
+        self.count: int = 0
+        self.previous_output: torch.Tensor = self.sum
+
+    def reduce(self, reduced_val: Optional[torch.Tensor],
+               new_val: torch.Tensor) -> torch.Tensor:
+        """Update the running average with a new scalar loss.
+
+        Args:
+            reduced_val: Current average loss tensor. A value of ``None``
+                will reset the reducer state.
+            new_val: New scalar loss tensor to incorporate.
+
+        Returns:
+            Updated average loss tensor.
+
+        Raises:
+            AssertionError: If the same ``AvgReducer`` instance is used
+                across multiple reductions at the same time.
+        """
+        if reduced_val is None:
+            self.sum = new_val.clone()
+            self.count = 1
+        else:
+            assert reduced_val is self.previous_output, \
+                "Do not use the same AvgReducer instance across multiple reductions at the same time."
+            self.sum = self.sum + new_val
+            self.count += 1
+        self.previous_output = self.sum / self.count
+        return self.previous_output
+
+avg_reducer: AvgReducer = AvgReducer()
 
 class Batch:
     """Holds flattened microbatch state, labels, and CUDA events.
@@ -143,8 +168,19 @@ class Batch:
                 args_spec, guessed_batchsize = guess_split_spec(args)
             if kwargs_spec is None:
                 kwargs_spec, guessed_batchsize = guess_split_spec(kwargs, guessed_batchsize)
-            args_list, kwargs_list = split_args_kwargs_into_chunks(
-                args, kwargs, run_config.num_microbatch, args_spec, kwargs_spec)
+            try:
+                args_list, kwargs_list = split_args_kwargs_into_chunks(
+                    args, kwargs, run_config.num_microbatch, args_spec, kwargs_spec)
+            except Exception as e:
+                info = "Split input failed. The specs are: "
+                info += (f"args_spec = {args_spec}, "
+                         .replace('torch.distributed.pipelining.microbatch.', ''))
+                info += (f"kwargs_spec = {kwargs_spec}. "
+                         .replace('torch.distributed.pipelining.microbatch.', ''))
+                info += "Please check if they are compatible with the input arguments. "
+                info += "You may provide a custom split spec/function to handle splitting."
+                e.args += (info,)
+                raise
 
         self.flatten_states: List[List[Any]] = []
         self.flatten_specs: List[TreeSpec] = []
@@ -194,8 +230,17 @@ class Batch:
             label_spec = run_config.split_label
             if label_spec is None:
                 label_spec, _ = guess_split_spec(label)
-            label_list, _ = split_args_kwargs_into_chunks(
-                (label,), {}, self.num_microbatch, (label_spec,), {})
+            try:
+                label_list, _ = split_args_kwargs_into_chunks(
+                    (label,), {}, self.num_microbatch, (label_spec,), {})
+            except Exception as e:
+                info = "Split label failed. The specs are: "
+                info += (f"label_spec = {label_spec}, "
+                         .replace('torch.distributed.pipelining.microbatch.', ''))
+                info += "Please check if they are compatible with the label arguments. "
+                info += "You may provide a custom split spec/function to handle splitting."
+                e.args += (info,)
+                raise
             self.label_list = [lbl_tuple[0] for lbl_tuple in label_list]
         self.loss_list: List[Union[Sequence[torch.Tensor], torch.Tensor]] = [[] for _ in range(self.num_microbatch)]
 
@@ -273,7 +318,16 @@ class Batch:
                     guessed_spec.append(_Replicate)
             hidden_states = [tree_unflatten(state, spec) for state, spec in zip(self.flatten_states, self.flatten_specs)]
             guessed_spec = tree_unflatten(guessed_spec, self.flatten_specs[0])
-            return merge_chunks(hidden_states, guessed_spec)
+            try:
+                return merge_chunks(hidden_states, guessed_spec)
+            except Exception as e:
+                info = "Automatic merge failed. The specs are: "
+                info += (f"merge_spec = {guessed_spec}, "
+                         .replace('torch.distributed.pipelining.microbatch.', ''))
+                info += "Please check if they are compatible with the output arguments. "
+                info += "You may provide a custom merge spec/function to handle merging."
+                e.args += (info,)
+                raise
         else:
             hidden_states = [tree_unflatten(state, spec) for state, spec in zip(self.flatten_states, self.flatten_specs)]
             return merge_chunks(hidden_states, run_config.merge_output)
