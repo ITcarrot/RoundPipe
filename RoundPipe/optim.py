@@ -2,27 +2,43 @@
 
 Attributes:
     kernel_queue: Queue of optimizer kernel tasks.
+    optim_shutdown: Flag to signal optimizer stream shutdown.
+    optim_idle: Event that signals whether the optimizer stream is idle.
     optim_thread: Daemon thread that executes optimizer tasks.
 """
 from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
 
 import queue
+import threading
+import atexit
 
 from .threads import RoundPipeThread
 
 kernel_queue: queue.Queue[Tuple[Callable, Tuple, Dict[str, Any]]] = queue.Queue()
+optim_shutdown = False
+optim_idle: threading.Event = threading.Event()
+optim_idle.set()
 def controller() -> None:
     """Optimizer Stream thread function."""
-    while True:
+    while not optim_shutdown:
         fn, args, kwargs = kernel_queue.get()
+        optim_idle.clear()
         optim_thread.is_active = True
         fn(*args, **kwargs)
         optim_thread.is_active = False
+        optim_idle.set()
 
 optim_thread: RoundPipeThread = RoundPipeThread(
     target=controller,
     name="RoundPipe Optimizer Stream"
 )
+
+def shutdown_optim() -> None:
+    """Shut down the optimizer stream."""
+    global optim_shutdown
+    optim_shutdown = True
+    optim_idle.wait()
+atexit.register(shutdown_optim)
 
 def launch_optim_kernel(fn: Callable, *args: Any, **kwargs: Any) -> None:
     """Launch an optimizer kernel on the optimizer stream.
