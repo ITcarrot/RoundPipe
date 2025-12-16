@@ -109,8 +109,6 @@ class RoundPipeBase(nn.Module):
             Tuples of parameter names and their optimizer-ready tensors.
         """
         for name, parm in super().named_parameters(prefix, True, remove_duplicate):
-            if not ParamAttribute.has(parm):
-                ParamAttribute.set(parm)
             parm_attr = ParamAttribute.get(parm)
             if not parm_attr.optim_inited() and parm.requires_grad:
                 parm_attr.data_optim = parm_attr.data_cpu.to(dtype=self.optim_dtype, copy=True)
@@ -150,8 +148,6 @@ class RoundPipeBase(nn.Module):
             **kwargs: Keyword arguments forwarded to ``step_fn``.
         """
         for name, param in super().named_parameters():
-            if not ParamAttribute.has(param):
-                ParamAttribute.set(param)
             param_attr = ParamAttribute.get(param)
             if param.grad is not None and not param_attr.optim_inited():
                 raise RuntimeError(f"Parameter {name} has gradient but optimizer data is not "
@@ -241,7 +237,7 @@ class RoundPipe(RoundPipeBase):
             buffer.data = pinned_tensor
             ParamAttribute.set(buffer)
 
-        self.RoundPipe_initialized: bool = True
+        self.RoundPipe_initialized = True
 
     @override
     def sync_optim_param(self) -> None:
@@ -249,11 +245,11 @@ class RoundPipe(RoundPipeBase):
         self.optim_updated.wait()
         for layer, event in zip(reversed(self.layers), reversed(self.layer_param_uploaded_events)):
             event.synchronize()
-            for parm in layer.parameters():
-                parm_attr = ParamAttribute.get(parm)
-                if parm_attr.optim_inited() and parm_attr.data_version != parm_attr.data_optim._version:
-                    parm_attr.data_cpu.copy_(parm_attr.data_optim)
-                    parm_attr.data_version = parm_attr.data_optim._version
+            for param in layer.parameters():
+                param_attr = ParamAttribute.get(param)
+                if param_attr.optim_inited() and param_attr.data_version != param_attr.data_optim._version:
+                    param_attr.data_cpu.copy_(param_attr.data_optim)
+                    param_attr.data_version = param_attr.data_optim._version
 
     @override
     def move_grad_to_optim(self) -> None:
@@ -392,3 +388,83 @@ class RoundPipe(RoundPipeBase):
             return loss, batch.dump(full_run_config)
         else:
             return loss
+
+@beartype
+class AutoRoundPipe(RoundPipeBase):
+    """Provides partial RoundPipe's features over an arbitrary model.
+    This includes optimizer parameter management and async step execution.
+
+    Attributes:
+        module_param_uploaded_events: Events signaling params copied to gpu.
+            This collects all RoundPipe submodules' event lists.
+        module_gradient_ready_events: Events signaling gradients copied to cpu.
+            This collects all RoundPipe submodules' event lists.
+    """
+    def __init__(self,
+                 model: nn.Module,
+                 name: Optional[str] = None,
+                 optim_dtype: Optional[torch.dtype] = None,
+                 **kwargs: Any) -> None:
+        """Initialize AutoRoundPipe over an arbitrary model.
+        
+        Args:
+            model: Module to wrap.
+            name: Optional friendly identifier. Defaults to ``file:line``.
+            optim_dtype: Data type for optimizer parameters. Defaults to the same
+                as the parameter data type.
+            **kwargs: Placeholder for unused keyword arguments.
+        """
+        super().__init__(model, name, optim_dtype)
+        self.module_param_uploaded_events: List[List[torch.cuda.Event]] = []
+        self.module_gradient_ready_events: List[List[torch.cuda.Event]] = []
+
+        for module in self.model.modules():
+            if isinstance(module, RoundPipe):
+                self.module_param_uploaded_events.append(module.layer_param_uploaded_events)
+                self.module_gradient_ready_events.append(module.layer_gradient_ready_events)
+
+        for param in model.parameters():
+            if not ParamAttribute.has(param):
+                ParamAttribute.set(param)
+
+        self.RoundPipe_initialized = True
+
+    @override
+    def sync_optim_param(self) -> None:
+        """Ensure optimizer updated results are copied back to parameters."""
+        self.optim_updated.wait()
+        for layer_events in self.module_param_uploaded_events:
+            for event in layer_events:
+                event.synchronize()
+        for param in self.model.parameters():
+            parm_attr = ParamAttribute.get(param)
+            if parm_attr.optim_inited() and parm_attr.data_version != parm_attr.data_optim._version:
+                parm_attr.data_cpu.copy_(parm_attr.data_optim)
+                parm_attr.data_version = parm_attr.data_optim._version
+
+    @override
+    def move_grad_to_optim(self) -> None:
+        """Move parameter gradients to optimizer parameters."""
+        for layer_events in self.module_gradient_ready_events:
+            for event in layer_events:
+                event.synchronize()
+        for param in self.model.parameters():
+            param_attr = ParamAttribute.get(param)
+            if param_attr.data_grad is not None:
+                if param_attr.data_optim.grad is None:
+                    param_attr.data_optim.grad = param_attr.data_grad.to(dtype=param_attr.data_optim.dtype)
+                else:
+                    param_attr.data_optim.grad.add_(param_attr.data_grad.to(dtype=param_attr.data_optim.dtype))
+                param_attr.data_grad = None
+
+    def forward(self, *args: Any, **kwargs: Any) -> Any:
+        """Execute a forward pass.
+
+        Args:
+            *args: Positional arguments forwarded to the underlying ``model``.
+            **kwargs: Keyword arguments forwarded to ``model``.
+
+        Returns:
+            Output produced by the underlying ``model``.
+        """
+        return self.model(*args, **kwargs)
