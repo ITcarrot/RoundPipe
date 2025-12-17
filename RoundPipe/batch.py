@@ -138,6 +138,7 @@ class Batch:
         num_microbatch: Actual number of microbatches generated.
         label_list: Labels aligned with each microbatch.
         loss_list: Loss tensors accumulated per microbatch.
+        loss_ready: CUDA event signaling when all losses are ready on host.
     """
 
     def __init__(self, args: Tuple, kwargs: Dict[str, Any],
@@ -243,6 +244,7 @@ class Batch:
                 raise
             self.label_list = [lbl_tuple[0] for lbl_tuple in label_list]
         self.loss_list: List[Union[Sequence[torch.Tensor], torch.Tensor]] = [[] for _ in range(self.num_microbatch)]
+        self.loss_ready: torch.cuda.Event = torch.cuda.Event() # pyright: ignore[reportAttributeAccessIssue]
 
     def dump(self, run_config: FullRoundPipeRunConfig) -> Any:
         """Merge microbatch outputs according to the provided config.

@@ -12,6 +12,7 @@ import torch
 import torch.nn as nn
 
 from .batch import Batch
+from .context import doing_optimizer
 from .device import get_next_device
 from .optim import launch_optim_kernel
 from .param import ParamAttribute
@@ -90,12 +91,25 @@ class RoundPipeBase(nn.Module):
 
     def named_parameters(self, prefix: str = "", recurse: bool = True,
                          remove_duplicate: bool = True) -> Iterator[tuple[str, nn.Parameter]]:
+        """Iterator over named parameters. Overrides to warn against direct use,
+            and redirect to optim_named_parameters under optimizer context.
+        """
+        if doing_optimizer() and recurse:
+            return self.optim_named_parameters(prefix, remove_duplicate) # pyright: ignore[reportReturnType]
         warnings.warn("RoundPipe will manage parameter location and dtype internally. "
                       "\nAccessing parameters() or named_parameters() directly may "
                       "lead to unexpected behavior. \nIf you intend to get parameters "
                       "for optimization, please use optim_parameters() or "
                       "optim_named_parameters() instead.", UserWarning)
         return super().named_parameters(prefix, recurse, remove_duplicate)
+
+    def parameters(self, recurse: bool = True) -> Iterator[nn.Parameter]:
+        """Iterator over parameters. Overrides to redirect to optim_parameters
+            under optimizer context.
+        """
+        if doing_optimizer() and recurse:
+            return self.optim_parameters() # pyright: ignore[reportReturnType]
+        return super().parameters(recurse)
 
     def optim_named_parameters(self, prefix: str = "", remove_duplicate: bool = True
                                ) -> Iterator[tuple[str, torch.Tensor]]:
@@ -373,17 +387,20 @@ class RoundPipe(RoundPipeBase):
 
         if input_backward_handle.requires_grad:
             input_backward_handle.backward()
+
+        batch.loss_ready.synchronize()
         if isinstance(batch.loss_list[0], torch.Tensor):
             loss = torch.zeros_like(batch.loss_list[0], device=torch.device('cpu'))
             for batch_loss in batch.loss_list:
                 assert isinstance(batch_loss, torch.Tensor), \
                     "Inconsistent loss types across microbatches."
-                loss = loss + batch_loss.cpu()
+                loss = loss + batch_loss
         else:
             loss = [torch.zeros_like(t, device=torch.device('cpu')) for t in batch.loss_list[0]]
             for batch_loss in batch.loss_list:
                 for idx, t in enumerate(batch_loss):
-                    loss[idx] = loss[idx] + t.cpu()
+                    loss[idx] = loss[idx] + t
+
         if return_outputs:
             return loss, batch.dump(full_run_config)
         else:

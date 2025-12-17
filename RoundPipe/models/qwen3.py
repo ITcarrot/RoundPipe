@@ -7,6 +7,7 @@ from transformers.masking_utils import create_causal_mask, create_sliding_window
 from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.models.qwen3.modeling_qwen3 import Qwen3ForCausalLM
 
+from ..context import doing_recompute
 from ..RoundPipe import RoundPipe
 from .function import ChunkedForCausalLMLoss
 
@@ -36,6 +37,10 @@ class Qwen3ForCausalLMPrefix(nn.Module):
 
         if inputs_embeds is None:
             inputs_embeds: torch.Tensor = self.embed_tokens(input_ids)
+
+        # For recompute, embeddings is the only thing requires gradient.
+        if doing_recompute():
+            return inputs_embeds
 
         if use_cache:
             warnings.warn("`use_cache` will set to False. Caching behavior is not supported in RoundPipe.")

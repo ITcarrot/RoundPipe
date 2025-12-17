@@ -8,6 +8,7 @@ from torch.utils.checkpoint import _get_autocast_kwargs
 from torch.utils._pytree import tree_unflatten, tree_flatten, TreeSpec
 
 from .batch import Batch
+from .context import RecomputeCtx
 from .profile import annotate
 from .scheduler import ModelExecutePlan
 from .threads import thread_exception_print_lock
@@ -261,7 +262,7 @@ def run_backward(device: 'DeviceManager', context: RoundPipeRunContext,
             with torch.enable_grad(), torch.cuda.stream(device.compute_stream), \
                  torch.autocast('cuda', **context.device_autocast_kwargs), \
                  torch.autocast('cpu', **context.cpu_autocast_kwargs), \
-                 annotate(f'{model.name}L[{layer_id}]B[{batch_idx}]Re'), \
+                 annotate(f'{model.name}L[{layer_id}]B[{batch_idx}]Re'), RecomputeCtx(), \
                  model.model_timer.time_backward(layer_ids[0], device.compute_stream):
                 try:
                     if layer_id == 0:
@@ -281,10 +282,14 @@ def run_backward(device: 'DeviceManager', context: RoundPipeRunContext,
     
     outputs_requires_grad = []
     outputs_grad = []
-    for out, grad_out in zip(flatten_outputs_gpu, flatten_grad_outputs_gpu):
-        if isinstance(out, torch.Tensor) and out.requires_grad:
-            outputs_requires_grad.append(out)
-            outputs_grad.append(grad_out)
+    if len(flatten_outputs_gpu) == len(flatten_grad_outputs_gpu):
+        for out, grad_out in zip(flatten_outputs_gpu, flatten_grad_outputs_gpu):
+            if isinstance(out, torch.Tensor) and out.requires_grad:
+                outputs_requires_grad.append(out)
+                outputs_grad.append(grad_out)
+    else:
+        outputs_requires_grad = [t for t in flatten_outputs_gpu if isinstance(t, torch.Tensor) and t.requires_grad]
+        outputs_grad = [t for t in flatten_grad_outputs_gpu if isinstance(t, torch.Tensor)]
     with annotate(f'{model.name}L[{layer_ids[0]}, {layer_ids[-1]}]B[{batch_idx}]Bwd'), \
          model.model_timer.time_backward(layer_ids[0], device.compute_stream):
         try:
@@ -293,6 +298,8 @@ def run_backward(device: 'DeviceManager', context: RoundPipeRunContext,
             with thread_exception_print_lock:
                 traceback.print_exc()
                 print(f'The above error occurred in {model.name} layers {layer_ids} during backward pass.')
+                print(f'Outputs requiring grad: {[out.shape for out in outputs_requires_grad]}')
+                print(f'Provided gradients: {[grad.shape if isinstance(grad, torch.Tensor) else type(grad) for grad in outputs_grad]}')
             raise SystemExit(1)
     flatten_grad_inputs_gpu = [
         inp.grad if isinstance(inp, torch.Tensor) else None
@@ -376,11 +383,18 @@ def run_forward_backward(device: 'DeviceManager', context: RoundPipeRunContext,
          torch.autocast('cuda', **context.device_autocast_kwargs), \
          torch.autocast('cpu', **context.cpu_autocast_kwargs):
         loss = loss_fn(hidden_state, label_gpu)
-    if isinstance(loss, torch.Tensor):
-        batch.loss_list[batch_idx] = loss.detach()
-    else:
-        batch.loss_list[batch_idx] = [l.detach() for l in loss]
     del hidden_state # Free GPU memory before backward
+
+    device.wait_stream(device.downstream, device.compute_stream)
+    with torch.cuda.stream(device.downstream):
+        if isinstance(loss, torch.Tensor):
+            batch.loss_list[batch_idx] = loss.to('cpu', non_blocking=True)
+            device.mem_manager.record_stream(loss, device.compute_stream, device.downstream)
+        else:
+            batch.loss_list[batch_idx] = [l.to('cpu', non_blocking=True) for l in loss]
+            for l in loss:
+                device.mem_manager.record_stream(l, device.compute_stream, device.downstream)
+    batch.loss_ready.record(device.downstream)
 
     with annotate(f'{model.name}L[{layer_ids[0]}, {layer_ids[-1]}]B[{batch_idx}]Bwd'), \
          model.model_timer.time_backward(layer_ids[0], device.compute_stream):
