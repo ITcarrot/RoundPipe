@@ -98,7 +98,6 @@ def wrap_model_recursive(model: nn.Module,
 
         return model
 
-@beartype
 def wrap_model_to_roundpipe(model: nn.Module,
                             use_sequential_preset: Optional[bool] = None,
                             lower_threshold: int = 16 * 1024,

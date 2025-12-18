@@ -5,7 +5,6 @@ from beartype import beartype
 
 import torch
 
-@beartype
 class RoundPipeRunConfig:
     """Shallow user-facing configuration applied per forward/train call."""
     def __init__(self,

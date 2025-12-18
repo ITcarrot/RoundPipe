@@ -186,7 +186,6 @@ class RoundPipeBase(nn.Module):
             launch_optim_kernel(lambda: self.optim_updated.set())
             self.sync_optim_param()
 
-@beartype
 class RoundPipe(RoundPipeBase):
     """Wraps an ``nn.Module`` with RoundPipe's pipelined execution runtime.
 
@@ -406,7 +405,6 @@ class RoundPipe(RoundPipeBase):
         else:
             return loss
 
-@beartype
 class AutoRoundPipe(RoundPipeBase):
     """Provides partial RoundPipe's features over an arbitrary model.
     This includes optimizer parameter management and async step execution.
