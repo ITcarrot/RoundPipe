@@ -185,7 +185,7 @@ def download_layer(layer: torch.nn.Module, device: 'DeviceManager'):
 
     Args:
         layer: Module whose tensors should be copied to host memory.
-        transfer_stream: Stream used to issue download copies.
+        device: Device manager orchestrating the transfer.
     """
     with torch.cuda.stream(device.downstream):
         for param in layer.parameters():

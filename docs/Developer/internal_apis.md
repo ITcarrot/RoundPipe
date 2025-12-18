@@ -5,9 +5,17 @@ This section documents the internal APIs of RoundPipe that are intended for deve
 
 ::: RoundPipe.batch
 
+::: RoundPipe.context
+
 ::: RoundPipe.device
 
+::: RoundPipe.grad_scaler
+
 ::: RoundPipe.models
+
+::: RoundPipe.optim
+
+::: RoundPipe.param
 
 ::: RoundPipe.profile
 
