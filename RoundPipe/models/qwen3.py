@@ -9,7 +9,7 @@ from transformers.models.qwen3.modeling_qwen3 import Qwen3ForCausalLM
 
 from ..context import doing_recompute
 from ..RoundPipe import RoundPipe
-from .function import ChunkedForCausalLMLoss
+from .function import CompileForCausalLMLoss
 
 class Qwen3ForCausalLMPrefix(nn.Module):
     def __init__(self, model: Qwen3ForCausalLM) -> None:
@@ -129,7 +129,7 @@ class Qwen3ForCausalLMPostfix(nn.Module):
 
 EXPECTED_MODEL_CLASS = Qwen3ForCausalLM
 def wrap_model(model: Qwen3ForCausalLM, **roundpipe_kwargs: Any) -> RoundPipe:
-    model.loss_function = ChunkedForCausalLMLoss
+    model.loss_function = CompileForCausalLMLoss
     prefix = Qwen3ForCausalLMPrefix(model)
     layers = [Qwen3ForCausalLMWrappedLayer(layer) for layer in model.model.layers]
     postfix = Qwen3ForCausalLMPostfix(model)
