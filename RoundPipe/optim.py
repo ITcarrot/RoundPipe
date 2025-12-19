@@ -49,3 +49,17 @@ def launch_optim_kernel(fn: Callable, *args: Any, **kwargs: Any) -> None:
         **kwargs: Keyword arguments forwarded to ``fn``.
     """
     kernel_queue.put((fn, args, kwargs))
+
+def synchronize_optim() -> None:
+    """Synchronize the optimizer stream with the main thread."""
+    event = threading.Event()
+    launch_optim_kernel(event.set)
+    event.wait()
+
+def on_optim_stream() -> bool:
+    """Check if the current thread is the optimizer stream.
+
+    Returns:
+        True if the current thread is the optimizer stream, False otherwise.
+    """
+    return threading.current_thread() is optim_thread
