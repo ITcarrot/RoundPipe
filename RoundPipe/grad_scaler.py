@@ -5,7 +5,7 @@ import threading
 
 import torch
 
-from .optim import on_optim_stream, launch_optim_kernel, synchronize_optim
+from .optim_stream import on_optim_stream, launch_optim_kernel, synchronize_optim
 
 class GradScaler:
     """Helps perform the steps of gradient scaling conveniently.

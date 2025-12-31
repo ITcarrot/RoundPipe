@@ -5,10 +5,10 @@ import itertools
 import pytest
 from torch import nn
 
-from RoundPipe import RoundPipe
+from RoundPipe.RoundPipe import RoundPipe, AutoRoundPipe
 
 @pytest.mark.parametrize("model_class, designate",
-                         itertools.product([RoundPipe], [True, False]))
+                         itertools.product([RoundPipe, AutoRoundPipe], [True, False]))
 def test_RoundPipe_attribute_shim(model_class, designate):
     original_model = nn.Linear(10, 5)
     if designate:

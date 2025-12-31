@@ -15,6 +15,10 @@ This section documents the internal APIs of RoundPipe that are intended for deve
 
 ::: RoundPipe.optim
 
+::: RoundPipe.optim.optim_builder
+
+::: RoundPipe.optim_stream
+
 ::: RoundPipe.param
 
 ::: RoundPipe.profile

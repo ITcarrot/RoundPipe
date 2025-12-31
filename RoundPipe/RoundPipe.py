@@ -14,7 +14,7 @@ import torch.nn as nn
 from .batch import Batch
 from .context import doing_optimizer
 from .device import get_next_device
-from .optim import launch_optim_kernel
+from .optim_stream import launch_optim_kernel
 from .param import ParamAttribute
 from .run import RoundPipeRunContext, RoundPipeBatchedBackward, RoundPipeMicrobatchBackward, RoundPipeInputBackward
 from .RunConfig import RoundPipeRunConfig, FullRoundPipeRunConfig
