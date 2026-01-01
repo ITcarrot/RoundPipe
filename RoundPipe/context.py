@@ -3,7 +3,7 @@
 Attributes:
     flags: Thread-local storage for context flags.
 """
-from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
+from typing_extensions import *
 
 import threading
 import types

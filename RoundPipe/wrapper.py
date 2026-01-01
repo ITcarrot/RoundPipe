@@ -1,7 +1,6 @@
 """Utilities that wrap user models with RoundPipe sequential presets."""
 
-from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
-from beartype import beartype
+from typing_extensions import *
 import traceback
 import copy
 

@@ -1,5 +1,5 @@
 """A gradient scaler for mixed precision training in RoundPipe."""
-from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
+from typing_extensions import *
 
 import threading
 
@@ -11,6 +11,24 @@ class GradScaler:
     """Helps perform the steps of gradient scaling conveniently.
     The GradScaler is designed to be API compatible with `torch.amp.GradScaler`.
     
+    !!! info
+        Object of this class will be access both from the main thread
+        and from the optimizer stream. Care must be taken to avoid data
+        corruption due to race conditions. All methods in this class
+        must check which stream they are called from, and behave accordingly.
+        The following object members access rules are applied:
+
+        * Both: `next_scale`, `scaler_updated`
+        * Optimizer stream only: `main_scaler`
+        * Main thread only: `scale_scaler`
+        * Read only: `enabled`
+
+    Attributes:
+        enabled: Whether gradient scaling is enabled. 
+        main_scaler: The main GradScaler tracks the scale used for unscaling and updating.
+        scale_scaler: This GradScaler is only used for applying scaling to outputs.
+        next_scale: The next scale factor to be used.
+        scaler_updated: An event to signal when the scaler has been updated.
     """
     def __init__(
         self,
@@ -32,8 +50,7 @@ class GradScaler:
             enabled: If ``False``, disables gradient scaling. `step` simply
                 invokes the underlying ``optimizer.step()``, and other methods become no-ops.
         """
-
-        self.enabled: bool = enabled
+        self.enabled: Final[bool] = enabled
         self.main_scaler: torch.GradScaler = torch.GradScaler(
             'cpu', init_scale, growth_factor, backoff_factor, growth_interval
         )
@@ -85,11 +102,14 @@ class GradScaler:
         unmodified.
 
         Args:
-            outputs:  Outputs to scale.
+            outputs: Outputs to scale.
         """
         if not self.enabled:
             return outputs
-        return self.scale_scaler.scale(outputs)
+        if on_optim_stream():
+            return self.main_scaler.scale(outputs)
+        else:
+            return self.scale_scaler.scale(outputs)
 
     def unscale_(self, optimizer: torch.optim.Optimizer) -> None:
         """
@@ -179,11 +199,15 @@ class GradScaler:
         launch_optim_kernel(self.update_kernel, new_scale)
 
     def get_scale(self) -> float:
-        """
+        """Return the current scale factor. Result will adapt to which stream this is called from.
+        
         Returns:
             a Python float containing the current scale, or 1.0 if scaling is disabled.
         """
-        return self.scale_scaler.get_scale() if self.enabled else 1.0
+        if on_optim_stream():
+            return self.main_scaler.get_scale() if self.enabled else 1.0
+        else:
+            return self.scale_scaler.get_scale() if self.enabled else 1.0
 
     def get_growth_factor(self, up_to_date: bool = False) -> float:
         """

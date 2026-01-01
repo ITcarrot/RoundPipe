@@ -1,6 +1,5 @@
-from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
+from typing_extensions import *
 import types
-import math
 
 import torch
 import torch.nn as nn

@@ -1,4 +1,4 @@
-from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
+from typing_extensions import *
 
 import itertools
 import random
@@ -40,6 +40,6 @@ def test_Adam(lr_betas: Union[Tuple[float, float, float],
               maximize: bool, decoupled_weight_decay: bool) -> None:
     lr, *betas = lr_betas
     run_optim(Adam, torch.optim.Adam,
-               lr=lr, betas=betas, eps=1e-4,
+               lr=lr, betas=tuple(betas), eps=1e-4,
                weight_decay=weight_decay, amsgrad=amsgrad,
                maximize=maximize,decoupled_weight_decay=decoupled_weight_decay)

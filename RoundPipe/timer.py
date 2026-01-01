@@ -1,6 +1,6 @@
 """CUDA event helpers for measuring per-layer forward/backward latency."""
 
-from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
+from typing_extensions import *
 
 import torch
 
@@ -10,12 +10,12 @@ class LayerTimingContext:
     Attributes:
         start_event: CUDA event recorded on entry.
         end_event: CUDA event recorded on exit.
-        stream: Optional stream used for event recording.
+        stream: Stream used for event recording.
     """
 
     def __init__(self,
                  start_event: torch.cuda.Event, end_event: torch.cuda.Event,
-                 stream: Optional[torch.cuda.Stream]):
+                 stream: torch.cuda.Stream):
         """Store events/stream for later use.
 
         Args:
@@ -25,15 +25,15 @@ class LayerTimingContext:
         """
         self.start_event: torch.cuda.Event = start_event
         self.end_event: torch.cuda.Event = end_event
-        self.stream: Optional[torch.cuda.Stream] = stream
+        self.stream: torch.cuda.Stream = stream
         
     def __enter__(self):
         """Record ``start_event`` on the configured stream."""
-        self.start_event.record(self.stream) # pyright: ignore[reportArgumentType]
+        self.start_event.record(self.stream)
     
     def __exit__(self, *args):
         """Record ``end_event`` when the context exits."""
-        self.end_event.record(self.stream) # pyright: ignore[reportArgumentType]
+        self.end_event.record(self.stream)
 
 class ModelTimer:
     """Persistent tracker for smoothed per-layer timings.
@@ -60,33 +60,33 @@ class ModelTimer:
         self.bwd_history: List[float] = [0. for _ in range(num_layers)]
         self.num_records: int = -1
 
-    def time_forward(self, layer_id: int, stream: Optional[torch.cuda.Stream] = None) -> LayerTimingContext:
+    def time_forward(self, layer_id: int, stream: torch.cuda.Stream) -> LayerTimingContext:
         """Create a timing context for a forward pass.
 
         Args:
             layer_id: Index of the layer being measured.
-            stream: Optional CUDA stream to associate with the events.
+            stream: CUDA stream to associate with the events.
 
         Returns:
             ``LayerTimingContext`` that records start/end events upon use.
         """
-        start_event: torch.cuda.Event = torch.cuda.Event(enable_timing = True)  # pyright: ignore[reportAssignmentType]
-        end_event: torch.cuda.Event = torch.cuda.Event(enable_timing = True)  # pyright: ignore[reportAssignmentType]
+        start_event = cast(torch.cuda.Event, torch.cuda.Event(enable_timing = True))
+        end_event = cast(torch.cuda.Event, torch.cuda.Event(enable_timing = True))
         self.fwd_timing_events[layer_id].append((start_event, end_event))
         return LayerTimingContext(start_event, end_event, stream)
     
-    def time_backward(self, layer_id: int, stream: Optional[torch.cuda.Stream] = None) -> LayerTimingContext:
+    def time_backward(self, layer_id: int, stream: torch.cuda.Stream) -> LayerTimingContext:
         """Create a timing context for a backward pass.
 
         Args:
             layer_id: Index of the layer being measured.
-            stream: Optional CUDA stream to associate with the events.
+            stream: CUDA stream to associate with the events.
 
         Returns:
             ``LayerTimingContext`` that records start/end events upon use.
         """
-        start_event: torch.cuda.Event = torch.cuda.Event(enable_timing = True)  # pyright: ignore[reportAssignmentType]
-        end_event: torch.cuda.Event = torch.cuda.Event(enable_timing = True)  # pyright: ignore[reportAssignmentType]
+        start_event = cast(torch.cuda.Event, torch.cuda.Event(enable_timing = True))
+        end_event = cast(torch.cuda.Event, torch.cuda.Event(enable_timing = True))
         self.bwd_timing_events[layer_id].append((start_event, end_event))
         return LayerTimingContext(start_event, end_event, stream)
 

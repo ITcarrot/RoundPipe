@@ -1,7 +1,6 @@
 """The RoundPipe model wrapper and execution runtime."""
 
-from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
-from beartype import beartype
+from typing_extensions import *
 import traceback
 import copy
 import warnings
@@ -95,7 +94,8 @@ class RoundPipeBase(nn.Module):
             and redirect to optim_named_parameters under optimizer context.
         """
         if doing_optimizer() and recurse:
-            return self.optim_named_parameters(prefix, remove_duplicate) # pyright: ignore[reportReturnType]
+            return cast(Iterator[tuple[str, nn.Parameter]],
+                        self.optim_named_parameters(prefix, remove_duplicate))
         warnings.warn("RoundPipe will manage parameter location and dtype internally. "
                       "\nAccessing parameters() or named_parameters() directly may "
                       "lead to unexpected behavior. \nIf you intend to get parameters "
@@ -108,7 +108,7 @@ class RoundPipeBase(nn.Module):
             under optimizer context.
         """
         if doing_optimizer() and recurse:
-            return self.optim_parameters() # pyright: ignore[reportReturnType]
+            return cast(Iterator[nn.Parameter], self.optim_parameters())
         return super().parameters(recurse)
 
     def optim_named_parameters(self, prefix: str = "", remove_duplicate: bool = True
@@ -234,8 +234,10 @@ class RoundPipe(RoundPipeBase):
             self.layer_workload.append(get_model_size(layer))
         self.model_timer: ModelTimer = ModelTimer(self.num_layers)
 
-        self.layer_param_uploaded_events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(self.num_layers)] # pyright: ignore[reportAttributeAccessIssue]
-        self.layer_gradient_ready_events: List[torch.cuda.Event] = [torch.cuda.Event() for _ in range(self.num_layers)] # pyright: ignore[reportAttributeAccessIssue]
+        self.layer_param_uploaded_events: List[torch.cuda.Event] \
+            = [cast(torch.cuda.Event, torch.cuda.Event()) for _ in range(self.num_layers)]
+        self.layer_gradient_ready_events: List[torch.cuda.Event] \
+            = [cast(torch.cuda.Event, torch.cuda.Event()) for _ in range(self.num_layers)]
 
         for parm in tqdm.tqdm(self.model.parameters(), total=sum(1 for _ in self.model.parameters()),
                               desc=f'Roundpipe: Process params in {self.name}', leave=False):
@@ -314,7 +316,8 @@ class RoundPipe(RoundPipeBase):
                 tag = backward_schedule_simulator.get_next_tag()
                 for context in reversed(run_context):
                     tag, output_require_grad_idx, *output_require_grad \
-                        = RoundPipeMicrobatchBackward.apply(context, batch, tag, *context.flatten_inputs[0]) # pyright: ignore[reportGeneralTypeIssues]
+                        = cast(Tuple[torch.Tensor, List[int], Unpack[Tuple[torch.Tensor, ...]]],
+                          RoundPipeMicrobatchBackward.apply(context, batch, tag, *context.flatten_inputs[0]))
                     for idx, item in zip(output_require_grad_idx, output_require_grad):
                         batch.flatten_states[context.microbatch_id][idx] = item
                 backward_schedule_simulator.update_current_tag(tag)
@@ -323,7 +326,9 @@ class RoundPipe(RoundPipeBase):
                 # ensuring gradients to be calculated even if inputs do not require grad.
                 all_inputs = [item for batch_context in run_context
                             for item in batch_context.flatten_inputs[0]]
-                output_require_grad_idx, *output_require_grad = RoundPipeBatchedBackward.apply(run_context, batch, gradient_anchor, *all_inputs) # pyright: ignore[reportGeneralTypeIssues]
+                output_require_grad_idx, *output_require_grad \
+                    = cast(Tuple[List[Tuple[int, int]], Unpack[Tuple[torch.Tensor, ...]]],
+                      RoundPipeBatchedBackward.apply(run_context, batch, gradient_anchor, *all_inputs))
                 for (batch_idx, idx), item in zip(output_require_grad_idx, output_require_grad):
                     batch.flatten_states[batch_idx][idx] = item
 
@@ -371,7 +376,7 @@ class RoundPipe(RoundPipeBase):
             context.input_backward_events = batch.backward_events[batch_idx]
 
         all_inputs = [item for batch_input in batch.flatten_states for item in batch_input]
-        input_backward_handle: torch.Tensor = RoundPipeInputBackward.apply(run_context, *all_inputs) # pyright: ignore[reportAssignmentType]
+        input_backward_handle = cast(torch.Tensor, RoundPipeInputBackward.apply(run_context, *all_inputs))
 
         for layer_group_id in range(len(execute_plan.fwd_plan)):
             device = get_next_device()

@@ -1,6 +1,6 @@
 """Core runtime helpers for executing RoundPipe forward/backward passes."""
 
-from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
+from typing_extensions import *
 import traceback
 
 import torch
@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from .device import DeviceManager
     from .RoundPipe import RoundPipe
 else:
-    from typing_extensions import TypeAliasType
     DeviceManager = TypeAliasType('DeviceManager', 'RoundPipe.device.DeviceManager')
     RoundPipe = TypeAliasType('RoundPipe', 'RoundPipe.RoundPipe')
 
@@ -208,7 +207,7 @@ def run_forward(device: 'DeviceManager', context: RoundPipeRunContext,
                 if isinstance(item, torch.Tensor):
                     batch.flatten_states[batch_idx][idx] = item.detach().requires_grad_(item.requires_grad)
 
-    batch.forward_events[batch_idx] = [torch.cuda.Event()] # pyright: ignore[reportArgumentType, reportCallIssue]
+    batch.forward_events[batch_idx] = [cast(torch.cuda.Event, torch.cuda.Event())]
     batch.flatten_states[batch_idx] = async_d2h(
         device, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], context.enable_grad
     )
@@ -251,7 +250,8 @@ def run_backward(device: 'DeviceManager', context: RoundPipeRunContext,
         device, [], context.flatten_inputs[layer_ids[0]], True
     )
     context.flatten_inputs[layer_ids[0]].clear() # Free CPU memory
-    hidden_state = tree_unflatten(flatten_inputs_gpu, context.flatten_specs[layer_ids[0]]) # pyright: ignore[reportArgumentType]
+    flatten_input_spec = cast(TreeSpec, context.flatten_specs[layer_ids[0]])
+    hidden_state = tree_unflatten(flatten_inputs_gpu, flatten_input_spec)
     
     with torch.random.fork_rng(
         devices=[device.device.index], enabled=context.preserve_rng_state, device_type='cuda'
@@ -306,7 +306,8 @@ def run_backward(device: 'DeviceManager', context: RoundPipeRunContext,
         for inp in flatten_inputs_gpu
     ]
 
-    context.output_backward_events = context.input_backward_events if layer_ids[0] == 0 else [torch.cuda.Event()] # pyright: ignore[reportAttributeAccessIssue]
+    context.output_backward_events = \
+        context.input_backward_events if layer_ids[0] == 0 else [cast(torch.cuda.Event, torch.cuda.Event())]
     context.grad_states = async_d2h(
         device, context.output_backward_events, flatten_grad_inputs_gpu
     )
@@ -314,7 +315,7 @@ def run_backward(device: 'DeviceManager', context: RoundPipeRunContext,
     if batch_idx == context.num_microbatches - 1:
         for layer_id in layer_ids:
             download_layer(model.layers[layer_id], device)
-            download_finish_event: torch.cuda.Event = torch.cuda.Event() # pyright: ignore[reportAssignmentType]
+            download_finish_event = cast(torch.cuda.Event, torch.cuda.Event())
             download_finish_event.record(device.downstream)
             model.layer_gradient_ready_events[layer_id] = download_finish_event
     context.execute_plan.backward_notify(layer_group_id)
@@ -369,7 +370,7 @@ def run_forward_backward(device: 'DeviceManager', context: RoundPipeRunContext,
 
     batch.flatten_states[batch_idx], batch.flatten_specs[batch_idx] \
         = tree_flatten(hidden_state if return_outputs else None)
-    batch.forward_events[batch_idx] = [torch.cuda.Event()] # pyright: ignore[reportCallIssue, reportArgumentType]
+    batch.forward_events[batch_idx] = [cast(torch.cuda.Event, torch.cuda.Event())]
     batch.flatten_states[batch_idx] = async_d2h(
         device, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], False
     )
@@ -410,7 +411,8 @@ def run_forward_backward(device: 'DeviceManager', context: RoundPipeRunContext,
         for inp in flatten_inputs_gpu
     ]
 
-    context.output_backward_events = context.input_backward_events if layer_ids[0] == 0 else [torch.cuda.Event()] # pyright: ignore[reportAttributeAccessIssue]
+    context.output_backward_events \
+        = context.input_backward_events if layer_ids[0] == 0 else [cast(torch.cuda.Event, torch.cuda.Event())]
     context.grad_states = async_d2h(
         device, context.output_backward_events, flatten_grad_inputs_gpu
     )
@@ -418,7 +420,7 @@ def run_forward_backward(device: 'DeviceManager', context: RoundPipeRunContext,
     if batch_idx == context.num_microbatches - 1:
         for layer_id in layer_ids:
             download_layer(model.layers[layer_id], device)
-            download_finish_event: torch.cuda.Event = torch.cuda.Event() # pyright: ignore[reportAssignmentType]
+            download_finish_event = cast(torch.cuda.Event, torch.cuda.Event())
             download_finish_event.record(device.downstream)
             model.layer_gradient_ready_events[layer_id] = download_finish_event
     context.execute_plan.backward_notify(0)
@@ -427,7 +429,8 @@ class RoundPipeBatchedBackward(torch.autograd.Function):
     """Autograd node that launches backward passes for all microbatches."""
     @staticmethod
     def forward(ctx: Any, roundpipe_context: List[RoundPipeRunContext],
-                batch: Batch, tag: torch.Tensor, *all_inputs: Any) -> Any:
+                batch: Batch, tag: torch.Tensor, *all_inputs: Any
+                ) -> Tuple[List[Tuple[int, int]], Unpack[Tuple[torch.Tensor, ...]]]:
         """Prepare shared backward state for all microbatches.
 
         Args:
@@ -442,7 +445,7 @@ class RoundPipeBatchedBackward(torch.autograd.Function):
         """
         for batch_idx, context in enumerate(roundpipe_context):
             context.input_backward_events = batch.backward_events[batch_idx]
-            context.output_backward_events = [torch.cuda.Event()] # pyright: ignore[reportAttributeAccessIssue]
+            context.output_backward_events = [cast(torch.cuda.Event, torch.cuda.Event())]
             batch.backward_events[batch_idx] = context.output_backward_events
 
         tensor_inputs = []
@@ -458,7 +461,7 @@ class RoundPipeBatchedBackward(torch.autograd.Function):
 
         ctx.output_len = [len(flatten_outputs) for flatten_outputs in batch.flatten_states]
         ctx.output_require_grad_idx = []
-        output_require_grad = []
+        output_require_grad: List[torch.Tensor] = []
         for batch_idx, flatten_outputs in enumerate(batch.flatten_states):
             for idx, item in enumerate(flatten_outputs):
                 if isinstance(item, torch.Tensor) and item.requires_grad:
@@ -512,7 +515,8 @@ class RoundPipeMicrobatchBackward(torch.autograd.Function):
     """Autograd node that launches backward pass for a single microbatch."""
     @staticmethod
     def forward(ctx: Any, roundpipe_context: RoundPipeRunContext,
-                batch: Batch, tag: torch.Tensor, *all_inputs: Any) -> Any:
+                batch: Batch, tag: torch.Tensor, *all_inputs: Any
+                ) -> Tuple[torch.Tensor, List[int], Unpack[Tuple[torch.Tensor, ...]]]:
         """Prepare backward state for a single microbatch.
 
         Args:
@@ -527,7 +531,7 @@ class RoundPipeMicrobatchBackward(torch.autograd.Function):
             Tuple ``(tag, grad_indices, *output_tensors)`` consumed later.
         """
         roundpipe_context.input_backward_events = batch.backward_events[roundpipe_context.microbatch_id]
-        roundpipe_context.output_backward_events = [torch.cuda.Event()] # pyright: ignore[reportAttributeAccessIssue]
+        roundpipe_context.output_backward_events = [cast(torch.cuda.Event, torch.cuda.Event())]
         batch.backward_events[roundpipe_context.microbatch_id] = roundpipe_context.output_backward_events
 
         tensor_inputs = []
@@ -542,7 +546,7 @@ class RoundPipeMicrobatchBackward(torch.autograd.Function):
 
         ctx.output_len = len(batch.flatten_states[roundpipe_context.microbatch_id])
         ctx.output_require_grad_idx = []
-        output_require_grad = []
+        output_require_grad: List[torch.Tensor] = []
         for idx, item in enumerate(batch.flatten_states[roundpipe_context.microbatch_id]):
             if isinstance(item, torch.Tensor) and item.requires_grad:
                 ctx.output_require_grad_idx.append(idx)
@@ -594,7 +598,8 @@ class RoundPipeMicrobatchBackward(torch.autograd.Function):
 class RoundPipeInputBackward(torch.autograd.Function):
     """Autograd node that reconnects RoundPipe gradients to user inputs."""
     @staticmethod
-    def forward(ctx: Any, roundpipe_context: List[RoundPipeRunContext], *all_inputs: Any) -> Any:
+    def forward(ctx: Any, roundpipe_context: List[RoundPipeRunContext], *all_inputs: Any
+                ) -> torch.Tensor:
         """Anchor upstream gradients spanning multiple microbatches.
 
         Args:

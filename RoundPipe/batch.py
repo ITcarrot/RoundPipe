@@ -9,7 +9,7 @@ Attributes:
     avg_reducer: Predefined reducer that averages scalar losses across microbatches.
 """
 
-from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
+from typing_extensions import *
 import warnings
 
 import torch
@@ -190,7 +190,7 @@ class Batch:
         for batch_idx, args_kwargs in enumerate(zip(args_list, kwargs_list)):
             forward_event: Set[torch.cuda.Event] = set()
             backward_event: Set[torch.cuda.Event] = set()
-            cpu_tensor_backward_event: torch.cuda.Event = torch.cuda.Event() # pyright: ignore[reportAssignmentType]
+            cpu_tensor_backward_event = cast(torch.cuda.Event, torch.cuda.Event())
             flatten_input, flatten_spec = tree_flatten(args_kwargs)
             for idx, item in enumerate(flatten_input):
                 if isinstance(item, torch.Tensor):
@@ -218,7 +218,7 @@ class Batch:
             self.forward_events.append(list(forward_event))
             self.backward_events.append(list(backward_event))
 
-        self.num_microbatch: int = len(self.flatten_states)
+        self.num_microbatch: Final[int] = len(self.flatten_states)
 
         if self.num_microbatch == 1:
             self.label_list: List[Any] = [label]
@@ -244,7 +244,7 @@ class Batch:
                 raise
             self.label_list = [lbl_tuple[0] for lbl_tuple in label_list]
         self.loss_list: List[Union[Sequence[torch.Tensor], torch.Tensor]] = [[] for _ in range(self.num_microbatch)]
-        self.loss_ready: torch.cuda.Event = torch.cuda.Event() # pyright: ignore[reportAttributeAccessIssue]
+        self.loss_ready: torch.cuda.Event = cast(torch.cuda.Event, torch.cuda.Event())
 
     def dump(self, run_config: FullRoundPipeRunConfig) -> Any:
         """Merge microbatch outputs according to the provided config.

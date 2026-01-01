@@ -1,4 +1,4 @@
-from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
+from typing_extensions import *
 import warnings
 
 import torch

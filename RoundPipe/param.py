@@ -1,5 +1,5 @@
 '''Module defining parameter attributes for RoundPipe.'''
-from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
+from typing_extensions import *
 
 import torch
 

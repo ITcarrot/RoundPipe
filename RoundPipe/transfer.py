@@ -5,7 +5,7 @@ Attributes:
     CHUNK_UPLOAD_SIZE: Size threshold (in bytes) for chunked uploads.
 """
 
-from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
+from typing_extensions import *
 import math
 
 import torch
@@ -16,7 +16,6 @@ from .scheduler import chunk_layer_params
 if TYPE_CHECKING:
     from .device import DeviceManager
 else:
-    from typing_extensions import TypeAliasType
     DeviceManager = TypeAliasType('DeviceManager', 'RoundPipe.device.DeviceManager')
 
 chunked_upload: bool = True
@@ -133,7 +132,7 @@ def upload_layers(layers: List[torch.nn.Module], device: 'DeviceManager',
     """
     chunk_events = device.flush_upload_marks()
     if len(chunk_events) == 0:
-        chunk_events.append(torch.cuda.Event())  # pyright: ignore[reportArgumentType]
+        chunk_events.append(cast(torch.cuda.Event, torch.cuda.Event()))
     tensor_pair: List[Tuple[torch.Tensor, torch.Tensor]] = []
     with torch.cuda.stream(device.param_upstream):
         for layer in layers:
@@ -149,7 +148,7 @@ def upload_layers(layers: List[torch.nn.Module], device: 'DeviceManager',
                 buffer_attr = ParamAttribute.get(buffer)
                 buffer.data = create_upload_pair(tensor_pair, buffer_attr.data_cpu, device.device)
     if len(tensor_pair) == 0:
-        return torch.cuda.Event() # pyright: ignore[reportReturnType]
+        return cast(torch.cuda.Event, torch.cuda.Event())
     chunked_tensor_pairs = chunk_layer_params(tensor_pair, len(chunk_events))
 
     with torch.cuda.stream(device.param_upstream):
@@ -157,7 +156,7 @@ def upload_layers(layers: List[torch.nn.Module], device: 'DeviceManager',
             chunk_event.wait()
             for src, dst in tensor_chunk:
                 dst.copy_(src, non_blocking = True)
-    finish_event: torch.cuda.Event = torch.cuda.Event()  # pyright: ignore[reportAssignmentType]
+    finish_event = cast(torch.cuda.Event, torch.cuda.Event())
     finish_event.record(device.param_upstream)
     device.wait_stream(device.compute_stream, device.param_upstream)
     device.wait_stream(device.param_upstream, device.compute_stream)
@@ -209,7 +208,7 @@ def download_layer(layer: torch.nn.Module, device: 'DeviceManager'):
 class PinnedUpload(torch.autograd.Function):
     """Autograd helper that enforces pinned host tensors before H2D copies."""
     @staticmethod
-    def forward(ctx: Any, t: torch.Tensor, d: torch.device) -> Any:
+    def forward(ctx: Any, t: torch.Tensor, d: torch.device) -> torch.Tensor:
         """Ensure ``t`` resides in pinned memory before copying to device.
 
         Args:

@@ -3,11 +3,10 @@
 Attributes:
     loaded_optim_functions: A dictionary caching loaded optimizer functions.
 """
-from beartype.typing import *  # pyright: ignore[reportWildcardImportFromLibrary]
+from typing_extensions import * 
 
 import hashlib
 import pathlib
-import time
 import warnings
 
 from torch.utils.cpp_extension import load, verify_ninja_availability

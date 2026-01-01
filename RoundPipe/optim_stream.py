@@ -6,14 +6,12 @@ Attributes:
     optim_active: Lock to indicate if the optimizer stream is active.
     optim_thread: Daemon thread that executes optimizer tasks.
 """
-from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
+from typing_extensions import *
 
 import queue
 import threading
 import _thread
 import atexit
-
-import torch
 
 from .threads import RoundPipeThread
 

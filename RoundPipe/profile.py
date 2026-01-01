@@ -4,7 +4,7 @@ Attributes:
     PROFILER_TYPE: Type of profiler detected from environment variables.
 """
 
-from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
+from typing_extensions import *
 
 import os
 import contextlib

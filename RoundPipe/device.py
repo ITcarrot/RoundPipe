@@ -5,7 +5,7 @@ Attributes:
     cur_device: Index tracking the next device to schedule work on.
 """
 
-from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
+from typing_extensions import *
 import threading
 import itertools
 
@@ -134,10 +134,10 @@ class DeviceManager:
         self.id: int = id
         self.device: torch.device = device
         
-        self.param_upstream: torch.cuda.Stream = torch.cuda.Stream(device) # pyright: ignore[reportAttributeAccessIssue]
-        self.upstream: torch.cuda.Stream = torch.cuda.Stream(device) # pyright: ignore[reportAttributeAccessIssue]
+        self.param_upstream: torch.cuda.Stream = cast(torch.cuda.Stream, torch.cuda.Stream(device))
+        self.upstream: torch.cuda.Stream = cast(torch.cuda.Stream, torch.cuda.Stream(device))
         self.compute_stream: torch.cuda.Stream = torch.cuda.default_stream(self.device)
-        self.downstream: torch.cuda.Stream = torch.cuda.Stream(device) # pyright: ignore[reportAttributeAccessIssue]
+        self.downstream: torch.cuda.Stream = cast(torch.cuda.Stream, torch.cuda.Stream(device))
         self.mem_manager: InterStreamMemManager = InterStreamMemManager(
             self.param_upstream, self.upstream, self.compute_stream, self.downstream
         )
@@ -165,7 +165,7 @@ class DeviceManager:
         Returns:
             The recorded event is appended to ``upload_mark``.
         """
-        event: torch.cuda.Event = torch.cuda.Event() # pyright: ignore[reportAssignmentType]
+        event = cast(torch.cuda.Event, torch.cuda.Event())
         with torch.cuda.stream(self.upstream):
             event.record()
         self.upload_mark.append(event)

@@ -4,7 +4,7 @@ Attributes:
     backward_schedule_simulator: Global simulator for pipelined backward scheduling.
 """
 
-from beartype.typing import * # pyright: ignore[reportWildcardImportFromLibrary]
+from typing_extensions import *
 import threading
 import heapq
 
@@ -15,7 +15,6 @@ from .threads import dump_all_active_threads, KeyboardInterruptRoundPipeThreads
 if TYPE_CHECKING:
     from RoundPipe import RoundPipe
 else:
-    from typing_extensions import TypeAliasType
     RoundPipe = TypeAliasType('RoundPipe', 'RoundPipe.RoundPipe')
 
 class ModelExecutePlan:
