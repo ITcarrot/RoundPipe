@@ -108,6 +108,12 @@ class InterStreamMemManager:
 
 class DeviceManager:
     """Manages memory, CUDA streams and kernel launch of a single device.
+    !!! info
+        The device controller threads is designed to run multiple forward
+        / backward jobs concurrently on different devices. It is NOT designed
+        to run jobs while doing other work on the main thread at the same time.
+        The main thread should wait for all device threads to return before
+        proceeding to the next step.
 
     Attributes:
         id: Integer identifier matching ``cuda:{id}``.

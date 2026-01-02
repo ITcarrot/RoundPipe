@@ -157,6 +157,11 @@ class RoundPipeRunContext:
 def run_forward(device: 'DeviceManager', context: RoundPipeRunContext,
                 layer_group_id: int, batch: Batch) -> None:
     """Upload layers, execute forward compute, and copy outputs back to host.
+    !!! info
+        This function will run on a separate thread managed by the DeviceManager.
+        Multiple threads may run concurrently on different devices.
+        Be aware of thread-safety when using and modifying this function.
+        All data access must limit to the input parameters and the specified model layers.
 
     Args:
         layer_group_id: Index of the layer group being executed.
@@ -221,6 +226,11 @@ def run_forward(device: 'DeviceManager', context: RoundPipeRunContext,
 def run_backward(device: 'DeviceManager', context: RoundPipeRunContext,
                  layer_group_id: int) -> None:
     """Recompute saved inputs, propagate gradients, and ship grads to CPU.
+    !!! info
+        This function will run on a separate thread managed by the DeviceManager
+        or Pytorch autograd. Multiple threads may run concurrently on different devices.
+        Be aware of thread-safety when using and modifying this function.
+        All data access must limit to the input parameters and the specified model layers.
 
     Args:
         layer_group_id: Index of the backward layer group to execute.
@@ -314,6 +324,7 @@ def run_backward(device: 'DeviceManager', context: RoundPipeRunContext,
     device.mem_manager.flush()
     if batch_idx == context.num_microbatches - 1:
         for layer_id in layer_ids:
+            model.layer_gradient_copied[layer_id].wait()
             download_layer(model.layers[layer_id], device)
             download_finish_event = cast(torch.cuda.Event, torch.cuda.Event())
             download_finish_event.record(device.downstream)
@@ -326,6 +337,11 @@ def run_forward_backward(device: 'DeviceManager', context: RoundPipeRunContext,
                          loss_fn: Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]],
                          return_outputs: bool) -> None:
     """Execute a fused forward/backward pass for training workloads.
+    !!! info
+        This function will run on a separate thread managed by the DeviceManager.
+        Multiple threads may run concurrently on different devices.
+        Be aware of thread-safety when using and modifying this function.
+        All data access must limit to the input parameters and the specified model layers.
 
     Args:
         batch: Batch object containing flattened activations and labels.
@@ -419,6 +435,7 @@ def run_forward_backward(device: 'DeviceManager', context: RoundPipeRunContext,
     device.mem_manager.flush()
     if batch_idx == context.num_microbatches - 1:
         for layer_id in layer_ids:
+            model.layer_gradient_copied[layer_id].wait()
             download_layer(model.layers[layer_id], device)
             download_finish_event = cast(torch.cuda.Event, torch.cuda.Event())
             download_finish_event.record(device.downstream)
