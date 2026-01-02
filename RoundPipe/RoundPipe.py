@@ -196,7 +196,6 @@ class RoundPipe(RoundPipeBase):
     """Wraps an ``nn.Module`` with RoundPipe's pipelined execution runtime.
 
     Attributes:
-        param_dtype: Data type for storing floating parameters/buffers.
         model_run_config: Default run configuration used when callers do not
             override parameters per invocation.
         layers: Sequence of logical pipeline stages.
@@ -210,7 +209,6 @@ class RoundPipe(RoundPipeBase):
     """
     def __init__(self,
                  model: nn.Module,
-                 param_dtype: Optional[torch.dtype] = None,
                  optim_dtype: Optional[torch.dtype] = None,
                  name: Optional[str] = None,
                  model_run_config: RoundPipeRunConfig = RoundPipeRunConfig()) -> None:
@@ -221,15 +219,12 @@ class RoundPipe(RoundPipeBase):
 
         Args:
             model: Module to wrap. Can be ``nn.Sequential`` or arbitrary model.
-            param_dtype: Data type for storing floating parameters/buffers. Defaults to
-                the original dtype.
             optim_dtype: Data type for optimizer parameters. Defaults to the same
-                as ``param_dtype``.
+                as param type.
             name: Optional friendly identifier. Defaults to ``file:line``.
             model_run_config: Baseline configuration inherited by invocations.
         """
         super().__init__(model, name, optim_dtype)
-        self.param_dtype: Optional[torch.dtype] = param_dtype
         self.model_run_config: RoundPipeRunConfig = copy.deepcopy(model_run_config)
         if isinstance(model, nn.Sequential):
             self.layers: List[nn.Module] = list(model)
@@ -252,13 +247,13 @@ class RoundPipe(RoundPipeBase):
 
         for parm in tqdm.tqdm(self.model.parameters(), total=sum(1 for _ in self.model.parameters()),
                               desc=f'Roundpipe: Process params in {self.name}', leave=False):
-            pinned_tensor = torch.empty_like(parm.data, dtype=self.param_dtype if parm.is_floating_point() else None, pin_memory=True)
+            pinned_tensor = torch.empty_like(parm.data, pin_memory=True)
             pinned_tensor.copy_(parm.data)
             parm.data = pinned_tensor
             ParamAttribute.set(parm)
         for buffer in tqdm.tqdm(self.model.buffers(), total=sum(1 for _ in self.model.buffers()),
                                 desc=f'Roundpipe: Process buffers in {self.name}', leave=False):
-            pinned_tensor = torch.empty_like(buffer.data, dtype=self.param_dtype if buffer.is_floating_point() else None, pin_memory=True)
+            pinned_tensor = torch.empty_like(buffer.data, pin_memory=True)
             pinned_tensor.copy_(buffer.data)
             buffer.data = pinned_tensor
             ParamAttribute.set(buffer)

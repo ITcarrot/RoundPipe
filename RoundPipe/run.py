@@ -79,24 +79,13 @@ class RoundPipeRunContext:
         self.microbatch_id = microbatch_id
         self.num_microbatches = num_microbatches
         self.preserve_rng_state = preserve_rng_state
-        if model.param_dtype:
-            self.device_autocast_kwargs = {
-                'enabled': True,
-                'dtype': model.param_dtype,
-                'cache_enabled': False
-            }
-            self.cpu_autocast_kwargs = {
-                'enabled': True,
-                'dtype': model.param_dtype,
-                'cache_enabled': False
-            }
-        else:
-            device_autocast_kwargs, self.cpu_autocast_kwargs = _get_autocast_kwargs('cuda')
-            assert device_autocast_kwargs is not None, "Failed to get CUDA autocast kwargs."
-            self.device_autocast_kwargs = device_autocast_kwargs
-            # RoundPipe manages its own autocast cache
-            self.device_autocast_kwargs['cache_enabled'] = False
-            self.cpu_autocast_kwargs['cache_enabled'] = False
+
+        device_autocast_kwargs, self.cpu_autocast_kwargs = _get_autocast_kwargs('cuda')
+        assert device_autocast_kwargs is not None, "Failed to get CUDA autocast kwargs."
+        self.device_autocast_kwargs = device_autocast_kwargs
+        # RoundPipe moves param across GPUs; disable autocast caching.
+        self.device_autocast_kwargs['cache_enabled'] = False
+        self.cpu_autocast_kwargs['cache_enabled'] = False
 
         self.flatten_inputs = [[] for _ in range(model.num_layers)]
         self.flatten_specs = [None for _ in range(model.num_layers)]
