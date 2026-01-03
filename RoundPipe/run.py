@@ -166,6 +166,8 @@ def run_forward(device: 'DeviceManager', context: RoundPipeRunContext,
     layer_ids = context.execute_plan.fwd_plan[layer_group_id]
     grad_context = torch.enable_grad() if context.enable_grad else torch.no_grad()
     if batch_idx == 0:
+        for layer_id in layer_ids:
+            model.layer_param_copied[layer_id].wait()
         finish_event = upload_layers([model.layers[layer_id] for layer_id in layer_ids], device, False)
         for layer_id in layer_ids:
             model.layer_param_uploaded_events[layer_id] = finish_event
@@ -242,6 +244,8 @@ def run_backward(device: 'DeviceManager', context: RoundPipeRunContext,
     batch_idx = context.microbatch_id
     layer_ids = context.execute_plan.bwd_plan[layer_group_id]
     if batch_idx == 0:
+        for layer_id in layer_ids:
+            model.layer_param_copied[layer_id].wait()
         finish_event = upload_layers([model.layers[layer_id] for layer_id in layer_ids], device, True)
         for layer_id in layer_ids:
             model.layer_param_uploaded_events[layer_id] = finish_event
@@ -346,6 +350,8 @@ def run_forward_backward(device: 'DeviceManager', context: RoundPipeRunContext,
     batch_idx = context.microbatch_id
     layer_ids = context.execute_plan.bwd_plan[0]
     if batch_idx == 0:
+        for layer_id in layer_ids:
+            model.layer_param_copied[layer_id].wait()
         finish_event = upload_layers([model.layers[layer_id] for layer_id in layer_ids], device, True)
         for layer_id in layer_ids:
             model.layer_param_uploaded_events[layer_id] = finish_event
