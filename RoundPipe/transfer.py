@@ -197,7 +197,11 @@ def download_layer(layer: torch.nn.Module, device: 'DeviceManager'):
                                             device.compute_stream, device.downstream)
                 else:
                     device.mem_manager.free(param.grad.untyped_storage(), device.compute_stream, device.downstream)
-                param.grad = param.grad.to(torch.device('cpu'), non_blocking = True)
+                if param_attr.data_grad is not None: # reuse allocated grad buffer if exists
+                    param_attr.data_grad.copy_(param.grad, non_blocking = True)
+                    param.grad = param_attr.data_grad
+                else:
+                    param.grad = param.grad.to(torch.device('cpu'), non_blocking = True)
         for buffer in layer.buffers():
             device.mem_manager.free(buffer.data.untyped_storage(), device.param_upstream,
                                     device.compute_stream, device.downstream)

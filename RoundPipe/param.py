@@ -10,6 +10,7 @@ class ParamAttribute:
         data_cpu: The CPU copy of the parameter data.
         data_grad: A temporary location to hold reference to gradient.
         data_optim: The optimizer copy of the parameter data.
+        optim_grad: Hold reference to optimizer gradient to avoid reallocation.
         uploaded_grad: Whether the gradient is uploaded from cpu.
     '''
     @classmethod
@@ -37,6 +38,7 @@ class ParamAttribute:
         self.data_cpu: torch.Tensor = data
         self.data_grad: Optional[torch.Tensor] = None
         self.data_optim: torch.Tensor = data
+        self.optim_grad: Optional[torch.Tensor] = None
         self.uploaded_grad: bool = False
 
     def optim_inited(self) -> bool:

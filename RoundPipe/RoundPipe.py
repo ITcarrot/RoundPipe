@@ -171,6 +171,7 @@ class RoundPipeBase(nn.Module):
             **kwargs: Keyword arguments forwarded to ``step_fn``.
         """
         self.optim_updated.wait() # ensure previous step is done to avoid data race
+        self.lock_grad()
         for name, param in super().named_parameters():
             param_attr = ParamAttribute.get(param)
             if param.grad is not None and not param_attr.optim_inited():
@@ -182,10 +183,9 @@ class RoundPipeBase(nn.Module):
             param_attr.data_grad = param.grad
             param.grad = None
 
-        self.lock_grad()
-        launch_optim_kernel(self.move_grad_to_optim)
         if is_async:
             self.sync_optim_param()
+        launch_optim_kernel(self.move_grad_to_optim)
         self.optim_updated.clear()
         launch_optim_kernel(step_fn, *args, **kwargs)
         launch_optim_kernel(lambda: self.optim_updated.set())
@@ -204,7 +204,8 @@ class RoundPipe(RoundPipeBase):
         layer_param_uploaded_events: Event signaling params is copied to gpu.
         layer_gradient_ready_events: Event signaling gradient is copied to cpu.
         layer_gradient_copied: Event signaling gradient has been moved to optimizer.
-            This can avoid allocating doubled gradient memory on cpu.
+            This can avoid allocating doubled gradient memory on cpu. When this is
+            set, it implies the ParamAttribute.data_grad can be reused for next backward.
         model_timer: ``ModelTimer`` measuring per-layer latency.
     """
     def __init__(self,
@@ -283,10 +284,16 @@ class RoundPipe(RoundPipeBase):
                 param_attr = ParamAttribute.get(param)
                 if param_attr.data_grad is not None:
                     if param_attr.data_optim.grad is None:
-                        param_attr.data_optim.grad = param_attr.data_grad.to(dtype=param_attr.data_optim.dtype)
+                        if param_attr.optim_grad is not None:
+                            param_attr.data_optim.grad = param_attr.optim_grad
+                        else:
+                            param_attr.data_optim.grad = torch.empty_like(param_attr.data_optim)
+                        param_attr.data_optim.grad.copy_(param_attr.data_grad)
                     else:
                         param_attr.data_optim.grad.add_(param_attr.data_grad.to(dtype=param_attr.data_optim.dtype))
-                    param_attr.data_grad = None
+                    param_attr.optim_grad = param_attr.data_optim.grad
+                else:
+                    param_attr.optim_grad = None # clear optim_grad reference if no grad
             copied_event.set()
 
     @override
@@ -492,10 +499,16 @@ class AutoRoundPipe(RoundPipeBase):
             param_attr = ParamAttribute.get(param)
             if param_attr.data_grad is not None:
                 if param_attr.data_optim.grad is None:
-                    param_attr.data_optim.grad = param_attr.data_grad.to(dtype=param_attr.data_optim.dtype)
+                    if param_attr.optim_grad is not None:
+                        param_attr.data_optim.grad = param_attr.optim_grad
+                    else:
+                        param_attr.data_optim.grad = torch.empty_like(param_attr.data_optim)
+                    param_attr.data_optim.grad.copy_(param_attr.data_grad)
                 else:
                     param_attr.data_optim.grad.add_(param_attr.data_grad.to(dtype=param_attr.data_optim.dtype))
-                param_attr.data_grad = None
+                param_attr.optim_grad = param_attr.data_optim.grad
+            else:
+                param_attr.optim_grad = None # clear optim_grad reference if no grad
         for layer_copied_events in self.module_gradient_copied:
             for copied_event in layer_copied_events:
                 copied_event.set()

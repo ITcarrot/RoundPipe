@@ -13,6 +13,8 @@ import threading
 import _thread
 import atexit
 
+import torch
+
 from .threads import RoundPipeThread
 
 kernel_queue: queue.Queue[Tuple[Callable, Tuple, Dict[str, Any]]] = queue.Queue()
@@ -20,6 +22,11 @@ optim_shutdown = False
 optim_active: _thread.LockType = threading.Lock()
 def controller() -> None:
     """Optimizer Stream thread function."""
+    num_cpu = torch.get_num_threads()
+    num_gpu = torch.cuda.device_count()
+    if num_cpu > num_gpu * 4:
+        torch.set_num_threads(num_cpu - num_gpu)
+
     while not optim_shutdown:
         fn, args, kwargs = kernel_queue.get()
         with optim_active:
