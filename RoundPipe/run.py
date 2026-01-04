@@ -2,13 +2,14 @@
 
 from typing_extensions import *
 import traceback
+import functools
 
 import torch
 from torch.utils.checkpoint import _get_autocast_kwargs
 from torch.utils._pytree import tree_unflatten, tree_flatten, TreeSpec
 
 from .batch import Batch
-from .context import RecomputeCtx
+from .context import ForwardCtx, RecomputeCtx
 from .profile import annotate
 from .scheduler import ModelExecutePlan
 from .threads import thread_exception_print_lock
@@ -35,6 +36,9 @@ class RoundPipeRunContext:
         cpu_autocast_kwargs: Settings applied to CPU autocast.
         flatten_inputs: Cached flattened inputs for recompute.
         flatten_specs: Tree specs that rebuild flattened inputs.
+        recompute_data: Saved data for backward recompute.
+        recompute_data_specs: Tree specs that rebuild recompute data.
+        download_event: Events to signal when saved data download is done.
         device_rng_states: Saved CUDA RNG states per layer when requested.
         cpu_rng_states: Saved CPU RNG states per layer when requested.
         input_backward_events: Events to record when gradients are ready.
@@ -51,6 +55,9 @@ class RoundPipeRunContext:
     cpu_autocast_kwargs: dict
     flatten_inputs: List[List[Any]]
     flatten_specs: List[Optional[TreeSpec]]
+    recompute_data: List[List[Any]]
+    recompute_data_specs: List[Optional[TreeSpec]]
+    download_event: List[torch.cuda.Event]
     device_rng_states: List[Optional[torch.Tensor]]
     cpu_rng_states: List[Optional[torch.Tensor]]
     input_backward_events: Sequence[torch.cuda.Event]
@@ -89,6 +96,9 @@ class RoundPipeRunContext:
 
         self.flatten_inputs = [[] for _ in range(model.num_layers)]
         self.flatten_specs = [None for _ in range(model.num_layers)]
+        self.recompute_data = [[] for _ in range(model.num_layers)]
+        self.recompute_data_specs = [None for _ in range(model.num_layers)]
+        self.download_event = [cast(torch.cuda.Event, torch.cuda.Event()) for _ in range(model.num_layers)]
         self.device_rng_states = [None for _ in range(model.num_layers)]
         self.cpu_rng_states = [None for _ in range(model.num_layers)]
 
@@ -115,11 +125,78 @@ class RoundPipeRunContext:
                 if isinstance(item, torch.Tensor) and item.device != torch.device('cpu'):
                     device.mem_manager.record_stream(item, device.compute_stream, device.downstream)
                     self.flatten_inputs[layer_id][idx] = item.to('cpu', non_blocking=True)
+            self.download_event[layer_id].record(device.downstream)
 
         if self.preserve_rng_state:
             with device.device:
                 self.device_rng_states[layer_id] = torch.cuda.get_rng_state()
             self.cpu_rng_states[layer_id] = torch.get_rng_state()
+
+    def save_for_recompute(self, layer_id: int, device: 'DeviceManager', *data: Any) -> None:
+        """Save data for backward recompute. Tensor to be saved cannot require
+        gradients. This function can be called at most once from each layer. 
+        If forward gradients are not enabled, this is a no-op.
+
+        Args:
+            layer_id: Layer index whose data should be cached.
+            device: Device manager whose streams guard the transfer.
+            *data: Data to save for recomputation.
+        """
+        if not self.enable_grad:
+            return
+        assert self.recompute_data_specs[layer_id] is None, \
+            f"Recompute data for layer {layer_id} has already been saved."
+
+        flatten_data, flatten_spec = tree_flatten(data)
+        device.wait_stream(device.downstream, device.compute_stream)
+        with torch.cuda.stream(device.downstream):
+            for idx, item in enumerate(flatten_data):
+                if isinstance(item, torch.Tensor):
+                    assert not item.requires_grad, \
+                        "Tensors saved for recompute cannot require gradients."
+                    assert item.device == device.device, \
+                        "Tensors saved for recompute must reside on the compute device."
+                    device.mem_manager.record_stream(item, device.compute_stream, device.downstream)
+                    flatten_data[idx] = item.to('cpu', non_blocking=True)
+            self.download_event[layer_id].record(device.downstream)
+
+        self.recompute_data[layer_id] = flatten_data
+        self.recompute_data_specs[layer_id] = flatten_spec
+
+    def fetch_recompute_data(self, layer_id: int, device: 'DeviceManager') -> None:
+        """Load data saved for backward recompute to GPU.
+
+        Args:
+            layer_id: Layer index whose data should be retrieved.
+            device: Device manager whose streams guard the transfer.
+        """
+        if self.recompute_data_specs[layer_id] is None:
+            return
+        with torch.cuda.stream(device.upstream):
+            self.download_event[layer_id].wait(device.upstream)
+            for idx, item in enumerate(self.recompute_data[layer_id]):
+                if isinstance(item, torch.Tensor):
+                    self.recompute_data[layer_id][idx] = item.to(device.device, non_blocking=True)
+                    device.mem_manager.record_stream(
+                        self.recompute_data[layer_id][idx], device.upstream, device.compute_stream
+                    )
+
+    def cut_recompute_data(self, layer_id: int) -> Any:
+        """Retrieve and clear data saved for backward recompute.
+
+        Args:
+            layer_id: Layer index whose data should be retrieved.
+
+        Returns:
+            The data previously saved via `save_for_recompute`.
+        """
+        flatten_data = self.recompute_data[layer_id]
+        flatten_spec = self.recompute_data_specs[layer_id]
+        self.recompute_data[layer_id] = []
+        self.recompute_data_specs[layer_id] = None
+        if flatten_spec is None:
+            return None
+        return tree_unflatten(flatten_data, flatten_spec)
 
     def restore_rng_state(self, layer_id: int, device: 'DeviceManager') -> None:
         """Restore the RNG snapshot captured during `save_input`.
@@ -184,6 +261,7 @@ def run_forward(device: 'DeviceManager', context: RoundPipeRunContext,
              torch.autocast('cuda', **context.device_autocast_kwargs), \
              torch.autocast('cpu', **context.cpu_autocast_kwargs), \
              annotate(f'{model.name}L[{layer_id}]B[{batch_idx}]Fwd'), \
+             ForwardCtx(functools.partial(context.save_for_recompute, layer_id, device)), \
              model.model_timer.time_forward(layer_id, device.compute_stream):
             try:
                 if layer_id == 0:
@@ -249,8 +327,10 @@ def run_backward(device: 'DeviceManager', context: RoundPipeRunContext,
         finish_event = upload_layers([model.layers[layer_id] for layer_id in layer_ids], device, True)
         for layer_id in layer_ids:
             model.layer_param_uploaded_events[layer_id] = finish_event
+    for layer_id in layer_ids:
+        context.fetch_recompute_data(layer_id, device)
     flatten_inputs_gpu = async_h2d(
-        device, [], context.flatten_inputs[layer_ids[0]], True
+        device, [context.download_event[layer_ids[0]]], context.flatten_inputs[layer_ids[0]], True
     )
     context.flatten_inputs[layer_ids[0]].clear() # Free CPU memory
     flatten_input_spec = cast(TreeSpec, context.flatten_specs[layer_ids[0]])
@@ -265,7 +345,8 @@ def run_backward(device: 'DeviceManager', context: RoundPipeRunContext,
             with torch.enable_grad(), torch.cuda.stream(device.compute_stream), \
                  torch.autocast('cuda', **context.device_autocast_kwargs), \
                  torch.autocast('cpu', **context.cpu_autocast_kwargs), \
-                 annotate(f'{model.name}L[{layer_id}]B[{batch_idx}]Re'), RecomputeCtx(), \
+                 annotate(f'{model.name}L[{layer_id}]B[{batch_idx}]Re'), \
+                 RecomputeCtx(context.cut_recompute_data(layer_id)), \
                  model.model_timer.time_backward(layer_ids[0], device.compute_stream):
                 try:
                     if layer_id == 0:
@@ -285,14 +366,10 @@ def run_backward(device: 'DeviceManager', context: RoundPipeRunContext,
     
     outputs_requires_grad = []
     outputs_grad = []
-    if len(flatten_outputs_gpu) == len(flatten_grad_outputs_gpu):
-        for out, grad_out in zip(flatten_outputs_gpu, flatten_grad_outputs_gpu):
-            if isinstance(out, torch.Tensor) and out.requires_grad:
-                outputs_requires_grad.append(out)
-                outputs_grad.append(grad_out)
-    else:
-        outputs_requires_grad = [t for t in flatten_outputs_gpu if isinstance(t, torch.Tensor) and t.requires_grad]
-        outputs_grad = [t for t in flatten_grad_outputs_gpu if isinstance(t, torch.Tensor)]
+    for out, grad_out in zip(flatten_outputs_gpu, flatten_grad_outputs_gpu):
+        if isinstance(out, torch.Tensor) and out.requires_grad:
+            outputs_requires_grad.append(out)
+            outputs_grad.append(grad_out)
     with annotate(f'{model.name}L[{layer_ids[0]}, {layer_ids[-1]}]B[{batch_idx}]Bwd'), \
          model.model_timer.time_backward(layer_ids[0], device.compute_stream):
         try:

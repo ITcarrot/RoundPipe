@@ -7,7 +7,7 @@ from transformers.masking_utils import create_causal_mask, create_sliding_window
 from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.models.qwen3.modeling_qwen3 import Qwen3ForCausalLM
 
-from ..context import doing_recompute
+from ..context import doing_recompute, save_for_recompute, get_recompute_data
 from ..RoundPipe import RoundPipe
 from .function import CompileForCausalLMLoss
 
@@ -38,9 +38,10 @@ class Qwen3ForCausalLMPrefix(nn.Module):
         if inputs_embeds is None:
             inputs_embeds: torch.Tensor = self.embed_tokens(input_ids)
 
-        # For recompute, embeddings is the only thing requires gradient.
+        # Early return to avoid host-device synchronization in create_causal_mask
         if doing_recompute():
-            return inputs_embeds
+            causal_mask_mapping, position_ids, position_embeddings = get_recompute_data()
+            return inputs_embeds, causal_mask_mapping, position_ids, position_embeddings, kwargs, labels, logits_to_keep
 
         if use_cache:
             warnings.warn("`use_cache` will set to False. Caching behavior is not supported in RoundPipe.")
@@ -82,6 +83,7 @@ class Qwen3ForCausalLMPrefix(nn.Module):
         # create position embeddings to be shared across the decoder layers
         position_embeddings = self.rotary_emb(hidden_states, position_ids)
 
+        save_for_recompute(causal_mask_mapping, position_ids, position_embeddings)
         return hidden_states, causal_mask_mapping, position_ids, position_embeddings, kwargs, labels, logits_to_keep
 
 class Qwen3ForCausalLMWrappedLayer(nn.Module):
