@@ -1,8 +1,11 @@
 """CUDA event helpers for measuring per-layer forward/backward latency."""
 
 from typing_extensions import *
+import sys
 
 import torch
+
+from .utils import get_model_size
 
 class LayerTimingContext:
     """Context manager that records CUDA events around a code block.
@@ -36,76 +39,158 @@ class LayerTimingContext:
         self.end_event.record(self.stream)
 
 class ModelTimer:
-    """Persistent tracker for smoothed per-layer timings.
-
-    Attributes:
-        fwd_timing_events: Per-layer queues of recorded forward events.
-        bwd_timing_events: Per-layer queues of recorded backward events.
-        fwd_history: Smoothed forward timing history.
-        bwd_history: Smoothed backward timing history.
-        num_records: Number of timing updates applied so far.
-    """
-
-    def __init__(self, num_layers: int):
-        """Allocate timing event queues for ``num_layers`` entries.
-
-        Args:
-            num_layers: Number of logical layers being timed.
-        """
-        self.fwd_timing_events: List[List[Tuple[torch.cuda.Event, torch.cuda.Event]]] \
-            = [[] for _ in range(num_layers)]
-        self.bwd_timing_events: List[List[Tuple[torch.cuda.Event, torch.cuda.Event]]] \
-            = [[] for _ in range(num_layers)]
-        self.fwd_history: List[float] = [0. for _ in range(num_layers)]
-        self.bwd_history: List[float] = [0. for _ in range(num_layers)]
-        self.num_records: int = -1
-
-    def time_forward(self, layer_id: int, stream: torch.cuda.Stream) -> LayerTimingContext:
-        """Create a timing context for a forward pass.
-
-        Args:
-            layer_id: Index of the layer being measured.
-            stream: CUDA stream to associate with the events.
-
-        Returns:
-            ``LayerTimingContext`` that records start/end events upon use.
-        """
-        start_event = cast(torch.cuda.Event, torch.cuda.Event(enable_timing = True))
-        end_event = cast(torch.cuda.Event, torch.cuda.Event(enable_timing = True))
-        self.fwd_timing_events[layer_id].append((start_event, end_event))
-        return LayerTimingContext(start_event, end_event, stream)
+    """Tracks per-layer forward/recompute/backward timing using CUDA events.
+    Before recording any events for a layer, the timer uses model size-based
+    estimates. Once events have been recorded, the timer updates its estimates
+    using an exponential moving average.
     
-    def time_backward(self, layer_id: int, stream: torch.cuda.Stream) -> LayerTimingContext:
-        """Create a timing context for a backward pass.
+    Attributes:
+        SMOOTH_RATE: Smoothing factor for time estimates.
+        BACKWARD_MULTIPLIER: Initial multiplier to estimate backward time
+            from forward time.
+        VERBOSE: Whether to print timing updates.
+        n_layers: Number of layers being timed.
+        stage: 0 if no events recorded yet, 1 if first event recorded,
+            2 if time-based estimate has been computed.
+        estimate: Smoothed time estimates for each layer and type.
+        fwd_events: Recorded forward/recompute events for each layer
+            from current iteration.
+        bwd_events: Recorded backward events for each layer
+            from current iteration.
+        pending_fwd: Forward/recompute events from previous iteration.
+        pending_bwd: Backward events from previous iteration.
+    """
+    SMOOTH_RATE: float = 0.9
+    BACKWARD_MULTIPLIER: float = 2.0
+    VERBOSE: bool = False
+    def __init__(self, layers: List[torch.nn.Module]):
+        self.n_layers: int = len(layers)
+        self.stage : Dict[Literal['fwd', 're', 'bwd'], List[Literal[0, 1, 2]]] = {
+            'fwd': [0] * len(layers),
+            're': [0] * len(layers),
+            'bwd': [0] * len(layers),
+        }
+        self.estimate: Dict[Literal['fwd', 're', 'bwd'], List[float]] = {
+            'fwd': [float(get_model_size(layer)) for layer in layers],
+            're': [float(get_model_size(layer)) for layer in layers],
+            'bwd': [float(get_model_size(layer) * self.BACKWARD_MULTIPLIER)
+                    for layer in layers],
+        }
+        self.fwd_events: Dict[Literal['fwd', 're'],
+                              List[List[Tuple[torch.cuda.Event, torch.cuda.Event]]]] = {
+            'fwd': [[] for _ in layers],
+            're': [[] for _ in layers],
+        }
+        self.bwd_events: Dict[range, List[Tuple[torch.cuda.Event, torch.cuda.Event]]] = {}
+        self.pending_fwd: Dict[Literal['fwd', 're'],
+                                  List[List[Tuple[torch.cuda.Event, torch.cuda.Event]]]] = {
+            'fwd': [[] for _ in layers],
+            're': [[] for _ in layers],
+        }
+        self.pending_bwd: Dict[range, List[Tuple[torch.cuda.Event, torch.cuda.Event]]] = {}
+
+    def time_fwd(self, action: Literal['fwd', 're'], layer_idx: int,
+                 stream: torch.cuda.Stream) -> LayerTimingContext:
+        """Create a context manager to time a forward/recompute layer.
 
         Args:
-            layer_id: Index of the layer being measured.
-            stream: CUDA stream to associate with the events.
+            action: Either 'fwd' or 're' to indicate forward or recompute.
+            layer_idx: Index of the layer being timed.
+            stream: CUDA stream on which to record events.
 
         Returns:
-            ``LayerTimingContext`` that records start/end events upon use.
+            A LayerTimingContext that records events on entry/exit.
         """
-        start_event = cast(torch.cuda.Event, torch.cuda.Event(enable_timing = True))
-        end_event = cast(torch.cuda.Event, torch.cuda.Event(enable_timing = True))
-        self.bwd_timing_events[layer_id].append((start_event, end_event))
+        start_event = cast(torch.cuda.Event, torch.cuda.Event(enable_timing=True))
+        end_event = cast(torch.cuda.Event, torch.cuda.Event(enable_timing=True))
+        if self.stage[action][layer_idx] > 0:
+            self.fwd_events[action][layer_idx].append((start_event, end_event))
+        else:
+            self.stage[action][layer_idx] = 1
         return LayerTimingContext(start_event, end_event, stream)
 
-    def update_workload(self, workload: List[float]) -> bool:
-        """Convert recorded events into smoothed timing estimates.
+    def time_bwd(self, layer_ids: range, stream: torch.cuda.Stream
+                 ) -> LayerTimingContext:
+        """Create a context manager to time a backward layer.
 
         Args:
-            workload: Mutable list updated in-place with averaged timings.
+            layer_idx: Index of the layer being timed.
+            stream: CUDA stream on which to record events.
 
         Returns:
-            ``True`` once at least two records exist (ignoring warm-up).
+            A LayerTimingContext that records events on entry/exit.
         """
-        for idx, (layer_events, layer_history) in enumerate(zip(self.fwd_timing_events, self.fwd_history)):
-            new_time = 0.
-            for start_event, end_event in layer_events:
-                new_time += start_event.elapsed_time(end_event)
-            layer_events.clear()
-            if self.num_records > -1: # ignore first forward to avoid kernel JIT
-                self.fwd_history[idx] = (layer_history * self.num_records + new_time) / (self.num_records + 1)
-                workload[idx] = self.fwd_history[idx]
-        self.num_records += 1
-        return self.num_records > 0
+        start_event = cast(torch.cuda.Event, torch.cuda.Event(enable_timing=True))
+        end_event = cast(torch.cuda.Event, torch.cuda.Event(enable_timing=True))
+        if all(self.stage['bwd'][i] != 0 for i in layer_ids):
+            self.bwd_events.setdefault(layer_ids, []) \
+                           .append((start_event, end_event))
+        else:
+            for i in layer_ids:
+                self.stage['bwd'][i] = 1
+        return LayerTimingContext(start_event, end_event, stream)
+
+    def update_times(self):
+        """Update time estimates based on recorded events.""" 
+        sums = {
+            'fwd': [0.0] * self.n_layers,
+            're': [0.0] * self.n_layers,
+            'bwd': [0.0] * self.n_layers,
+        }
+        cnts = {
+            'fwd': [0] * self.n_layers,
+            're': [0] * self.n_layers,
+            'bwd': [0] * self.n_layers,
+        }
+        for action in self.pending_fwd.keys():
+            for layer_idx, events in enumerate(self.pending_fwd[action]):
+                cnts[action][layer_idx] = len(events)
+                for start_event, end_event in events:
+                    end_event.synchronize()
+                    elapsed = start_event.elapsed_time(end_event)
+                    sums[action][layer_idx] += elapsed
+        assert all(cnts['fwd'][i] == cnts['fwd'][0] for i in range(self.n_layers)), \
+            "Mismatched forward event counts across layers"
+        assert all(cnts['re'][i] == cnts['re'][0] for i in range(self.n_layers)), \
+            "Mismatched recompute event counts across layers"
+        # Backward timing proportional to recompute times
+        for layer_ids, events in self.pending_bwd.items():
+            scale_sum = sum(sums['re'][i] for i in layer_ids) + sys.float_info.epsilon
+            block_sum = 0.0
+            for start_event, end_event in events:
+                end_event.synchronize()
+                elapsed = start_event.elapsed_time(end_event)
+                block_sum += elapsed
+            for i in layer_ids:
+                portion = sums['re'][i] / scale_sum * block_sum
+                sums['bwd'][i] += portion
+                cnts['bwd'][i] += len(events)
+        assert all(cnts['bwd'][i] == cnts['bwd'][0] for i in range(self.n_layers)), \
+            "Mismatched backward event counts across layers"
+        # Update estimates with smoothed averages
+        for action in self.estimate.keys():
+            for layer_idx in range(self.n_layers):
+                if cnts[action][layer_idx] > 0:
+                    avg_time = sums[action][layer_idx] / cnts[action][layer_idx]
+                    if self.stage[action][layer_idx] < 2:
+                        self.estimate[action][layer_idx] = avg_time
+                        self.stage[action][layer_idx] = 2
+                    else:
+                        self.estimate[action][layer_idx] \
+                            = self.SMOOTH_RATE * self.estimate[action][layer_idx] \
+                            + (1 - self.SMOOTH_RATE) * avg_time
+        if self.VERBOSE:
+            for action in self.estimate.keys():
+                if cnts[action][0] > 0:
+                    for layer_idx in range(self.n_layers):
+                        print(f"Layer {layer_idx} {action}  "
+                              f"new record: {sums[action][layer_idx] / cnts[action][layer_idx]:.3f} ms  "
+                              f"new estimate: {self.estimate[action][layer_idx]:.3f} ms")
+        # Move current events to pending and clear current
+        self.pending_fwd = self.fwd_events
+        self.pending_bwd = self.bwd_events
+        self.fwd_events = {
+            'fwd': [[] for _ in range(self.n_layers)],
+            're': [[] for _ in range(self.n_layers)],
+        }
+        self.bwd_events = {}

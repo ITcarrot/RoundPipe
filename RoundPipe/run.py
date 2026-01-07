@@ -269,7 +269,7 @@ def run_forward(device: 'DeviceManager', context: RoundPipeRunContext,
              torch.autocast('cpu', **context.cpu_autocast_kwargs), \
              annotate(f'{model.name}L[{layer_id}]B[{batch_idx}]Fwd'), \
              ForwardCtx(functools.partial(context.save_for_recompute, layer_id, device)), \
-             model.model_timer.time_forward(layer_id, device.compute_stream):
+             model.model_timer.time_fwd('fwd', layer_id, device.compute_stream):
             try:
                 if layer_id == 0:
                     args, kwargs = hidden_state
@@ -354,7 +354,7 @@ def run_backward(device: 'DeviceManager', context: RoundPipeRunContext,
                  torch.autocast('cpu', **context.cpu_autocast_kwargs), \
                  annotate(f'{model.name}L[{layer_id}]B[{batch_idx}]Re'), \
                  RecomputeCtx(context.cut_recompute_data(layer_id)), \
-                 model.model_timer.time_backward(layer_ids[0], device.compute_stream):
+                 model.model_timer.time_fwd('re', layer_id, device.compute_stream):
                 try:
                     if layer_id == 0:
                         args, kwargs = hidden_state
@@ -378,7 +378,7 @@ def run_backward(device: 'DeviceManager', context: RoundPipeRunContext,
             outputs_requires_grad.append(out)
             outputs_grad.append(grad_out)
     with annotate(f'{model.name}L[{layer_ids[0]}, {layer_ids[-1]}]B[{batch_idx}]Bwd'), \
-         model.model_timer.time_backward(layer_ids[0], device.compute_stream):
+         model.model_timer.time_bwd(layer_ids, device.compute_stream):
         try:
             torch.autograd.backward(outputs_requires_grad, outputs_grad)
         except Exception:
@@ -450,7 +450,8 @@ def run_forward_backward(device: 'DeviceManager', context: RoundPipeRunContext,
              torch.autocast('cuda', **context.device_autocast_kwargs), \
              torch.autocast('cpu', **context.cpu_autocast_kwargs), \
              annotate(f'{model.name}L[{layer_id}]B[{batch_idx}]Fwd'), \
-             model.model_timer.time_backward(layer_ids[0], device.compute_stream):
+             model.model_timer.time_fwd('fwd', layer_id, device.compute_stream), \
+             model.model_timer.time_fwd('re', layer_id, device.compute_stream):
             try:
                 if layer_id == 0:
                     args, kwargs = hidden_state
@@ -493,7 +494,7 @@ def run_forward_backward(device: 'DeviceManager', context: RoundPipeRunContext,
     batch.loss_ready.record(device.downstream)
 
     with annotate(f'{model.name}L[{layer_ids[0]}, {layer_ids[-1]}]B[{batch_idx}]Bwd'), \
-         model.model_timer.time_backward(layer_ids[0], device.compute_stream):
+         model.model_timer.time_bwd(layer_ids, device.compute_stream):
         try:
             torch.autograd.backward(loss)
         except Exception:

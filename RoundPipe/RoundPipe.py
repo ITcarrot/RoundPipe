@@ -246,7 +246,7 @@ class RoundPipe(RoundPipeBase):
         self.layer_workload: List[float] = []
         for layer in self.layers:
             self.layer_workload.append(get_model_size(layer))
-        self.model_timer: ModelTimer = ModelTimer(self.num_layers)
+        self.model_timer: ModelTimer = ModelTimer(self.layers)
 
         self.layer_param_copied: List[threading.Event] = [threading.Event() for _ in range(self.num_layers)]
         for e in self.layer_param_copied:
@@ -351,6 +351,7 @@ class RoundPipe(RoundPipeBase):
         if full_run_config.requires_grad and not torch.is_grad_enabled():
             raise RuntimeError("RoundPipe model is set to require gradients, but torch gradients are disabled globally.")
         batch = Batch(args, kwargs, full_run_config)
+        self.model_timer.update_times()
         execute_plan = ModelExecutePlan(self, False)
         run_context = [RoundPipeRunContext(self, execute_plan, full_run_config.requires_grad,
                                            i, batch.num_microbatch, full_run_config.preserve_rng_state)
@@ -419,6 +420,7 @@ class RoundPipe(RoundPipeBase):
         assert full_run_config.requires_grad and torch.is_grad_enabled(), \
                "train_iter requires gradients to be enabled."
         batch = Batch(input_args, input_kwargs, full_run_config, label)
+        self.model_timer.update_times()
         execute_plan = ModelExecutePlan(self, True)
         run_context = [RoundPipeRunContext(self, execute_plan, full_run_config.requires_grad,
                                            i, batch.num_microbatch, full_run_config.preserve_rng_state)
