@@ -3,6 +3,7 @@
 from typing_extensions import *
 import traceback
 import functools
+import copy
 
 import torch
 from torch.utils.checkpoint import _get_autocast_kwargs
@@ -116,15 +117,19 @@ class RoundPipeRunContext:
         if not (self.enable_grad and self.execute_plan.backward_need_input(layer_id)):
             return
 
-        self.flatten_inputs[layer_id] = batch.flatten_states[self.microbatch_id]
+        self.flatten_inputs[layer_id] = copy.copy(batch.flatten_states[self.microbatch_id])
         self.flatten_specs[layer_id] = batch.flatten_specs[self.microbatch_id]
 
         device.wait_stream(device.downstream, device.compute_stream)
         with torch.cuda.stream(device.downstream):
             for idx, item in enumerate(self.flatten_inputs[layer_id]):
-                if isinstance(item, torch.Tensor) and item.device != torch.device('cpu'):
-                    device.mem_manager.record_stream(item, device.compute_stream, device.downstream)
-                    self.flatten_inputs[layer_id][idx] = item.to('cpu', non_blocking=True)
+                if isinstance(item, torch.Tensor):
+                    if item.device != torch.device('cpu'):
+                        device.mem_manager.record_stream(item, device.compute_stream, device.downstream)
+                        self.flatten_inputs[layer_id][idx] \
+                            = item.to('cpu', non_blocking=True).requires_grad_(item.requires_grad)
+                else:
+                    self.flatten_inputs[layer_id][idx] = copy.deepcopy(item)
             self.download_event[layer_id].record(device.downstream)
 
         if self.preserve_rng_state:
@@ -158,6 +163,8 @@ class RoundPipeRunContext:
                         "Tensors saved for recompute must reside on the compute device."
                     device.mem_manager.record_stream(item, device.compute_stream, device.downstream)
                     flatten_data[idx] = item.to('cpu', non_blocking=True)
+                else:
+                    flatten_data[idx] = copy.deepcopy(item)
             self.download_event[layer_id].record(device.downstream)
 
         self.recompute_data[layer_id] = flatten_data
