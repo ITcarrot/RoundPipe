@@ -7107,7 +7107,7 @@ The following object members access rules are applied:</p>
               (<code><span title="Final">Final</span>[<span title="bool">bool</span>]</code>)
           –
           <div class="doc-md-description">
-            <p>Whether gradient scaling is enabled. </p>
+            <p>Whether gradient scaling is enabled.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -10343,7 +10343,7 @@ Otherwise, you should be aware of potential data races.</p>
 <p><span class="doc-section-title">Returns:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><span title="Tuple">Tuple</span>[<span title="List">List</span>[<span title="Tuple">Tuple</span>[<span title="int">int</span>, <span title="int">int</span>]], <span title="Unpack">Unpack</span>[<span title="Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>, ...]]]</code>
+              <code><span title="Any">Any</span></code>
           –
           <div class="doc-md-description">
             <p>Tuple with gradient indices followed by tensors requiring grad.</p>
@@ -10721,7 +10721,7 @@ thus ensuring correct backward order.</p>
 <p><span class="doc-section-title">Returns:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><span title="Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>, <span title="List">List</span>[<span title="int">int</span>], <span title="Unpack">Unpack</span>[<span title="Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>, ...]]]</code>
+              <code><span title="Any">Any</span></code>
           –
           <div class="doc-md-description">
             <p>Tuple <code>(tag, grad_indices, *output_tensors)</code> consumed later.</p>
@@ -11145,7 +11145,7 @@ thus ensuring correct backward order.</p>
     <div class="doc doc-contents ">
 
         <p>Save data for backward recompute. Tensor to be saved cannot require
-gradients. This function can be called at most once from each layer. 
+gradients. This function can be called at most once from each layer.
 If forward gradients are not enabled, this is a no-op.</p>
 
 
@@ -11196,7 +11196,7 @@ If forward gradients are not enabled, this is a no-op.</p>
     <div class="doc doc-contents ">
 
         <p>Stash flattened inputs (and optionally RNG) for backward recompute.</p>
-<p>If gradients are not enabled or the layer is not the first layer of a 
+<p>If gradients are not enabled or the layer is not the first layer of a
 backward stage, this is a no-op.</p>
 
 
@@ -14114,7 +14114,7 @@ based on the call site.</p>
               <code><span title="Union">Union</span>[<a class="autorefs autorefs-internal" title="            RoundPipe (roundpipe.roundpipe.RoundPipe)" href="#roundpipe.roundpipe.RoundPipe">RoundPipe</a>, <a class="autorefs autorefs-internal" title="            AutoRoundPipe (roundpipe.roundpipe.AutoRoundPipe)" href="#roundpipe.roundpipe.AutoRoundPipe">AutoRoundPipe</a>]</code>
           –
           <div class="doc-md-description">
-            <p>A RoundPipe managed model instance wrapping the selected submodules. </p>
+            <p>A RoundPipe managed model instance wrapping the selected submodules.</p>
           </div>
         </li>
     </ul>
