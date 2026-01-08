@@ -2,6 +2,10 @@
 
 ## Install
 
-RoundPipe can be installed with pip.
+RoundPipe can be installed with pip:
+
+```
+pip install roundpipe
+```
 
 ## Wrapping a Model

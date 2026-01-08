@@ -186,7 +186,7 @@ def adam(params: list[torch.Tensor], grads: list[torch.Tensor],
 ):
     """Functional API that performs Adam algorithm computation.
 
-    See `RoundPipe.optim.Adam` for details.
+    See `roundpipe.optim.Adam` for details.
     """
     assert not capturable, "capturable=True is not supported."
     assert not differentiable, "differentiable=True is not supported."

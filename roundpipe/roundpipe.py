@@ -16,7 +16,7 @@ from .device import get_next_device
 from .optim_stream import launch_optim_kernel, on_optim_stream
 from .param import ParamAttribute
 from .run import RoundPipeRunContext, RoundPipeBatchedBackward, RoundPipeMicrobatchBackward, RoundPipeInputBackward
-from .RunConfig import RoundPipeRunConfig, FullRoundPipeRunConfig
+from .run_config import RoundPipeRunConfig, FullRoundPipeRunConfig
 from .scheduler import ModelExecutePlan, backward_schedule_simulator
 from .timer import ModelTimer
 from .utils import get_model_size

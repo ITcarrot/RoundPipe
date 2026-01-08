@@ -16,7 +16,7 @@ from .scheduler import chunk_layer_params
 if TYPE_CHECKING:
     from .device import DeviceManager
 else:
-    DeviceManager = TypeAliasType('DeviceManager', 'RoundPipe.device.DeviceManager')
+    DeviceManager = TypeAliasType('DeviceManager', 'roundpipe.device.DeviceManager')
 
 chunked_upload: bool = True
 CHUNK_UPLOAD_SIZE: int = 256 * 1024 * 1024 # 256 MB

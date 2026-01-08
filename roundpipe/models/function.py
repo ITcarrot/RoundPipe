@@ -4,7 +4,7 @@ import types
 import torch
 import torch.nn as nn
 
-from ..RoundPipe import RoundPipe
+from ..roundpipe import RoundPipe
 
 @torch.compile
 def CompileCrossEntropy(logits: torch.Tensor, labels: torch.Tensor,

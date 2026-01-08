@@ -1,6 +1,6 @@
 # Run Config
 
-::: RoundPipe.RunConfig.RoundPipeRunConfig.__init__
+::: roundpipe.run_config.RoundPipeRunConfig.__init__
 
 ### split_input
 

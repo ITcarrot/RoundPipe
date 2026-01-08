@@ -12,8 +12,8 @@ except ImportError:
     HFPreTrainedModel = None
 
 from .models import wrap_model
-from .RoundPipe import RoundPipe, AutoRoundPipe
-from .RunConfig import RoundPipeRunConfig
+from .roundpipe import RoundPipe, AutoRoundPipe
+from .run_config import RoundPipeRunConfig
 from .utils import get_model_size
 
 def wrap_model_recursive(model: nn.Module,

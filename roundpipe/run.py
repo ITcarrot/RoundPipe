@@ -18,10 +18,10 @@ from .transfer import async_h2d, async_d2h, upload_layers, download_layer, free_
 
 if TYPE_CHECKING:
     from .device import DeviceManager
-    from .RoundPipe import RoundPipe
+    from .roundpipe import RoundPipe
 else:
-    DeviceManager = TypeAliasType('DeviceManager', 'RoundPipe.device.DeviceManager')
-    RoundPipe = TypeAliasType('RoundPipe', 'RoundPipe.RoundPipe')
+    DeviceManager = TypeAliasType('DeviceManager', 'roundpipe.device.DeviceManager')
+    RoundPipe = TypeAliasType('RoundPipe', 'roundpipe.roundpipe.RoundPipe')
 
 class RoundPipeRunContext:
     """Per-microbatch state shared between forward and backward passes.

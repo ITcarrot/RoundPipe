@@ -13,9 +13,9 @@ import torch
 from .threads import dump_all_active_threads, KeyboardInterruptRoundPipeThreads
 
 if TYPE_CHECKING:
-    from RoundPipe import RoundPipe
+    from .roundpipe import RoundPipe
 else:
-    RoundPipe = TypeAliasType('RoundPipe', 'RoundPipe.RoundPipe')
+    RoundPipe = TypeAliasType('RoundPipe', 'roundpipe.roundpipe.RoundPipe')
 
 class ModelExecutePlan:
     """Encodes layer grouping and synchronization for forward/backward.

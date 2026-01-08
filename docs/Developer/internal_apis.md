@@ -3,40 +3,40 @@
 
 This section documents the internal APIs of RoundPipe that are intended for developers. Users typically do not need to interact with these APIs directly.
 
-::: RoundPipe.batch
+::: roundpipe.batch
 
-::: RoundPipe.context
+::: roundpipe.context
 
-::: RoundPipe.device
+::: roundpipe.device
 
-::: RoundPipe.grad_scaler
+::: roundpipe.grad_scaler
 
-::: RoundPipe.models
+::: roundpipe.models
 
-::: RoundPipe.optim
+::: roundpipe.optim
 
-::: RoundPipe.optim.optim_builder
+::: roundpipe.optim.optim_builder
 
-::: RoundPipe.optim_stream
+::: roundpipe.optim_stream
 
-::: RoundPipe.param
+::: roundpipe.param
 
-::: RoundPipe.profile
+::: roundpipe.profile
 
-::: RoundPipe.RoundPipe
+::: roundpipe.roundpipe
 
-::: RoundPipe.run
+::: roundpipe.run
 
-::: RoundPipe.RunConfig
+::: roundpipe.run_config
 
-::: RoundPipe.scheduler
+::: roundpipe.scheduler
 
-::: RoundPipe.threads
+::: roundpipe.threads
 
-::: RoundPipe.timer
+::: roundpipe.timer
 
-::: RoundPipe.transfer
+::: roundpipe.transfer
 
-::: RoundPipe.utils
+::: roundpipe.utils
 
-::: RoundPipe.wrapper
+::: roundpipe.wrapper

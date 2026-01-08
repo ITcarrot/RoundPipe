@@ -6,8 +6,8 @@ import torch
 from torch.distributed.pipelining.microbatch import TensorChunkSpec, _Replicate, sum_reducer
 from torch.utils._pytree import tree_flatten
 
-from RoundPipe.batch import Batch, RoundPipePackedData
-from RoundPipe.RunConfig import RoundPipeRunConfig, FullRoundPipeRunConfig
+from roundpipe.batch import Batch, RoundPipePackedData
+from roundpipe.run_config import RoundPipeRunConfig, FullRoundPipeRunConfig
 
 @pytest.mark.parametrize("num_microbatch, merge_output", itertools.product([2, 3, 4], [True, None]))
 def test_io_auto(num_microbatch, merge_output):

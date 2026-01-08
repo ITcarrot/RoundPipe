@@ -5,7 +5,7 @@ import itertools
 import pytest
 from torch import nn
 
-from RoundPipe.RoundPipe import RoundPipe, AutoRoundPipe
+from roundpipe.roundpipe import RoundPipe, AutoRoundPipe
 
 @pytest.mark.parametrize("model_class, designate",
                          itertools.product([RoundPipe, AutoRoundPipe], [True, False]))

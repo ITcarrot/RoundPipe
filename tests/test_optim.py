@@ -6,7 +6,7 @@ import random
 import pytest
 import torch
 
-from RoundPipe.optim import Adam
+from roundpipe.optim import Adam
 
 def run_optim(cls: type[torch.optim.Optimizer], ref_cls: type[torch.optim.Optimizer],
                *optim_args: Any, **optim_kwargs: Any) -> None:

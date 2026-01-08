@@ -16,7 +16,7 @@ import torch
 from torch.distributed.pipelining.microbatch import TensorChunkSpec, _Replicate, split_args_kwargs_into_chunks, merge_chunks, _CustomReducer
 from torch.utils._pytree import tree_flatten, tree_unflatten, TreeSpec
 
-from .RunConfig import FullRoundPipeRunConfig
+from .run_config import FullRoundPipeRunConfig
 from .transfer import PinnedUpload, RegisterBackwardEvent
 
 class RoundPipePackedData(list):

@@ -8,7 +8,7 @@ from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.models.qwen3.modeling_qwen3 import Qwen3ForCausalLM
 
 from ..context import doing_recompute, save_for_recompute, get_recompute_data
-from ..RoundPipe import RoundPipe
+from ..roundpipe import RoundPipe
 from .function import CompileForCausalLMLoss
 
 class Qwen3ForCausalLMPrefix(nn.Module):

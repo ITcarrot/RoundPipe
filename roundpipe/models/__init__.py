@@ -12,7 +12,7 @@ Attributes:
 from typing_extensions import *
 import importlib
 
-from ..RoundPipe import RoundPipe
+from ..roundpipe import RoundPipe
 
 SUPPORTED_MODELS = {
     'function': '.function',
