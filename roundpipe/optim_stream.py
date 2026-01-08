@@ -6,6 +6,7 @@ Attributes:
     optim_active: Lock to indicate if the optimizer stream is active.
     optim_thread: Daemon thread that executes optimizer tasks.
 """
+
 from typing_extensions import *
 
 import queue
@@ -20,6 +21,8 @@ from .threads import RoundPipeThread
 kernel_queue: queue.Queue[Tuple[Callable, Tuple, Dict[str, Any]]] = queue.Queue()
 optim_shutdown = False
 optim_active: _thread.LockType = threading.Lock()
+
+
 def controller() -> None:
     """Optimizer Stream thread function."""
     num_cpu = torch.get_num_threads()
@@ -34,17 +37,21 @@ def controller() -> None:
             fn(*args, **kwargs)
             optim_thread.is_active = False
 
+
 optim_thread: RoundPipeThread = RoundPipeThread(
-    target=controller,
-    name="RoundPipe Optimizer Stream"
+    target=controller, name="RoundPipe Optimizer Stream"
 )
+
 
 def shutdown_optim() -> None:
     """Shut down the optimizer stream."""
     global optim_shutdown
     optim_shutdown = True
-    optim_active.acquire() # Ensure no tasks are running
+    optim_active.acquire()  # Ensure no tasks are running
+
+
 atexit.register(shutdown_optim)
+
 
 def launch_optim_kernel(fn: Callable, *args: Any, **kwargs: Any) -> None:
     """Launch an optimizer kernel on the optimizer stream.
@@ -56,11 +63,13 @@ def launch_optim_kernel(fn: Callable, *args: Any, **kwargs: Any) -> None:
     """
     kernel_queue.put((fn, args, kwargs))
 
+
 def synchronize_optim() -> None:
     """Synchronize the optimizer stream with the main thread."""
     event = threading.Event()
     launch_optim_kernel(event.set)
     event.wait()
+
 
 def on_optim_stream() -> bool:
     """Check if the current thread is the optimizer stream.

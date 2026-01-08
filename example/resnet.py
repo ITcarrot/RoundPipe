@@ -4,6 +4,7 @@ from torchvision import datasets, transforms
 
 import random
 import numpy as np
+
 random.seed(42)
 np.random.seed(42)
 torch.manual_seed(42)
@@ -12,11 +13,11 @@ torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
 import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
 import matplotlib.pyplot as plt
 
-from RoundPipe import RoundPipe
+from roundpipe import RoundPipe, OptimizerCtx, GradScaler
+from roundpipe.optim import Adam
+
 
 # ResNet Basic Block
 class BasicBlock(nn.Module):
@@ -31,7 +32,7 @@ class BasicBlock(nn.Module):
         if stride != 1 or in_channels != out_channels:
             self.downsample = nn.Sequential(
                 nn.Conv2d(in_channels, out_channels, 1, stride, bias=False),
-                nn.BatchNorm2d(out_channels)
+                nn.BatchNorm2d(out_channels),
             )
 
     def forward(self, x):
@@ -43,6 +44,8 @@ class BasicBlock(nn.Module):
         out += identity
         out = self.relu(out)
         return out
+
+
 # Helper to create a list of blocks (not Sequential)
 def make_blocks(in_channels, out_channels, blocks, stride):
     layers = []
@@ -50,6 +53,7 @@ def make_blocks(in_channels, out_channels, blocks, stride):
     for _ in range(1, blocks):
         layers.append(BasicBlock(out_channels, out_channels))
     return layers
+
 
 class ResNet(nn.Module):
     def __init__(self, num_classes=100):
@@ -64,47 +68,58 @@ class ResNet(nn.Module):
             *make_blocks(256, 512, 3, 2),
             nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(),
-            nn.Linear(512, num_classes)
+            nn.Linear(512, num_classes),
         ]
         self.seq = nn.Sequential(*layers)
 
     def forward(self, x):
         return self.seq(x)
 
-# Data preparation
-transform = transforms.Compose([
-    transforms.RandomHorizontalFlip(),
-    transforms.RandomCrop(32, 4),
-    transforms.ToTensor(),
-    transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761))
-])
 
-trainset = datasets.CIFAR100(root='./data', train=True, download=True, transform=transform)
-testset = datasets.CIFAR100(root='./data', train=False, download=True, transform=transform)
+# Data preparation
+transform = transforms.Compose(
+    [
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomCrop(32, 4),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761)),
+    ]
+)
+
+trainset = datasets.CIFAR100(
+    root="./data", train=True, download=True, transform=transform
+)
+testset = datasets.CIFAR100(
+    root="./data", train=False, download=True, transform=transform
+)
 trainloader = DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
 testloader = DataLoader(testset, batch_size=128, shuffle=False, num_workers=2)
 
 # Training setup
-model = RoundPipe(ResNet().seq)
-optimizer = optim.Adam(model.optim_parameters(), lr=0.001)
+scaler = GradScaler()
+model = RoundPipe(ResNet().seq.to(torch.float16), optim_dtype=torch.float32)
+with OptimizerCtx():
+    optimizer = Adam(model.parameters(), lr=0.001)
 criterion = nn.CrossEntropyLoss()
 
 train_losses, test_losses = [], []
 train_accs, test_accs = [], []
+
 
 def evaluate(loader):
     model.eval()
     correct, total, loss_sum = 0, 0, 0
     with torch.no_grad():
         for images, labels in loader:
-            images, labels = images, labels
+            images, labels = images.to(torch.float16), labels
             outputs = model(images)
-            loss = criterion(outputs, labels)
+            loss = criterion(outputs.float(), labels)
             loss_sum += loss.item() * labels.size(0)
             _, predicted = outputs.max(1)
             correct += predicted.eq(labels).sum().item()
             total += labels.size(0)
     return loss_sum / total, correct / total
+
 
 # Training loop
 epochs = 20
@@ -112,12 +127,20 @@ for epoch in range(epochs):
     model.train()
     running_loss, correct, total = 0, 0, 0
     for images, labels in trainloader:
-        images, labels = images, labels
-        loss, outputs = model.forward_backward(input_args=(images,), label=labels,
-                            loss_fn=lambda outputs, labels: criterion(outputs, labels) / (torch.cuda.device_count() + 1),
-                            return_outputs=True)
-        model.step(lambda: (optimizer.step(), optimizer.zero_grad(), None)[2])
-        running_loss += loss.item() * labels.size(0)
+        images, labels = images.to(torch.float16), labels
+        loss, outputs = model.forward_backward(
+            input_args=(images,),
+            label=labels,
+            loss_fn=lambda outputs, labels: scaler.scale(
+                criterion(outputs.float(), labels)
+            )
+            / (torch.cuda.device_count() + 1),
+            return_outputs=True,
+        )
+        loss_item = loss.item() / scaler.get_scale()
+        model.step(lambda: (scaler.step(optimizer), optimizer.zero_grad())[1])
+        scaler.update()
+        running_loss += loss_item * labels.size(0)
         _, predicted = outputs.max(1)
         correct += predicted.eq(labels).sum().item()
         total += labels.size(0)
@@ -128,16 +151,19 @@ for epoch in range(epochs):
     test_losses.append(test_loss)
     train_accs.append(train_acc)
     test_accs.append(test_acc)
-    print(f"Epoch {epoch+1}/{epochs} | Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.4f} | Test Loss: {test_loss:.4f} | Test Acc: {test_acc:.4f}")
+    print(
+        f"Epoch {epoch+1}/{epochs} | Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.4f} | Test Loss: {test_loss:.4f} | Test Acc: {test_acc:.4f}"
+    )
 
 import os, re
+
 pattern = re.compile(
     r"Train Loss: ([\d.]+) \| Train Acc: ([\d.]+) \| Test Loss: ([\d.]+) \| Test Acc: ([\d.]+)"
 )
 script_dir = os.path.dirname(os.path.abspath(__file__))
 ref_train_losses, ref_train_accs = [], []
 ref_test_losses, ref_test_accs = [], []
-with open(os.path.join(script_dir, 'resnet_cifar100_ref.log'), 'r') as f:
+with open(os.path.join(script_dir, "resnet_cifar100_ref.log"), "r") as f:
     for line in f:
         match = pattern.search(line)
         if match:
@@ -147,25 +173,25 @@ with open(os.path.join(script_dir, 'resnet_cifar100_ref.log'), 'r') as f:
             ref_test_accs.append(float(match.group(4)))
 
 # Plotting
-plt.figure(figsize=(12,5))
-plt.subplot(1,2,1)
-plt.plot(ref_train_losses, label='Ref Train Loss', linestyle='dashed')
-plt.plot(ref_test_losses, label='Ref Test Loss', linestyle='dashed')
-plt.plot(train_losses, label='Train Loss')
-plt.plot(test_losses, label='Test Loss')
-plt.xlabel('Epoch')
-plt.ylabel('Loss')
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+plt.plot(ref_train_losses, label="Ref Train Loss", linestyle="dashed")
+plt.plot(ref_test_losses, label="Ref Test Loss", linestyle="dashed")
+plt.plot(train_losses, label="Train Loss")
+plt.plot(test_losses, label="Test Loss")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
 plt.legend()
-plt.title('Loss Curve')
-plt.subplot(1,2,2)
-plt.plot(ref_train_accs, label='Ref Train Acc', linestyle='dashed')
-plt.plot(ref_test_accs, label='Ref Test Acc', linestyle='dashed')
-plt.plot(train_accs, label='Train Acc')
-plt.plot(test_accs, label='Test Acc')
-plt.xlabel('Epoch')
-plt.ylabel('Accuracy')
+plt.title("Loss Curve")
+plt.subplot(1, 2, 2)
+plt.plot(ref_train_accs, label="Ref Train Acc", linestyle="dashed")
+plt.plot(ref_test_accs, label="Ref Test Acc", linestyle="dashed")
+plt.plot(train_accs, label="Train Acc")
+plt.plot(test_accs, label="Test Acc")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
 plt.legend()
-plt.title('Accuracy Curve')
+plt.title("Accuracy Curve")
 plt.tight_layout()
-plt.savefig(script_dir + '/resnet_cifar100_curves.png')
+plt.savefig(script_dir + "/resnet_cifar100_curves.png")
 plt.show()

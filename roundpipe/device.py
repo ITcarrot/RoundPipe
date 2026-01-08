@@ -13,43 +13,52 @@ import torch
 
 from .batch import Batch
 from .run import run_forward, run_backward, run_forward_backward, RoundPipeRunContext
-from .threads import RoundPipeThread, dump_all_active_threads, KeyboardInterruptRoundPipeThreads
+from .threads import (
+    RoundPipeThread,
+    dump_all_active_threads,
+    KeyboardInterruptRoundPipeThreads,
+)
+
 
 class InterStreamMemManager:
     """Handles tensor deallocation across multiple CUDA streams.
-    
+
     Attributes:
         free_queue: Maps stream pairs to lists of tensor storage
             waiting to be freed after synchronization.
         in_use: Maps tensor storages to the list of streams that
             have used them.
     """
+
     def __init__(self, *streams: torch.cuda.Stream):
         """Initialize tracking structures for inter-stream memory management.
-        
+
         Args:
             streams: Streams that will be used by tensors.
         """
-        self.free_queue: Dict[Tuple[torch.cuda.Stream, torch.cuda.Stream],
-                              List[Tuple[torch.UntypedStorage,
-                                         Tuple[torch.cuda.Stream, ...]
-                                         ]]] = {}
+        self.free_queue: Dict[
+            Tuple[torch.cuda.Stream, torch.cuda.Stream],
+            List[Tuple[torch.UntypedStorage, Tuple[torch.cuda.Stream, ...]]],
+        ] = {}
         self.in_use: Dict[torch.UntypedStorage, List[torch.cuda.Stream]] = {}
         for src, dst in itertools.product(streams, streams):
             if src is not dst:
                 self.free_queue[(src, dst)] = []
 
-    def record_stream(self, tensor: torch.Tensor,
-                      from_stream: torch.cuda.Stream,
-                      use_stream: torch.cuda.Stream) -> None:
+    def record_stream(
+        self,
+        tensor: torch.Tensor,
+        from_stream: torch.cuda.Stream,
+        use_stream: torch.cuda.Stream,
+    ) -> None:
         """Record that ``tensor`` is used on ``use_stream`` after being
         used on ``from_stream``.
-        
+
         Args:
             tensor: Tensor whose usage is being tracked.
             from_stream: Stream where the tensor was last used.
             use_stream: Stream where the tensor will be used next.
-        
+
         Raises:
             AssertionError: If the last recorded stream for ``tensor``
                 does not match ``from_stream``.
@@ -60,36 +69,43 @@ class InterStreamMemManager:
         elif from_stream in self.in_use[storage] and use_stream in self.in_use[storage]:
             return
         else:
-            assert self.in_use[storage][-1] is from_stream, \
-                "Tensor usage tracking: expected last stream to match from_stream."
+            assert (
+                self.in_use[storage][-1] is from_stream
+            ), "Tensor usage tracking: expected last stream to match from_stream."
             self.in_use[storage].append(use_stream)
 
-    def stream_synced(self, waiter: torch.cuda.Stream,
-                      wait_for: torch.cuda.Stream) -> None:
+    def stream_synced(
+        self, waiter: torch.cuda.Stream, wait_for: torch.cuda.Stream
+    ) -> None:
         """When ``waiter`` stream has synchronized on ``wait_for``,
         release all tensors waiting on this synchronization.
-        
+
         Args:
             waiter: Stream that has synchronized.
             wait_for: Stream that ``waiter`` has synchronized on.
         """
         for storage, use_streams in self.free_queue[(waiter, wait_for)]:
             if len(use_streams) > 2:
-                self.free_queue[(use_streams[-3], use_streams[-2])] \
-                    .append((storage, use_streams[:-1]))
+                self.free_queue[(use_streams[-3], use_streams[-2])].append(
+                    (storage, use_streams[:-1])
+                )
         self.free_queue[(waiter, wait_for)].clear()
 
-    def free(self, storage: torch.UntypedStorage, *use_streams: torch.cuda.Stream) -> None:
+    def free(
+        self, storage: torch.UntypedStorage, *use_streams: torch.cuda.Stream
+    ) -> None:
         """Hold tensor ``storage`` reference before all streams
         used this storage synchronize back to the owning stream.
-        
+
         Args:
             storage: Tensor storage to be freed.
             use_streams: Ordered streams that have used ``storage``.
         """
         if len(use_streams) < 2:
             return
-        self.free_queue[(use_streams[-2], use_streams[-1])].append((storage, use_streams))
+        self.free_queue[(use_streams[-2], use_streams[-1])].append(
+            (storage, use_streams)
+        )
 
     def flush(self) -> None:
         """Flush all tracked tensors into free queues."""
@@ -105,6 +121,7 @@ class InterStreamMemManager:
                 for stream in streams:
                     tensor.record_stream(stream)
         self.free_queue = {k: [] for k in self.free_queue}
+
 
 class DeviceManager:
     """Manages memory, CUDA streams and kernel launch of a single device.
@@ -139,11 +156,17 @@ class DeviceManager:
         """
         self.id: int = id
         self.device: torch.device = device
-        
-        self.param_upstream: torch.cuda.Stream = cast(torch.cuda.Stream, torch.cuda.Stream(device))
-        self.upstream: torch.cuda.Stream = cast(torch.cuda.Stream, torch.cuda.Stream(device))
+
+        self.param_upstream: torch.cuda.Stream = cast(
+            torch.cuda.Stream, torch.cuda.Stream(device)
+        )
+        self.upstream: torch.cuda.Stream = cast(
+            torch.cuda.Stream, torch.cuda.Stream(device)
+        )
         self.compute_stream: torch.cuda.Stream = torch.cuda.default_stream(self.device)
-        self.downstream: torch.cuda.Stream = cast(torch.cuda.Stream, torch.cuda.Stream(device))
+        self.downstream: torch.cuda.Stream = cast(
+            torch.cuda.Stream, torch.cuda.Stream(device)
+        )
         self.mem_manager: InterStreamMemManager = InterStreamMemManager(
             self.param_upstream, self.upstream, self.compute_stream, self.downstream
         )
@@ -151,11 +174,16 @@ class DeviceManager:
 
         self.is_idle: threading.Semaphore = threading.Semaphore(1)
         self.job_arrived: threading.Semaphore = threading.Semaphore(0)
-        self.cur_job: Optional[Tuple[Callable[..., None], List[RoundPipeRunContext], Tuple]] = None
-        self.controller_thread: RoundPipeThread = RoundPipeThread(target=self.controller, name=f'RoundPipe DeviceController-{id}')
+        self.cur_job: Optional[
+            Tuple[Callable[..., None], List[RoundPipeRunContext], Tuple]
+        ] = None
+        self.controller_thread: RoundPipeThread = RoundPipeThread(
+            target=self.controller, name=f"RoundPipe DeviceController-{id}"
+        )
 
-    def wait_stream(self, waiter: torch.cuda.Stream,
-                    wait_for: torch.cuda.Stream) -> None:
+    def wait_stream(
+        self, waiter: torch.cuda.Stream, wait_for: torch.cuda.Stream
+    ) -> None:
         """Make ``waiter`` stream wait on ``wait_for`` stream.
 
         Args:
@@ -208,8 +236,9 @@ class DeviceManager:
             self.controller_thread.is_active = False
             self.is_idle.release()
 
-    def launch_forward(self, layer_group_id: int, batch: Batch,
-                       run_context: List[RoundPipeRunContext]) -> None:
+    def launch_forward(
+        self, layer_group_id: int, batch: Batch, run_context: List[RoundPipeRunContext]
+    ) -> None:
         """Schedule a forward-only job on this device.
 
         Args:
@@ -224,9 +253,10 @@ class DeviceManager:
             raise KeyboardInterruptRoundPipeThreads from None
         self.cur_job = (run_forward, run_context, (layer_group_id, batch))
         self.job_arrived.release()
-    
-    def launch_backward(self, layer_group_id: int,
-                        run_context: List[RoundPipeRunContext]) -> None:
+
+    def launch_backward(
+        self, layer_group_id: int, run_context: List[RoundPipeRunContext]
+    ) -> None:
         """Schedule a backward-only job on this device.
 
         Args:
@@ -241,9 +271,13 @@ class DeviceManager:
         self.cur_job = run_backward, run_context, (layer_group_id,)
         self.job_arrived.release()
 
-    def launch_forward_backward(self, batch: Batch, run_context: List[RoundPipeRunContext],
-                                loss_fn: Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]],
-                                return_outputs: bool) -> None:
+    def launch_forward_backward(
+        self,
+        batch: Batch,
+        run_context: List[RoundPipeRunContext],
+        loss_fn: Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]],
+        return_outputs: bool,
+    ) -> None:
         """Run forward + backward in the same pass for final layers.
 
         Args:
@@ -257,8 +291,13 @@ class DeviceManager:
         except KeyboardInterrupt:
             dump_all_active_threads()
             raise KeyboardInterruptRoundPipeThreads from None
-        self.cur_job = (run_forward_backward, run_context, (batch, loss_fn, return_outputs))
+        self.cur_job = (
+            run_forward_backward,
+            run_context,
+            (batch, loss_fn, return_outputs),
+        )
         self.job_arrived.release()
+
 
 device_list: List[DeviceManager] = []
 cur_device: int = 0
@@ -266,6 +305,7 @@ cur_device: int = 0
 for i in range(torch.cuda.device_count()):
     device = DeviceManager(i, torch.device(f"cuda:{i}"))
     device_list.append(device)
+
 
 def get_next_device() -> DeviceManager:
     """Round-robin iterator over instantiated ``DeviceManager`` objects.
@@ -277,6 +317,7 @@ def get_next_device() -> DeviceManager:
     device = device_list[cur_device]
     cur_device = (cur_device + 1) % len(device_list)
     return device
+
 
 def gc_collect() -> None:
     """Release all tracked tensors from inter-stream memory

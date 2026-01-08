@@ -1,5 +1,7 @@
 {
-  "include": ["roundpipe"],
-  "typeCheckingMode": "standard",
-  "reportWildcardImportFromLibrary": "none",
+    "include": [
+        "roundpipe"
+    ],
+    "typeCheckingMode": "standard",
+    "reportWildcardImportFromLibrary": "none",
 }

@@ -11,8 +11,9 @@ import contextlib
 
 PROFILER_TYPE: Optional[str] = None
 
-if os.environ.get('NSYS_PROFILING_SESSION_ID'):
-    PROFILER_TYPE = 'nsys'
+if os.environ.get("NSYS_PROFILING_SESSION_ID"):
+    PROFILER_TYPE = "nsys"
+
 
 def annotate(name: str, color: Optional[str] = None) -> ContextManager:
     """Return a context manager that instruments profiler annotations.
@@ -25,8 +26,9 @@ def annotate(name: str, color: Optional[str] = None) -> ContextManager:
         The annotation context when profiling is enabled, otherwise
             `contextlib.nullcontext` so callers can use ``with`` uniformly.
     """
-    if PROFILER_TYPE == 'nsys':
+    if PROFILER_TYPE == "nsys":
         import nvtx
-        return nvtx.annotate(name, color = color)
+
+        return nvtx.annotate(name, color=color)
     else:
         return contextlib.nullcontext()

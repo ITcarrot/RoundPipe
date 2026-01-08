@@ -17,6 +17,7 @@ import sys
 import types
 import _thread
 
+
 class RoundPipeThread(threading.Thread):
     """Daemon thread wrapper that reports uncaught exceptions before exit.
 
@@ -33,6 +34,7 @@ class RoundPipeThread(threading.Thread):
             name: Friendly name to help when dumping thread stacks.
             **kwargs: Additional ``threading.Thread`` keyword arguments.
         """
+
         def exception_wrapper(*args, **kwds):
             try:
                 target(*args, **kwds)
@@ -49,12 +51,15 @@ class RoundPipeThread(threading.Thread):
         roundpipe_threads.append(self)
         self.start()
 
+
 roundpipe_threads: List[RoundPipeThread] = []
 thread_exception_print_lock: _thread.LockType = threading.Lock()
 
-KeyboardInterruptRoundPipeThreads: KeyboardInterrupt \
-    = KeyboardInterrupt("KeyboardInterrupt when RoundPipe is waiting for its worker threads to finish their work. "
-                        "Check traceback of worker threads for more details.")
+KeyboardInterruptRoundPipeThreads: KeyboardInterrupt = KeyboardInterrupt(
+    "KeyboardInterrupt when RoundPipe is waiting for its worker threads to finish their work. "
+    "Check traceback of worker threads for more details."
+)
+
 
 def is_threading_internal(frame: types.FrameType) -> bool:
     """Return whether ``frame`` originates from Python or RoundPipe threading.
@@ -71,6 +76,7 @@ def is_threading_internal(frame: types.FrameType) -> bool:
     if filename.endswith("/RoundPipe/threads.py"):
         return True
     return False
+
 
 def print_trimmed_traceback(frame: Optional[types.FrameType]):
     """Print a traceback that omits internal threading frames.
@@ -90,6 +96,7 @@ def print_trimmed_traceback(frame: Optional[types.FrameType]):
             break
     traceback.print_stack(frame, begin_idx + 1)
 
+
 def dump_all_active_threads():
     """Print trimmed stack traces for all currently active RoundPipe threads."""
     cur_frames = sys._current_frames()
@@ -98,5 +105,5 @@ def dump_all_active_threads():
         if t.is_active and t.ident is not None:
             print(f"\n--- Thread: {t.name} (id={t.ident}) ---")
             print_trimmed_traceback(cur_frames[t.ident])
-            print('')
+            print("")
     print("=== End dumping all active RoundPipe threads ===\n")

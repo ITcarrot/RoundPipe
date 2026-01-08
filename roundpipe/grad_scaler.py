@@ -1,4 +1,5 @@
 """A gradient scaler for mixed precision training in RoundPipe."""
+
 from typing_extensions import *
 
 import threading
@@ -7,10 +8,11 @@ import torch
 
 from .optim_stream import on_optim_stream, launch_optim_kernel, synchronize_optim
 
+
 class GradScaler:
     """Helps perform the steps of gradient scaling conveniently.
     The GradScaler is designed to be API compatible with `torch.amp.GradScaler`.
-    
+
     !!! info
         Object of this class will be access both from the main thread
         and from the optimizer stream. Care must be taken to avoid data
@@ -24,12 +26,13 @@ class GradScaler:
         * Read only: `enabled`
 
     Attributes:
-        enabled: Whether gradient scaling is enabled. 
+        enabled: Whether gradient scaling is enabled.
         main_scaler: The main GradScaler tracks the scale used for unscaling and updating.
         scale_scaler: This GradScaler is only used for applying scaling to outputs.
         next_scale: The next scale factor to be used.
         scaler_updated: An event to signal when the scaler has been updated.
     """
+
     def __init__(
         self,
         init_scale: float = 2.0**16,
@@ -52,18 +55,21 @@ class GradScaler:
         """
         self.enabled: Final[bool] = enabled
         self.main_scaler: torch.GradScaler = torch.GradScaler(
-            'cpu', init_scale, growth_factor, backoff_factor, growth_interval
+            "cpu", init_scale, growth_factor, backoff_factor, growth_interval
         )
-        self.scale_scaler: torch.GradScaler = torch.GradScaler('cpu', init_scale)
-        self.next_scale: torch.Tensor = torch.full((), init_scale, dtype=torch.float32, device='cpu')
+        self.scale_scaler: torch.GradScaler = torch.GradScaler("cpu", init_scale)
+        self.next_scale: torch.Tensor = torch.full(
+            (), init_scale, dtype=torch.float32, device="cpu"
+        )
         self.scaler_updated: threading.Event = threading.Event()
         self.scaler_updated.set()
 
-        self.main_scaler._lazy_init_scale_growth_tracker(torch.device('cpu'))
-        self.scale_scaler._lazy_init_scale_growth_tracker(torch.device('cpu'))
+        self.main_scaler._lazy_init_scale_growth_tracker(torch.device("cpu"))
+        self.scale_scaler._lazy_init_scale_growth_tracker(torch.device("cpu"))
 
-    def _launch_kernel(self, fn: Callable, sync: bool,
-                       *args: Any, **kwargs: Any) -> Optional[Any]:
+    def _launch_kernel(
+        self, fn: Callable, sync: bool, *args: Any, **kwargs: Any
+    ) -> Optional[Any]:
         """Make sure the fn executes on the optimizer stream.
 
         Args:
@@ -153,7 +159,9 @@ class GradScaler:
         """
         if not self.enabled:
             return optimizer.step(*args, **kwargs)
-        return self._launch_kernel(self.main_scaler.step, True, optimizer, *args, **kwargs)
+        return self._launch_kernel(
+            self.main_scaler.step, True, optimizer, *args, **kwargs
+        )
 
     def update_kernel(self, new_scale: Optional[Union[float, torch.Tensor]]) -> None:
         """Kernel function to update the scale factor on the optimizer stream.
@@ -190,7 +198,9 @@ class GradScaler:
         if not self.enabled:
             return
         if on_optim_stream():
-            raise RuntimeError("GradScaler.update() must be called from the main thread.")
+            raise RuntimeError(
+                "GradScaler.update() must be called from the main thread."
+            )
 
         self.scaler_updated.wait()
         assert self.scale_scaler._scale is not None
@@ -200,7 +210,7 @@ class GradScaler:
 
     def get_scale(self) -> float:
         """Return the current scale factor. Result will adapt to which stream this is called from.
-        
+
         Returns:
             a Python float containing the current scale, or 1.0 if scaling is disabled.
         """

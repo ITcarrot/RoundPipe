@@ -13,11 +13,18 @@ from typing_extensions import *
 import warnings
 
 import torch
-from torch.distributed.pipelining.microbatch import TensorChunkSpec, _Replicate, split_args_kwargs_into_chunks, merge_chunks, _CustomReducer
+from torch.distributed.pipelining.microbatch import (
+    TensorChunkSpec,
+    _Replicate,
+    split_args_kwargs_into_chunks,
+    merge_chunks,
+    _CustomReducer,
+)
 from torch.utils._pytree import tree_flatten, tree_unflatten, TreeSpec
 
 from .run_config import FullRoundPipeRunConfig
 from .transfer import PinnedUpload, RegisterBackwardEvent
+
 
 class RoundPipePackedData(list):
     """Container that couples host tensors with CUDA transfer markers.
@@ -28,8 +35,11 @@ class RoundPipePackedData(list):
             gradients are ready on the host.
     """
 
-    def __init__(self, data: List[Any],
-                 transfer_event: List[Tuple[torch.cuda.Event, torch.cuda.Event]]) -> None:
+    def __init__(
+        self,
+        data: List[Any],
+        transfer_event: List[Tuple[torch.cuda.Event, torch.cuda.Event]],
+    ) -> None:
         """Build the packed container.
 
         Args:
@@ -38,7 +48,9 @@ class RoundPipePackedData(list):
                 each microbatch result.
         """
         super().__init__(data)
-        self.transfer_event: List[Tuple[torch.cuda.Event, torch.cuda.Event]] = transfer_event
+        self.transfer_event: List[Tuple[torch.cuda.Event, torch.cuda.Event]] = (
+            transfer_event
+        )
 
     def synchronize(self) -> None:
         """Block until all hosted tensors are fully transferred.
@@ -49,7 +61,10 @@ class RoundPipePackedData(list):
         for forward_event, _ in self.transfer_event:
             forward_event.synchronize()
 
-def guess_split_spec(data: Any, expected_batchsize: Optional[int] = None) -> Tuple[Any, Optional[int]]:
+
+def guess_split_spec(
+    data: Any, expected_batchsize: Optional[int] = None
+) -> Tuple[Any, Optional[int]]:
     """Infer how ``torch.distributed`` should chunk a nested argument tree.
 
     Args:
@@ -67,20 +82,29 @@ def guess_split_spec(data: Any, expected_batchsize: Optional[int] = None) -> Tup
     guessed_spec = []
     maybe_batchsize = []
     for item in flatten:
-        if isinstance(item, torch.Tensor) and item.ndim > 0 and (expected_batchsize is None or item.size(0) == expected_batchsize):
+        if (
+            isinstance(item, torch.Tensor)
+            and item.ndim > 0
+            and (expected_batchsize is None or item.size(0) == expected_batchsize)
+        ):
             guessed_spec.append(TensorChunkSpec(0))
             maybe_batchsize.append(item.size(0))
         else:
             guessed_spec.append(_Replicate)
-            if isinstance(item, RoundPipePackedData) \
-                and all(isinstance(batch_item, torch.Tensor) for batch_item in item) \
-                and all(batch_item.ndim > 0 for batch_item in item):
+            if (
+                isinstance(item, RoundPipePackedData)
+                and all(isinstance(batch_item, torch.Tensor) for batch_item in item)
+                and all(batch_item.ndim > 0 for batch_item in item)
+            ):
                 maybe_batchsize.append(sum(batch_item.size(0) for batch_item in item))
-    if len(maybe_batchsize) == 0 or any(bs != maybe_batchsize[0] for bs in maybe_batchsize):
+    if len(maybe_batchsize) == 0 or any(
+        bs != maybe_batchsize[0] for bs in maybe_batchsize
+    ):
         guessed_batchsize = None
     else:
         guessed_batchsize = maybe_batchsize[0]
     return tree_unflatten(guessed_spec, flatten_spec), guessed_batchsize
+
 
 class AvgReducer(_CustomReducer):
     """Reducer that averages scalar losses across microbatches.
@@ -89,8 +113,9 @@ class AvgReducer(_CustomReducer):
         sum: Running sum of scalar losses.
         count: Number of scalar losses accumulated.
     """
+
     def __repr__(self) -> str:
-        return 'AvgReducer'
+        return "AvgReducer"
 
     def __init__(self) -> None:
         super().__init__(None, self.reduce)
@@ -98,8 +123,9 @@ class AvgReducer(_CustomReducer):
         self.count: int = 0
         self.previous_output: torch.Tensor = self.sum
 
-    def reduce(self, reduced_val: Optional[torch.Tensor],
-               new_val: torch.Tensor) -> torch.Tensor:
+    def reduce(
+        self, reduced_val: Optional[torch.Tensor], new_val: torch.Tensor
+    ) -> torch.Tensor:
         """Update the running average with a new scalar loss.
 
         Args:
@@ -118,14 +144,17 @@ class AvgReducer(_CustomReducer):
             self.sum = new_val.clone()
             self.count = 1
         else:
-            assert reduced_val is self.previous_output, \
-                "Do not use the same AvgReducer instance across multiple reductions at the same time."
+            assert (
+                reduced_val is self.previous_output
+            ), "Do not use the same AvgReducer instance across multiple reductions at the same time."
             self.sum = self.sum + new_val
             self.count += 1
         self.previous_output = self.sum / self.count
         return self.previous_output
 
+
 avg_reducer: AvgReducer = AvgReducer()
+
 
 class Batch:
     """Holds flattened microbatch state, labels, and CUDA events.
@@ -141,9 +170,13 @@ class Batch:
         loss_ready: CUDA event signaling when all losses are ready on host.
     """
 
-    def __init__(self, args: Tuple, kwargs: Dict[str, Any],
-                 run_config: FullRoundPipeRunConfig,
-                 label: Any = None) -> None:
+    def __init__(
+        self,
+        args: Tuple,
+        kwargs: Dict[str, Any],
+        run_config: FullRoundPipeRunConfig,
+        label: Any = None,
+    ) -> None:
         """Split inputs and reconcile chained ``RoundPipePackedData`` sources.
 
         Args:
@@ -158,28 +191,39 @@ class Batch:
         if run_config.num_microbatch == 1:
             args_list, kwargs_list = [args], [kwargs]
         elif callable(run_config.split_input):
-            args_list, kwargs_list = run_config.split_input(args, kwargs, run_config.num_microbatch)
-            assert isinstance(args_list, list) and isinstance(kwargs_list, list) \
-                   and len(args_list) == len(kwargs_list), \
-                   "split_input function must return two lists of equal length."
+            args_list, kwargs_list = run_config.split_input(
+                args, kwargs, run_config.num_microbatch
+            )
+            assert (
+                isinstance(args_list, list)
+                and isinstance(kwargs_list, list)
+                and len(args_list) == len(kwargs_list)
+            ), "split_input function must return two lists of equal length."
         else:
             args_spec, kwargs_spec = run_config.split_input
             guessed_batchsize = None
             if args_spec is None:
                 args_spec, guessed_batchsize = guess_split_spec(args)
             if kwargs_spec is None:
-                kwargs_spec, guessed_batchsize = guess_split_spec(kwargs, guessed_batchsize)
+                kwargs_spec, guessed_batchsize = guess_split_spec(
+                    kwargs, guessed_batchsize
+                )
             try:
                 args_list, kwargs_list = split_args_kwargs_into_chunks(
-                    args, kwargs, run_config.num_microbatch, args_spec, kwargs_spec)
+                    args, kwargs, run_config.num_microbatch, args_spec, kwargs_spec
+                )
             except Exception as e:
                 info = "Split input failed. The specs are: "
-                info += (f"args_spec = {args_spec}, "
-                         .replace('torch.distributed.pipelining.microbatch.', ''))
-                info += (f"kwargs_spec = {kwargs_spec}. "
-                         .replace('torch.distributed.pipelining.microbatch.', ''))
+                info += f"args_spec = {args_spec}, ".replace(
+                    "torch.distributed.pipelining.microbatch.", ""
+                )
+                info += f"kwargs_spec = {kwargs_spec}. ".replace(
+                    "torch.distributed.pipelining.microbatch.", ""
+                )
                 info += "Please check if they are compatible with the input arguments. "
-                info += "You may provide a custom split spec/function to handle splitting."
+                info += (
+                    "You may provide a custom split spec/function to handle splitting."
+                )
                 e.args += (info,)
                 raise
 
@@ -194,12 +238,14 @@ class Batch:
             flatten_input, flatten_spec = tree_flatten(args_kwargs)
             for idx, item in enumerate(flatten_input):
                 if isinstance(item, torch.Tensor):
-                    assert item.is_cpu, 'All inputs to RoundPipe must be on CPU.'
+                    assert item.is_cpu, "All inputs to RoundPipe must be on CPU."
                     # If the input tensor requires gradients, register a autograd
                     # graph node to ensure the the gradient is transfered back to
                     # CPU before using it in the subsequent computation.
                     if item.requires_grad:
-                        flatten_input[idx] = RegisterBackwardEvent.apply(item, cpu_tensor_backward_event)
+                        flatten_input[idx] = RegisterBackwardEvent.apply(
+                            item, cpu_tensor_backward_event
+                        )
                         backward_event.add(cpu_tensor_backward_event)
             try:
                 for idx, item in enumerate(flatten_input):
@@ -210,7 +256,9 @@ class Batch:
                         forward_event.add(item.transfer_event[batch_idx][0])
                         backward_event.add(item.transfer_event[batch_idx][1])
             except IndexError:
-                warnings.warn(f'Batch index {batch_idx} out of range for RoundPipePackedData input, downsizing batch size to {batch_idx}.')
+                warnings.warn(
+                    f"Batch index {batch_idx} out of range for RoundPipePackedData input, downsizing batch size to {batch_idx}."
+                )
                 break
 
             self.flatten_states.append(flatten_input)
@@ -224,8 +272,9 @@ class Batch:
             self.label_list: List[Any] = [label]
         elif callable(run_config.split_label):
             label_list = run_config.split_label(label, self.num_microbatch)
-            assert isinstance(label_list, list) and len(label_list) == self.num_microbatch, \
-                   "split_label function must return a list of labels with length equal to num_microbatch."
+            assert (
+                isinstance(label_list, list) and len(label_list) == self.num_microbatch
+            ), "split_label function must return a list of labels with length equal to num_microbatch."
             self.label_list = label_list
         else:
             label_spec = run_config.split_label
@@ -233,17 +282,23 @@ class Batch:
                 label_spec, _ = guess_split_spec(label)
             try:
                 label_list, _ = split_args_kwargs_into_chunks(
-                    (label,), {}, self.num_microbatch, (label_spec,), {})
+                    (label,), {}, self.num_microbatch, (label_spec,), {}
+                )
             except Exception as e:
                 info = "Split label failed. The specs are: "
-                info += (f"label_spec = {label_spec}, "
-                         .replace('torch.distributed.pipelining.microbatch.', ''))
+                info += f"label_spec = {label_spec}, ".replace(
+                    "torch.distributed.pipelining.microbatch.", ""
+                )
                 info += "Please check if they are compatible with the label arguments. "
-                info += "You may provide a custom split spec/function to handle splitting."
+                info += (
+                    "You may provide a custom split spec/function to handle splitting."
+                )
                 e.args += (info,)
                 raise
             self.label_list = [lbl_tuple[0] for lbl_tuple in label_list]
-        self.loss_list: List[Union[Sequence[torch.Tensor], torch.Tensor]] = [[] for _ in range(self.num_microbatch)]
+        self.loss_list: List[Union[Sequence[torch.Tensor], torch.Tensor]] = [
+            [] for _ in range(self.num_microbatch)
+        ]
         self.loss_ready: torch.cuda.Event = cast(torch.cuda.Event, torch.cuda.Event())
 
     def dump(self, run_config: FullRoundPipeRunConfig) -> Any:
@@ -269,21 +324,36 @@ class Batch:
                 backward_events = self.backward_events[i]
                 assert len(forward_events) == 1
                 assert len(backward_events) <= 1
-                transfer_events.append((forward_events[0], backward_events[0] if len(backward_events) == 1 else torch.cuda.Event()))
+                transfer_events.append(
+                    (
+                        forward_events[0],
+                        (
+                            backward_events[0]
+                            if len(backward_events) == 1
+                            else torch.cuda.Event()
+                        ),
+                    )
+                )
             flatten_output = []
             for out_idx in range(len(self.flatten_states[0])):
-                batched_out = [self.flatten_states[i][out_idx] for i in range(self.num_microbatch)]
+                batched_out = [
+                    self.flatten_states[i][out_idx] for i in range(self.num_microbatch)
+                ]
                 flatten_output.append(RoundPipePackedData(batched_out, transfer_events))
             return tree_unflatten(flatten_output, self.flatten_specs[0])
 
-        if run_config.output_device != torch.device('cpu'):
+        if run_config.output_device != torch.device("cpu"):
             flatten_states_on_device = []
-            for flatten_state, (transfer_event,) in zip(self.flatten_states, self.forward_events):
+            for flatten_state, (transfer_event,) in zip(
+                self.flatten_states, self.forward_events
+            ):
                 transfer_event.synchronize()
                 flatten_state_on_device = []
                 for arg in flatten_state:
                     if isinstance(arg, torch.Tensor):
-                        flatten_state_on_device.append(PinnedUpload.apply(arg, run_config.output_device))
+                        flatten_state_on_device.append(
+                            PinnedUpload.apply(arg, run_config.output_device)
+                        )
                     else:
                         flatten_state_on_device.append(arg)
                 flatten_states_on_device.append(flatten_state_on_device)
@@ -293,18 +363,23 @@ class Batch:
             # When CPU is synchonized, it's ok to hand over the tensors
             # back to pytorch allocator.
             from .device import gc_collect
+
             gc_collect()
         # No out of order backward will happen arcoss the sync boundary.
         # Reset the backward scheduler to avoid connecting two unrelated
         # runs into a single backward graph.
         from .scheduler import backward_schedule_simulator
+
         backward_schedule_simulator.reset()
 
         if self.num_microbatch == 1:
             return tree_unflatten(self.flatten_states[0], self.flatten_specs[0])
 
         if callable(run_config.merge_output):
-            hidden_states = [tree_unflatten(state, spec) for state, spec in zip(self.flatten_states, self.flatten_specs)]
+            hidden_states = [
+                tree_unflatten(state, spec)
+                for state, spec in zip(self.flatten_states, self.flatten_specs)
+            ]
             return run_config.merge_output(hidden_states)
 
         if isinstance(run_config.merge_output, bool) or run_config.merge_output is None:
@@ -318,18 +393,29 @@ class Batch:
                         guessed_spec.append(avg_reducer)
                 else:
                     guessed_spec.append(_Replicate)
-            hidden_states = [tree_unflatten(state, spec) for state, spec in zip(self.flatten_states, self.flatten_specs)]
+            hidden_states = [
+                tree_unflatten(state, spec)
+                for state, spec in zip(self.flatten_states, self.flatten_specs)
+            ]
             guessed_spec = tree_unflatten(guessed_spec, self.flatten_specs[0])
             try:
                 return merge_chunks(hidden_states, guessed_spec)
             except Exception as e:
                 info = "Automatic merge failed. The specs are: "
-                info += (f"merge_spec = {guessed_spec}, "
-                         .replace('torch.distributed.pipelining.microbatch.', ''))
-                info += "Please check if they are compatible with the output arguments. "
-                info += "You may provide a custom merge spec/function to handle merging."
+                info += f"merge_spec = {guessed_spec}, ".replace(
+                    "torch.distributed.pipelining.microbatch.", ""
+                )
+                info += (
+                    "Please check if they are compatible with the output arguments. "
+                )
+                info += (
+                    "You may provide a custom merge spec/function to handle merging."
+                )
                 e.args += (info,)
                 raise
         else:
-            hidden_states = [tree_unflatten(state, spec) for state, spec in zip(self.flatten_states, self.flatten_specs)]
+            hidden_states = [
+                tree_unflatten(state, spec)
+                for state, spec in zip(self.flatten_states, self.flatten_specs)
+            ]
             return merge_chunks(hidden_states, run_config.merge_output)

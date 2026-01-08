@@ -2,6 +2,7 @@
 
 import torch.nn as nn
 
+
 def get_model_size(model: nn.Module, recurse: bool = True) -> int:
     """Return the combined parameter + buffer bytes for ``model``.
 

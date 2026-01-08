@@ -7,6 +7,7 @@ import torch
 
 from .utils import get_model_size
 
+
 class LayerTimingContext:
     """Context manager that records CUDA events around a code block.
 
@@ -16,9 +17,12 @@ class LayerTimingContext:
         stream: Stream used for event recording.
     """
 
-    def __init__(self,
-                 start_event: torch.cuda.Event, end_event: torch.cuda.Event,
-                 stream: torch.cuda.Stream):
+    def __init__(
+        self,
+        start_event: torch.cuda.Event,
+        end_event: torch.cuda.Event,
+        stream: torch.cuda.Stream,
+    ):
         """Store events/stream for later use.
 
         Args:
@@ -29,21 +33,22 @@ class LayerTimingContext:
         self.start_event: torch.cuda.Event = start_event
         self.end_event: torch.cuda.Event = end_event
         self.stream: torch.cuda.Stream = stream
-        
+
     def __enter__(self):
         """Record ``start_event`` on the configured stream."""
         self.start_event.record(self.stream)
-    
+
     def __exit__(self, *args):
         """Record ``end_event`` when the context exits."""
         self.end_event.record(self.stream)
+
 
 class ModelTimer:
     """Tracks per-layer forward/recompute/backward timing using CUDA events.
     Before having any records, the timer uses model size-based estimates.
     After one warm-up run, the timer updates its estimates using an exponential
     moving average from 0.
-    
+
     Attributes:
         SMOOTH_RATE: Smoothing factor for time estimates.
         BACKWARD_MULTIPLIER: Initial multiplier to estimate backward time
@@ -62,38 +67,53 @@ class ModelTimer:
         pending_fwd: Forward/recompute events from previous iteration.
         pending_bwd: Backward events from previous iteration.
     """
+
     SMOOTH_RATE: float = 0.9
     BACKWARD_MULTIPLIER: float = 2.0
     VERBOSE: bool = False
+
     def __init__(self, layers: List[torch.nn.Module]):
         self.n_layers: int = len(layers)
-        self.stage: Dict[Literal['fwd', 're', 'bwd'],  Literal[0, 1, 2]] = {
-            'fwd': 0, 're': 0, 'bwd': 0,
+        self.stage: Dict[Literal["fwd", "re", "bwd"], Literal[0, 1, 2]] = {
+            "fwd": 0,
+            "re": 0,
+            "bwd": 0,
         }
-        self.scale: Dict[Literal['fwd', 're', 'bwd'], float] = {
-            'fwd': 0.0, 're': 0.0, 'bwd': 0.0,
+        self.scale: Dict[Literal["fwd", "re", "bwd"], float] = {
+            "fwd": 0.0,
+            "re": 0.0,
+            "bwd": 0.0,
         }
-        self.estimate: Dict[Literal['fwd', 're', 'bwd'], List[float]] = {
-            'fwd': [float(get_model_size(layer)) for layer in layers],
-            're': [float(get_model_size(layer)) for layer in layers],
-            'bwd': [float(get_model_size(layer) * self.BACKWARD_MULTIPLIER)
-                    for layer in layers],
+        self.estimate: Dict[Literal["fwd", "re", "bwd"], List[float]] = {
+            "fwd": [float(get_model_size(layer)) for layer in layers],
+            "re": [float(get_model_size(layer)) for layer in layers],
+            "bwd": [
+                float(get_model_size(layer) * self.BACKWARD_MULTIPLIER)
+                for layer in layers
+            ],
         }
-        self.fwd_events: Dict[Literal['fwd', 're'],
-                              List[List[Tuple[torch.cuda.Event, torch.cuda.Event]]]] = {
-            'fwd': [[] for _ in layers],
-            're': [[] for _ in layers],
+        self.fwd_events: Dict[
+            Literal["fwd", "re"], List[List[Tuple[torch.cuda.Event, torch.cuda.Event]]]
+        ] = {
+            "fwd": [[] for _ in layers],
+            "re": [[] for _ in layers],
         }
-        self.bwd_events: Dict[range, List[Tuple[torch.cuda.Event, torch.cuda.Event]]] = {}
-        self.pending_fwd: Dict[Literal['fwd', 're'],
-                                  List[List[Tuple[torch.cuda.Event, torch.cuda.Event]]]] = {
-            'fwd': [[] for _ in layers],
-            're': [[] for _ in layers],
+        self.bwd_events: Dict[
+            range, List[Tuple[torch.cuda.Event, torch.cuda.Event]]
+        ] = {}
+        self.pending_fwd: Dict[
+            Literal["fwd", "re"], List[List[Tuple[torch.cuda.Event, torch.cuda.Event]]]
+        ] = {
+            "fwd": [[] for _ in layers],
+            "re": [[] for _ in layers],
         }
-        self.pending_bwd: Dict[range, List[Tuple[torch.cuda.Event, torch.cuda.Event]]] = {}
+        self.pending_bwd: Dict[
+            range, List[Tuple[torch.cuda.Event, torch.cuda.Event]]
+        ] = {}
 
-    def time_fwd(self, action: Literal['fwd', 're'], layer_idx: int,
-                 stream: torch.cuda.Stream) -> LayerTimingContext:
+    def time_fwd(
+        self, action: Literal["fwd", "re"], layer_idx: int, stream: torch.cuda.Stream
+    ) -> LayerTimingContext:
         """Create a context manager to time a forward/recompute layer.
 
         Args:
@@ -109,8 +129,9 @@ class ModelTimer:
         self.fwd_events[action][layer_idx].append((start_event, end_event))
         return LayerTimingContext(start_event, end_event, stream)
 
-    def time_bwd(self, layer_ids: range, stream: torch.cuda.Stream
-                 ) -> LayerTimingContext:
+    def time_bwd(
+        self, layer_ids: range, stream: torch.cuda.Stream
+    ) -> LayerTimingContext:
         """Create a context manager to time a backward layer.
 
         Args:
@@ -126,16 +147,16 @@ class ModelTimer:
         return LayerTimingContext(start_event, end_event, stream)
 
     def update_times(self):
-        """Update time estimates based on recorded events.""" 
+        """Update time estimates based on recorded events."""
         sums = {
-            'fwd': [0.0] * self.n_layers,
-            're': [0.0] * self.n_layers,
-            'bwd': [0.0] * self.n_layers,
+            "fwd": [0.0] * self.n_layers,
+            "re": [0.0] * self.n_layers,
+            "bwd": [0.0] * self.n_layers,
         }
         cnts = {
-            'fwd': [0] * self.n_layers,
-            're': [0] * self.n_layers,
-            'bwd': [0] * self.n_layers,
+            "fwd": [0] * self.n_layers,
+            "re": [0] * self.n_layers,
+            "bwd": [0] * self.n_layers,
         }
         for action in self.pending_fwd.keys():
             for layer_idx, events in enumerate(self.pending_fwd[action]):
@@ -144,24 +165,27 @@ class ModelTimer:
                     end_event.synchronize()
                     elapsed = start_event.elapsed_time(end_event)
                     sums[action][layer_idx] += elapsed
-        assert all(cnts['fwd'][i] == cnts['fwd'][0] for i in range(self.n_layers)), \
-            "Mismatched forward event counts across layers"
-        assert all(cnts['re'][i] == cnts['re'][0] for i in range(self.n_layers)), \
-            "Mismatched recompute event counts across layers"
+        assert all(
+            cnts["fwd"][i] == cnts["fwd"][0] for i in range(self.n_layers)
+        ), "Mismatched forward event counts across layers"
+        assert all(
+            cnts["re"][i] == cnts["re"][0] for i in range(self.n_layers)
+        ), "Mismatched recompute event counts across layers"
         # Backward timing proportional to recompute times
         for layer_ids, events in self.pending_bwd.items():
-            scale_sum = sum(sums['re'][i] for i in layer_ids) + sys.float_info.epsilon
+            scale_sum = sum(sums["re"][i] for i in layer_ids) + sys.float_info.epsilon
             block_sum = 0.0
             for start_event, end_event in events:
                 end_event.synchronize()
                 elapsed = start_event.elapsed_time(end_event)
                 block_sum += elapsed
             for i in layer_ids:
-                portion = sums['re'][i] / scale_sum * block_sum
-                sums['bwd'][i] += portion
-                cnts['bwd'][i] += len(events)
-        assert all(cnts['bwd'][i] == cnts['bwd'][0] for i in range(self.n_layers)), \
-            "Mismatched backward event counts across layers"
+                portion = sums["re"][i] / scale_sum * block_sum
+                sums["bwd"][i] += portion
+                cnts["bwd"][i] += len(events)
+        assert all(
+            cnts["bwd"][i] == cnts["bwd"][0] for i in range(self.n_layers)
+        ), "Mismatched backward event counts across layers"
         # Update estimates with smoothed averages
         for action in self.estimate.keys():
             if cnts[action][0] > 0:
@@ -177,21 +201,24 @@ class ModelTimer:
                 self.scale[action] *= self.SMOOTH_RATE
                 for layer_idx in range(self.n_layers):
                     avg_time = sums[action][layer_idx] / cnts[action][layer_idx]
-                    self.estimate[action][layer_idx] \
-                        = self.SMOOTH_RATE * self.estimate[action][layer_idx] \
+                    self.estimate[action][layer_idx] = (
+                        self.SMOOTH_RATE * self.estimate[action][layer_idx]
                         + (1 - self.SMOOTH_RATE) * avg_time
+                    )
         if self.VERBOSE:
             for action in self.estimate.keys():
                 if cnts[action][0] > 0:
                     for layer_idx in range(self.n_layers):
-                        print(f"Layer {layer_idx} {action}  "
-                              f"new record: {sums[action][layer_idx] / cnts[action][layer_idx]:.3f} ms  "
-                              f"new estimate: {self.estimate[action][layer_idx] / (1.0 - self.scale[action]):.3f} ms")
+                        print(
+                            f"Layer {layer_idx} {action}  "
+                            f"new record: {sums[action][layer_idx] / cnts[action][layer_idx]:.3f} ms  "
+                            f"new estimate: {self.estimate[action][layer_idx] / (1.0 - self.scale[action]):.3f} ms"
+                        )
         # Move current events to pending and clear current
         self.pending_fwd = self.fwd_events
         self.pending_bwd = self.bwd_events
         self.fwd_events = {
-            'fwd': [[] for _ in range(self.n_layers)],
-            're': [[] for _ in range(self.n_layers)],
+            "fwd": [[] for _ in range(self.n_layers)],
+            "re": [[] for _ in range(self.n_layers)],
         }
         self.bwd_events = {}

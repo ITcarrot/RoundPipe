@@ -15,7 +15,8 @@ from .threads import dump_all_active_threads, KeyboardInterruptRoundPipeThreads
 if TYPE_CHECKING:
     from .roundpipe import RoundPipe
 else:
-    RoundPipe = TypeAliasType('RoundPipe', 'roundpipe.roundpipe.RoundPipe')
+    RoundPipe = TypeAliasType("RoundPipe", "roundpipe.roundpipe.RoundPipe")
+
 
 class ModelExecutePlan:
     """Encodes layer grouping and synchronization for forward/backward.
@@ -27,7 +28,7 @@ class ModelExecutePlan:
         bwd_sem: Per-layer semaphores used to gate backward progress.
     """
 
-    def __init__(self, model: 'RoundPipe', fuse_fwd_bwd: bool) -> None:
+    def __init__(self, model: "RoundPipe", fuse_fwd_bwd: bool) -> None:
         """Initialize execution plans based on the model configuration.
 
         Args:
@@ -44,8 +45,12 @@ class ModelExecutePlan:
             self.fwd_plan = [range(i, i + 1) for i in range(model.num_layers)]
             self.bwd_plan = list(reversed(self.fwd_plan))
 
-        self.fwd_sem: List[threading.Semaphore] = [threading.Semaphore(0) for _ in self.fwd_plan]
-        self.bwd_sem: List[threading.Semaphore] = [threading.Semaphore(0) for _ in self.bwd_plan]
+        self.fwd_sem: List[threading.Semaphore] = [
+            threading.Semaphore(0) for _ in self.fwd_plan
+        ]
+        self.bwd_sem: List[threading.Semaphore] = [
+            threading.Semaphore(0) for _ in self.bwd_plan
+        ]
 
     def backward_need_input(self, layer_id: int) -> bool:
         """Return whether backward execution requires inputs for ``layer_id``."""
@@ -103,6 +108,7 @@ class ModelExecutePlan:
             dump_all_active_threads()
             raise KeyboardInterruptRoundPipeThreads from None
 
+
 class BackwardScheduleSimulator:
     """Mimics async backward tagging to coordinate microbatch ordering.
 
@@ -120,29 +126,38 @@ class BackwardScheduleSimulator:
 
     def __init__(self):
         """Pre-allocate gradient anchor tensors per CUDA device."""
-        self.tags: List[torch.Tensor] = [torch.tensor(0., dtype=torch.float32, requires_grad=True) for _ in range(torch.cuda.device_count())]
+        self.tags: List[torch.Tensor] = [
+            torch.tensor(0.0, dtype=torch.float32, requires_grad=True)
+            for _ in range(torch.cuda.device_count())
+        ]
         self.cur_device: int = 0
         self.n_devices: int = torch.cuda.device_count()
-    
+
     def get_next_tag(self) -> torch.Tensor:
         """Return the tag tensor assigned to the next device in rotation."""
         self.cur_device = (self.cur_device + 1) % self.n_devices
         tag = self.tags[self.cur_device]
         return tag
-    
+
     def update_current_tag(self, new_tag: torch.Tensor) -> None:
         """Cache the tag produced by the most recent backward pass."""
         self.tags[self.cur_device] = new_tag
-    
+
     def reset(self) -> None:
         """Reset rotation state so unrelated runs do not share graphs."""
         self.cur_device = 0
-        self.tags = [torch.tensor(0., dtype=torch.float32, requires_grad=True) for _ in range(torch.cuda.device_count())]
+        self.tags = [
+            torch.tensor(0.0, dtype=torch.float32, requires_grad=True)
+            for _ in range(torch.cuda.device_count())
+        ]
+
 
 backward_schedule_simulator: BackwardScheduleSimulator = BackwardScheduleSimulator()
 
-def chunk_layer_params(tensor_pair: List[Tuple[torch.Tensor, torch.Tensor]], n_chunks: int
-                       ) -> List[List[Tuple[torch.Tensor, torch.Tensor]]]:
+
+def chunk_layer_params(
+    tensor_pair: List[Tuple[torch.Tensor, torch.Tensor]], n_chunks: int
+) -> List[List[Tuple[torch.Tensor, torch.Tensor]]]:
     """Group tensor copies into balanced chunks for overlapped transfers.
 
     Here we use a greedy number partitioning algorithm to distribute tensor
@@ -156,12 +171,16 @@ def chunk_layer_params(tensor_pair: List[Tuple[torch.Tensor, torch.Tensor]], n_c
     Returns:
         List of chunks where each chunk is a list of tensor copy pairs.
     """
+
     def get_tensor_size(pair: Tuple[torch.Tensor, torch.Tensor]) -> int:
         """Return the total bytes represented by ``pair``."""
         src, dst = pair
         return src.numel() * src.element_size()
+
     tensor_pair.sort(key=get_tensor_size, reverse=True)
-    chunk_scheme: List[List[Tuple[torch.Tensor, torch.Tensor]]] = [[] for _ in range(n_chunks)]
+    chunk_scheme: List[List[Tuple[torch.Tensor, torch.Tensor]]] = [
+        [] for _ in range(n_chunks)
+    ]
     chunk_heap = [(0, i) for i in range(n_chunks)]
     heapq.heapify(chunk_heap)
     for pair in tensor_pair:

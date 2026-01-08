@@ -6,12 +6,21 @@ import torch.nn as nn
 
 from ..roundpipe import RoundPipe
 
+
 @torch.compile
-def CompileCrossEntropy(logits: torch.Tensor, labels: torch.Tensor,
-                        num_items_in_batch: torch.Tensor, ignore_index: int) -> torch.Tensor:
-    return nn.functional.cross_entropy(
-        logits.float(), labels, ignore_index=ignore_index, reduction='sum'
-        ) / num_items_in_batch
+def CompileCrossEntropy(
+    logits: torch.Tensor,
+    labels: torch.Tensor,
+    num_items_in_batch: torch.Tensor,
+    ignore_index: int,
+) -> torch.Tensor:
+    return (
+        nn.functional.cross_entropy(
+            logits.float(), labels, ignore_index=ignore_index, reduction="sum"
+        )
+        / num_items_in_batch
+    )
+
 
 def CompileForCausalLMLoss(
     logits: torch.Tensor,
@@ -39,13 +48,16 @@ def CompileForCausalLMLoss(
 
     return CompileCrossEntropy(logits, shift_labels, num_items_in_batch, ignore_index)
 
+
 LOSS_REPLACE = {}
 
 try:
     from transformers.loss.loss_utils import ForCausalLMLoss
+
     LOSS_REPLACE[ForCausalLMLoss] = CompileForCausalLMLoss
 except ImportError:
     pass
+
 
 class FunctionWrapper(nn.Module):
     def __init__(self, func: Callable) -> None:
@@ -55,7 +67,10 @@ class FunctionWrapper(nn.Module):
     def forward(self, *args, **kwargs):
         return self.func(*args, **kwargs)
 
+
 EXPECTED_MODEL_CLASS = types.FunctionType
+
+
 def wrap_model(func: types.FunctionType, **roundpipe_kwargs: Any) -> RoundPipe:
     if func in LOSS_REPLACE:
         func = LOSS_REPLACE[func]

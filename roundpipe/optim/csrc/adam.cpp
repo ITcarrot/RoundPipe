@@ -1,15 +1,14 @@
-#include <torch/extension.h>
 #include <omp.h>
+#include <torch/extension.h>
 using namespace std;
 using namespace torch;
 
-template<bool amsgrad, bool maximize, bool zero_weight_decay,
-         bool decoupled_weight_decay>
-void adam_kernel(float* __restrict params, const float* __restrict grads,
-    float* __restrict exp_avg, float* __restrict exp_avg_sq,
-    float* __restrict max_exp_avg_sq, float lr, float beta1, float beta2,
-    float eps, float weight_decay, int64_t param_size, int64_t step
-) {
+template <bool amsgrad, bool maximize, bool zero_weight_decay,
+          bool decoupled_weight_decay>
+void adam_kernel(float *__restrict params, const float *__restrict grads,
+                 float *__restrict exp_avg, float *__restrict exp_avg_sq,
+                 float *__restrict max_exp_avg_sq, float lr, float beta1, float beta2,
+                 float eps, float weight_decay, int64_t param_size, int64_t step) {
     float one_beta1 = 1.0f - beta1;
     float one_beta2 = 1.0f - beta2;
     float bias_correction1 = 1.0f - powf(beta1, step);
@@ -41,7 +40,7 @@ void adam_kernel(float* __restrict params, const float* __restrict grads,
 }
 
 // Helper to unpack boolean template parameters
-template<bool... FixedBools, typename... Args>
+template <bool... FixedBools, typename... Args>
 void adam_kernel(bool current_bool, Args... args) {
     if (current_bool) {
         adam_kernel<FixedBools..., true>(args...);
@@ -50,19 +49,16 @@ void adam_kernel(bool current_bool, Args... args) {
     }
 }
 
-void adam(vector<Tensor> params, vector<Tensor> grads,
-          vector<Tensor> exp_avg, vector<Tensor> exp_avg_sq,
-          vector<Tensor> max_exp_avg_sq, vector<int64_t> step_int,
-          bool amsgrad, float beta1, float beta2, float lr,
-          float weight_decay, float eps, bool maximize,
-          bool decoupled_weight_decay)
-{
+void adam(vector<Tensor> params, vector<Tensor> grads, vector<Tensor> exp_avg,
+          vector<Tensor> exp_avg_sq, vector<Tensor> max_exp_avg_sq,
+          vector<int64_t> step_int, bool amsgrad, float beta1, float beta2, float lr,
+          float weight_decay, float eps, bool maximize, bool decoupled_weight_decay) {
     vector<int64_t> numel(params.size());
-    vector<float*> params_ptr(params.size());
-    vector<const float*> grads_ptr(params.size());
-    vector<float*> exp_avg_ptr(params.size());
-    vector<float*> exp_avg_sq_ptr(params.size());
-    vector<float*> max_exp_avg_sq_ptr(params.size());
+    vector<float *> params_ptr(params.size());
+    vector<const float *> grads_ptr(params.size());
+    vector<float *> exp_avg_ptr(params.size());
+    vector<float *> exp_avg_sq_ptr(params.size());
+    vector<float *> max_exp_avg_sq_ptr(params.size());
     for (size_t i = 0; i < params.size(); ++i) {
         numel[i] = params[i].numel();
         params_ptr[i] = params[i].mutable_data_ptr<float>();
@@ -75,20 +71,19 @@ void adam(vector<Tensor> params, vector<Tensor> grads,
             max_exp_avg_sq_ptr[i] = nullptr;
         }
     }
-    #pragma omp parallel
+#pragma omp parallel
     {
         int rank = omp_get_thread_num();
         int nthreads = omp_get_num_threads();
-        for(size_t i = 0; i < params.size(); ++i) {
-            int64_t block_size = numel[i] / nthreads
-                                 + (rank < (numel[i] % nthreads));
-            int64_t offset = (numel[i] / nthreads) * rank
-                             + min<int64_t>(rank, numel[i] % nthreads);
-            adam_kernel(amsgrad, maximize, weight_decay == 0.0f,
-                        decoupled_weight_decay, params_ptr[i] + offset,
-                        grads_ptr[i] + offset, exp_avg_ptr[i] + offset,
-                        exp_avg_sq_ptr[i] + offset, max_exp_avg_sq_ptr[i] + offset,
-                        lr, beta1, beta2, eps, weight_decay, block_size, step_int[i]);
+        for (size_t i = 0; i < params.size(); ++i) {
+            int64_t block_size = numel[i] / nthreads + (rank < (numel[i] % nthreads));
+            int64_t offset =
+                (numel[i] / nthreads) * rank + min<int64_t>(rank, numel[i] % nthreads);
+            adam_kernel(amsgrad, maximize, weight_decay == 0.0f, decoupled_weight_decay,
+                        params_ptr[i] + offset, grads_ptr[i] + offset,
+                        exp_avg_ptr[i] + offset, exp_avg_sq_ptr[i] + offset,
+                        max_exp_avg_sq_ptr[i] + offset, lr, beta1, beta2, eps,
+                        weight_decay, block_size, step_int[i]);
         }
     }
 }

@@ -7,8 +7,11 @@ from torch import nn
 
 from roundpipe.roundpipe import RoundPipe, AutoRoundPipe
 
-@pytest.mark.parametrize("model_class, designate",
-                         itertools.product([RoundPipe, AutoRoundPipe], [True, False]))
+
+@pytest.mark.parametrize(
+    "model_class, designate",
+    itertools.product([RoundPipe, AutoRoundPipe], [True, False]),
+)
 def test_RoundPipe_attribute_shim(model_class, designate):
     original_model = nn.Linear(10, 5)
     if designate:
@@ -17,7 +20,7 @@ def test_RoundPipe_attribute_shim(model_class, designate):
     else:
         wrapped_model = model_class(original_model)
 
-    obj = {'dict': 123}
+    obj = {"dict": 123}
     wrapped_model.var1 = 42
     wrapped_model.var2 = obj
     assert original_model.var1 == 42
@@ -27,7 +30,7 @@ def test_RoundPipe_attribute_shim(model_class, designate):
 
     del wrapped_model.var1
     del wrapped_model.var2
-    assert not hasattr(original_model, 'var1')
-    assert not hasattr(original_model, 'var2')
-    assert not hasattr(wrapped_model, 'var1')
-    assert not hasattr(wrapped_model, 'var2')
+    assert not hasattr(original_model, "var1")
+    assert not hasattr(original_model, "var2")
+    assert not hasattr(wrapped_model, "var1")
+    assert not hasattr(wrapped_model, "var2")

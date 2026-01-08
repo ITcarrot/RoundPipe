@@ -15,11 +15,17 @@ from .context import doing_optimizer
 from .device import get_next_device
 from .optim_stream import launch_optim_kernel, on_optim_stream
 from .param import ParamAttribute
-from .run import RoundPipeRunContext, RoundPipeBatchedBackward, RoundPipeMicrobatchBackward, RoundPipeInputBackward
+from .run import (
+    RoundPipeRunContext,
+    RoundPipeBatchedBackward,
+    RoundPipeMicrobatchBackward,
+    RoundPipeInputBackward,
+)
 from .run_config import RoundPipeRunConfig, FullRoundPipeRunConfig
 from .scheduler import ModelExecutePlan, backward_schedule_simulator
 from .timer import ModelTimer
 from .utils import get_model_size
+
 
 class RoundPipeBase(nn.Module):
     """Common attributes and methods of RoundPipe and AutoRoundPipe
@@ -32,22 +38,29 @@ class RoundPipeBase(nn.Module):
         optim_dtype: Data type for optimizer parameters.
         optim_updated: Event signaling optimizer have updated.
     """
-    def __init__(self, model: nn.Module, name: Optional[str] = None,
-                 optim_dtype: Optional[torch.dtype] = None) -> None:
-        '''Initialize the RoundPipe base wrapper.
-        
+
+    def __init__(
+        self,
+        model: nn.Module,
+        name: Optional[str] = None,
+        optim_dtype: Optional[torch.dtype] = None,
+    ) -> None:
+        """Initialize the RoundPipe base wrapper.
+
         Args:
             model: Module to wrap.
             name: Optional friendly identifier. Defaults to ``file:line``.
             optim_dtype: Data type for optimizer parameters. Defaults to the same
                 as the parameter data type.
-        '''
+        """
         super().__init__()
         # call stack: beartype -> (Auto)RoundPipe -> beartype -> RoundPipeBase
         filename, lineno, _, _ = traceback.extract_stack()[-5]
         self.name: str = name if name else f'{filename.split("/")[-1]}:{lineno}'
         self.model: nn.Module = model
-        self.original_model: Optional[nn.Module] = None # placeholder for original model if needing its functions
+        self.original_model: Optional[nn.Module] = (
+            None  # placeholder for original model if needing its functions
+        )
 
         self.optim_dtype: Optional[torch.dtype] = optim_dtype
         self.optim_updated: threading.Event = threading.Event()
@@ -61,10 +74,10 @@ class RoundPipeBase(nn.Module):
             if self.original_model is not None:
                 return getattr(self.original_model, name)
             return getattr(self.model, name)
-    
+
     def __setattr__(self, name: str, value: Any) -> None:
         """Mirror attribute writes to wrapped/original models post-initialization."""
-        if 'RoundPipe_initialized' in self.__dict__:
+        if "RoundPipe_initialized" in self.__dict__:
             if self.original_model is not None:
                 setattr(self.original_model, name, value)
             setattr(self.model, name, value)
@@ -73,7 +86,7 @@ class RoundPipeBase(nn.Module):
 
     def __delattr__(self, name: str) -> None:
         """Ensure attribute deletions propagate to wrapped/original modules."""
-        if 'RoundPipe_initialized' in self.__dict__:
+        if "RoundPipe_initialized" in self.__dict__:
             if self.original_model is not None:
                 delattr(self.original_model, name)
             delattr(self.model, name)
@@ -86,33 +99,40 @@ class RoundPipeBase(nn.Module):
         Args:
             original_model: Module that should mirror attribute updates.
         """
-        object.__setattr__(self, 'original_model', original_model)
+        object.__setattr__(self, "original_model", original_model)
 
-    def named_parameters(self, prefix: str = "", recurse: bool = True,
-                         remove_duplicate: bool = True) -> Iterator[tuple[str, nn.Parameter]]:
+    def named_parameters(
+        self, prefix: str = "", recurse: bool = True, remove_duplicate: bool = True
+    ) -> Iterator[tuple[str, nn.Parameter]]:
         """Iterator over named parameters. Overrides to warn against direct use,
-            and redirect to optim_named_parameters under optimizer context.
+        and redirect to optim_named_parameters under optimizer context.
         """
         if doing_optimizer() and recurse:
-            return cast(Iterator[tuple[str, nn.Parameter]],
-                        self.optim_named_parameters(prefix, remove_duplicate))
-        warnings.warn("RoundPipe will manage parameter location and dtype internally. "
-                      "\nAccessing parameters() or named_parameters() directly may "
-                      "lead to unexpected behavior. \nIf you intend to get parameters "
-                      "for optimization, please use optim_parameters() or "
-                      "optim_named_parameters() instead.", UserWarning)
+            return cast(
+                Iterator[tuple[str, nn.Parameter]],
+                self.optim_named_parameters(prefix, remove_duplicate),
+            )
+        warnings.warn(
+            "RoundPipe will manage parameter location and dtype internally. "
+            "\nAccessing parameters() or named_parameters() directly may "
+            "lead to unexpected behavior. \nIf you intend to get parameters "
+            "for optimization, please use optim_parameters() or "
+            "optim_named_parameters() instead.",
+            UserWarning,
+        )
         return super().named_parameters(prefix, recurse, remove_duplicate)
 
     def parameters(self, recurse: bool = True) -> Iterator[nn.Parameter]:
         """Iterator over parameters. Overrides to redirect to optim_parameters
-            under optimizer context.
+        under optimizer context.
         """
         if doing_optimizer() and recurse:
             return cast(Iterator[nn.Parameter], self.optim_parameters())
         return super().parameters(recurse)
 
-    def optim_named_parameters(self, prefix: str = "", remove_duplicate: bool = True
-                               ) -> Iterator[tuple[str, torch.Tensor]]:
+    def optim_named_parameters(
+        self, prefix: str = "", remove_duplicate: bool = True
+    ) -> Iterator[tuple[str, torch.Tensor]]:
         """Iterator over named parameters suitable for optimizer consumption.
 
         Args:
@@ -125,9 +145,11 @@ class RoundPipeBase(nn.Module):
         for name, parm in super().named_parameters(prefix, True, remove_duplicate):
             parm_attr = ParamAttribute.get(parm)
             if not parm_attr.optim_inited() and parm.requires_grad:
-                parm_attr.data_optim = parm_attr.data_cpu.to(dtype=self.optim_dtype, copy=True)
+                parm_attr.data_optim = parm_attr.data_cpu.to(
+                    dtype=self.optim_dtype, copy=True
+                )
             yield name, parm_attr.data_optim
- 
+
     def optim_parameters(self) -> Iterator[torch.Tensor]:
         """Iterator over parameters suitable for optimizer consumption.
 
@@ -144,10 +166,12 @@ class RoundPipeBase(nn.Module):
     def sync_optim_param(self) -> None:
         """Ensure optimizer updated results are copied back to parameters."""
         raise NotImplementedError("sync_optim_param must be implemented in subclasses.")
-    
+
     def move_grad_to_optim(self) -> None:
         """Move parameter gradients to optimizer parameters."""
-        raise NotImplementedError("move_grad_to_optim must be implemented in subclasses.")
+        raise NotImplementedError(
+            "move_grad_to_optim must be implemented in subclasses."
+        )
 
     def lock_grad(self) -> None:
         """Lock parameter gradients and transfer events to avoid being
@@ -155,8 +179,13 @@ class RoundPipeBase(nn.Module):
         """
         raise NotImplementedError("lock_grad must be implemented in subclasses.")
 
-    def step(self, step_fn: Callable[..., None], is_async: bool = True,
-             *args: Any, **kwargs: Any) -> None:
+    def step(
+        self,
+        step_fn: Callable[..., None],
+        is_async: bool = True,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         """Run an optimizer step using the provided step function.
         The non-async version ensures optimizer updates are complete before returning.
         This ensures every training iteration uses the latest parameters.
@@ -174,15 +203,17 @@ class RoundPipeBase(nn.Module):
             *args: Positional arguments forwarded to ``step_fn``.
             **kwargs: Keyword arguments forwarded to ``step_fn``.
         """
-        self.optim_updated.wait() # ensure previous step is done to avoid data race
+        self.optim_updated.wait()  # ensure previous step is done to avoid data race
         self.lock_grad()
         for name, param in super().named_parameters():
             param_attr = ParamAttribute.get(param)
             if param.grad is not None and not param_attr.optim_inited():
-                raise RuntimeError(f"Parameter {name} has gradient but optimizer data is not "
+                raise RuntimeError(
+                    f"Parameter {name} has gradient but optimizer data is not "
                     "initialized. This is likely because you did not use optim_parameters() to "
                     "create your optimizer, or you changed parameter requires_grad after optimizer "
-                    "creation. Please make sure to create optimizer with optim_parameters().")
+                    "creation. Please make sure to create optimizer with optim_parameters()."
+                )
             # Move grad reference away from param to avoid accidental modification
             param_attr.data_grad = param.grad
             param.grad = None
@@ -199,6 +230,7 @@ class RoundPipeBase(nn.Module):
         launch_optim_kernel(lambda: self.optim_updated.set())
         if not is_async:
             self.sync_optim_param()
+
 
 class RoundPipe(RoundPipeBase):
     """Wraps an ``nn.Module`` with RoundPipe's pipelined execution runtime.
@@ -218,13 +250,16 @@ class RoundPipe(RoundPipeBase):
             set, it implies the ParamAttribute.data_grad can be reused for next backward.
         model_timer: ``ModelTimer`` measuring per-layer latency.
     """
-    def __init__(self,
-                 model: nn.Module,
-                 optim_dtype: Optional[torch.dtype] = None,
-                 name: Optional[str] = None,
-                 model_run_config: RoundPipeRunConfig = RoundPipeRunConfig()) -> None:
+
+    def __init__(
+        self,
+        model: nn.Module,
+        optim_dtype: Optional[torch.dtype] = None,
+        name: Optional[str] = None,
+        model_run_config: RoundPipeRunConfig = RoundPipeRunConfig(),
+    ) -> None:
         """Convert model storage to pinned tensors and determine pipeline cuts.
-        
+
         A nn.Sequential model is split into layers directly. Arbitrary models
         are wrapped as a single layer.
 
@@ -248,25 +283,39 @@ class RoundPipe(RoundPipeBase):
             self.layer_workload.append(get_model_size(layer))
         self.model_timer: ModelTimer = ModelTimer(self.layers)
 
-        self.layer_param_copied: List[threading.Event] = [threading.Event() for _ in range(self.num_layers)]
+        self.layer_param_copied: List[threading.Event] = [
+            threading.Event() for _ in range(self.num_layers)
+        ]
         for e in self.layer_param_copied:
             e.set()
-        self.layer_param_uploaded_events: List[torch.cuda.Event] \
-            = [cast(torch.cuda.Event, torch.cuda.Event()) for _ in range(self.num_layers)]
-        self.layer_gradient_ready_events: List[torch.cuda.Event] \
-            = [cast(torch.cuda.Event, torch.cuda.Event()) for _ in range(self.num_layers)]
-        self.layer_gradient_copied: List[threading.Event] = [threading.Event() for _ in range(self.num_layers)]
+        self.layer_param_uploaded_events: List[torch.cuda.Event] = [
+            cast(torch.cuda.Event, torch.cuda.Event()) for _ in range(self.num_layers)
+        ]
+        self.layer_gradient_ready_events: List[torch.cuda.Event] = [
+            cast(torch.cuda.Event, torch.cuda.Event()) for _ in range(self.num_layers)
+        ]
+        self.layer_gradient_copied: List[threading.Event] = [
+            threading.Event() for _ in range(self.num_layers)
+        ]
         for e in self.layer_gradient_copied:
             e.set()
 
-        for parm in tqdm.tqdm(self.model.parameters(), total=sum(1 for _ in self.model.parameters()),
-                              desc=f'Roundpipe: Process params in {self.name}', leave=False):
+        for parm in tqdm.tqdm(
+            self.model.parameters(),
+            total=sum(1 for _ in self.model.parameters()),
+            desc=f"Roundpipe: Process params in {self.name}",
+            leave=False,
+        ):
             pinned_tensor = torch.empty_like(parm.data, pin_memory=True)
             pinned_tensor.copy_(parm.data)
             parm.data = pinned_tensor
             ParamAttribute.set(parm)
-        for buffer in tqdm.tqdm(self.model.buffers(), total=sum(1 for _ in self.model.buffers()),
-                                desc=f'Roundpipe: Process buffers in {self.name}', leave=False):
+        for buffer in tqdm.tqdm(
+            self.model.buffers(),
+            total=sum(1 for _ in self.model.buffers()),
+            desc=f"Roundpipe: Process buffers in {self.name}",
+            leave=False,
+        ):
             pinned_tensor = torch.empty_like(buffer.data, pin_memory=True)
             pinned_tensor.copy_(buffer.data)
             buffer.data = pinned_tensor
@@ -287,10 +336,14 @@ class RoundPipe(RoundPipeBase):
         """
         if not on_optim_stream():
             self.optim_updated.wait()
-        for layer, event, copied_event in zip(self.layers, self.layer_param_uploaded_events, self.layer_param_copied):
+        for layer, event, copied_event in zip(
+            self.layers, self.layer_param_uploaded_events, self.layer_param_copied
+        ):
             event.synchronize()
             if on_optim_stream():
-                assert not copied_event.is_set(), "lock_param must be called before syncing optim param."
+                assert (
+                    not copied_event.is_set()
+                ), "lock_param must be called before syncing optim param."
             for param in layer.parameters():
                 param_attr = ParamAttribute.get(param)
                 if param_attr.optim_inited():
@@ -304,8 +357,13 @@ class RoundPipe(RoundPipeBase):
         This function is designed to run in the optimizer thread only.
         """
         for layer, ready_event, copied_event in zip(
-            reversed(self.layers), reversed(self.layer_gradient_ready_events), reversed(self.layer_gradient_copied)):
-            assert not copied_event.is_set(), "lock_grad must be called before moving grad to optim."
+            reversed(self.layers),
+            reversed(self.layer_gradient_ready_events),
+            reversed(self.layer_gradient_copied),
+        ):
+            assert (
+                not copied_event.is_set()
+            ), "lock_grad must be called before moving grad to optim."
             ready_event.synchronize()
             for param in layer.parameters():
                 param_attr = ParamAttribute.get(param)
@@ -314,13 +372,19 @@ class RoundPipe(RoundPipeBase):
                         if param_attr.optim_grad is not None:
                             param_attr.data_optim.grad = param_attr.optim_grad
                         else:
-                            param_attr.data_optim.grad = torch.empty_like(param_attr.data_optim)
+                            param_attr.data_optim.grad = torch.empty_like(
+                                param_attr.data_optim
+                            )
                         param_attr.data_optim.grad.copy_(param_attr.data_grad)
                     else:
-                        param_attr.data_optim.grad.add_(param_attr.data_grad.to(dtype=param_attr.data_optim.dtype))
+                        param_attr.data_optim.grad.add_(
+                            param_attr.data_grad.to(dtype=param_attr.data_optim.dtype)
+                        )
                     param_attr.optim_grad = param_attr.data_optim.grad
                 else:
-                    param_attr.optim_grad = None # clear optim_grad reference if no grad
+                    param_attr.optim_grad = (
+                        None  # clear optim_grad reference if no grad
+                    )
             copied_event.set()
 
     @override
@@ -331,8 +395,12 @@ class RoundPipe(RoundPipeBase):
         for copied_event in self.layer_gradient_copied:
             copied_event.clear()
 
-    def forward(self, *args: Any,
-                roundpipe_run_config: RoundPipeRunConfig = RoundPipeRunConfig(), **kwargs: Any) -> Any:
+    def forward(
+        self,
+        *args: Any,
+        roundpipe_run_config: RoundPipeRunConfig = RoundPipeRunConfig(),
+        **kwargs: Any,
+    ) -> Any:
         """Execute a forward pass, optionally enabling gradients per call.
 
         Args:
@@ -347,53 +415,89 @@ class RoundPipe(RoundPipeBase):
         Raises:
             RuntimeError: If gradients are required but disabled globally.
         """
-        full_run_config = FullRoundPipeRunConfig(roundpipe_run_config, self.model_run_config)
+        full_run_config = FullRoundPipeRunConfig(
+            roundpipe_run_config, self.model_run_config
+        )
         if full_run_config.requires_grad and not torch.is_grad_enabled():
-            raise RuntimeError("RoundPipe model is set to require gradients, but torch gradients are disabled globally.")
+            raise RuntimeError(
+                "RoundPipe model is set to require gradients, but torch gradients are disabled globally."
+            )
         batch = Batch(args, kwargs, full_run_config)
         self.model_timer.update_times()
         execute_plan = ModelExecutePlan(self, False)
-        run_context = [RoundPipeRunContext(self, execute_plan, full_run_config.requires_grad,
-                                           i, batch.num_microbatch, full_run_config.preserve_rng_state)
-                       for i in range(batch.num_microbatch)]
+        run_context = [
+            RoundPipeRunContext(
+                self,
+                execute_plan,
+                full_run_config.requires_grad,
+                i,
+                batch.num_microbatch,
+                full_run_config.preserve_rng_state,
+            )
+            for i in range(batch.num_microbatch)
+        ]
         for layer_group_id in range(len(execute_plan.fwd_plan)):
             device = get_next_device()
             device.launch_forward(layer_group_id, batch, run_context)
         execute_plan.forward_wait_complete(batch.num_microbatch)
-        
-        if any(isinstance(tensor, torch.Tensor) and tensor.requires_grad
-               for batch_output in batch.flatten_states
-               for tensor in batch_output):
+
+        if any(
+            isinstance(tensor, torch.Tensor) and tensor.requires_grad
+            for batch_output in batch.flatten_states
+            for tensor in batch_output
+        ):
             if len(execute_plan.bwd_plan) == 1:
                 tag = backward_schedule_simulator.get_next_tag()
                 for context in reversed(run_context):
-                    tag, output_require_grad_idx, *output_require_grad \
-                        = cast(Tuple[torch.Tensor, List[int], Unpack[Tuple[torch.Tensor, ...]]],
-                          RoundPipeMicrobatchBackward.apply(context, batch, tag, *context.flatten_inputs[0]))
+                    tag, output_require_grad_idx, *output_require_grad = cast(
+                        Tuple[
+                            torch.Tensor, List[int], Unpack[Tuple[torch.Tensor, ...]]
+                        ],
+                        RoundPipeMicrobatchBackward.apply(
+                            context, batch, tag, *context.flatten_inputs[0]
+                        ),
+                    )
                     for idx, item in zip(output_require_grad_idx, output_require_grad):
                         batch.flatten_states[context.microbatch_id][idx] = item
                 backward_schedule_simulator.update_current_tag(tag)
             else:
-                gradient_anchor = torch.tensor(0.0, dtype=torch.float32, requires_grad=True)
+                gradient_anchor = torch.tensor(
+                    0.0, dtype=torch.float32, requires_grad=True
+                )
                 # ensuring gradients to be calculated even if inputs do not require grad.
-                all_inputs = [item for batch_context in run_context
-                            for item in batch_context.flatten_inputs[0]]
-                output_require_grad_idx, *output_require_grad \
-                    = cast(Tuple[List[Tuple[int, int]], Unpack[Tuple[torch.Tensor, ...]]],
-                      RoundPipeBatchedBackward.apply(run_context, batch, gradient_anchor, *all_inputs))
-                for (batch_idx, idx), item in zip(output_require_grad_idx, output_require_grad):
+                all_inputs = [
+                    item
+                    for batch_context in run_context
+                    for item in batch_context.flatten_inputs[0]
+                ]
+                output_require_grad_idx, *output_require_grad = cast(
+                    Tuple[List[Tuple[int, int]], Unpack[Tuple[torch.Tensor, ...]]],
+                    RoundPipeBatchedBackward.apply(
+                        run_context, batch, gradient_anchor, *all_inputs
+                    ),
+                )
+                for (batch_idx, idx), item in zip(
+                    output_require_grad_idx, output_require_grad
+                ):
                     batch.flatten_states[batch_idx][idx] = item
 
         return batch.dump(full_run_config)
 
-    def forward_backward(self, input_args: Tuple[Any, ...] = (),
-                         input_kwargs: Dict[str, Any] = {},
-                         label: Any = None,
-                         loss_fn: Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]] = lambda outputs, labels: outputs,
-                         return_outputs: bool = False,
-                         run_config: RoundPipeRunConfig = RoundPipeRunConfig()
-                         ) -> Union[Tuple[Union[List[torch.Tensor], torch.Tensor], Any],
-                                    List[torch.Tensor], torch.Tensor]:
+    def forward_backward(
+        self,
+        input_args: Tuple[Any, ...] = (),
+        input_kwargs: Dict[str, Any] = {},
+        label: Any = None,
+        loss_fn: Callable[
+            [Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]
+        ] = lambda outputs, labels: outputs,
+        return_outputs: bool = False,
+        run_config: RoundPipeRunConfig = RoundPipeRunConfig(),
+    ) -> Union[
+        Tuple[Union[List[torch.Tensor], torch.Tensor], Any],
+        List[torch.Tensor],
+        torch.Tensor,
+    ]:
         """Run a fused forward and backward pass over all microbatches.
 
         Args:
@@ -417,19 +521,32 @@ class RoundPipe(RoundPipeBase):
             AssertionError: If gradients are not enabled.
         """
         full_run_config = FullRoundPipeRunConfig(run_config, self.model_run_config)
-        assert full_run_config.requires_grad and torch.is_grad_enabled(), \
-               "train_iter requires gradients to be enabled."
+        assert (
+            full_run_config.requires_grad and torch.is_grad_enabled()
+        ), "train_iter requires gradients to be enabled."
         batch = Batch(input_args, input_kwargs, full_run_config, label)
         self.model_timer.update_times()
         execute_plan = ModelExecutePlan(self, True)
-        run_context = [RoundPipeRunContext(self, execute_plan, full_run_config.requires_grad,
-                                           i, batch.num_microbatch, full_run_config.preserve_rng_state)
-                       for i in range(batch.num_microbatch)]
+        run_context = [
+            RoundPipeRunContext(
+                self,
+                execute_plan,
+                full_run_config.requires_grad,
+                i,
+                batch.num_microbatch,
+                full_run_config.preserve_rng_state,
+            )
+            for i in range(batch.num_microbatch)
+        ]
         for batch_idx, context in enumerate(run_context):
             context.input_backward_events = batch.backward_events[batch_idx]
 
-        all_inputs = [item for batch_input in batch.flatten_states for item in batch_input]
-        input_backward_handle = cast(torch.Tensor, RoundPipeInputBackward.apply(run_context, *all_inputs))
+        all_inputs = [
+            item for batch_input in batch.flatten_states for item in batch_input
+        ]
+        input_backward_handle = cast(
+            torch.Tensor, RoundPipeInputBackward.apply(run_context, *all_inputs)
+        )
 
         for layer_group_id in range(len(execute_plan.fwd_plan)):
             device = get_next_device()
@@ -447,13 +564,17 @@ class RoundPipe(RoundPipeBase):
 
         batch.loss_ready.synchronize()
         if isinstance(batch.loss_list[0], torch.Tensor):
-            loss = torch.zeros_like(batch.loss_list[0], device=torch.device('cpu'))
+            loss = torch.zeros_like(batch.loss_list[0], device=torch.device("cpu"))
             for batch_loss in batch.loss_list:
-                assert isinstance(batch_loss, torch.Tensor), \
-                    "Inconsistent loss types across microbatches."
+                assert isinstance(
+                    batch_loss, torch.Tensor
+                ), "Inconsistent loss types across microbatches."
                 loss = loss + batch_loss
         else:
-            loss = [torch.zeros_like(t, device=torch.device('cpu')) for t in batch.loss_list[0]]
+            loss = [
+                torch.zeros_like(t, device=torch.device("cpu"))
+                for t in batch.loss_list[0]
+            ]
             for batch_loss in batch.loss_list:
                 for idx, t in enumerate(batch_loss):
                     loss[idx] = loss[idx] + t
@@ -462,6 +583,7 @@ class RoundPipe(RoundPipeBase):
             return loss, batch.dump(full_run_config)
         else:
             return loss
+
 
 class AutoRoundPipe(RoundPipeBase):
     """Provides partial RoundPipe's features over an arbitrary model.
@@ -473,13 +595,16 @@ class AutoRoundPipe(RoundPipeBase):
         module_gradient_ready_events: Events signaling gradients copied to cpu.
             This collects all RoundPipe submodules' event lists.
     """
-    def __init__(self,
-                 model: nn.Module,
-                 name: Optional[str] = None,
-                 optim_dtype: Optional[torch.dtype] = None,
-                 **kwargs: Any) -> None:
+
+    def __init__(
+        self,
+        model: nn.Module,
+        name: Optional[str] = None,
+        optim_dtype: Optional[torch.dtype] = None,
+        **kwargs: Any,
+    ) -> None:
         """Initialize AutoRoundPipe over an arbitrary model.
-        
+
         Args:
             model: Module to wrap.
             name: Optional friendly identifier. Defaults to ``file:line``.
@@ -494,8 +619,12 @@ class AutoRoundPipe(RoundPipeBase):
 
         for module in self.model.modules():
             if isinstance(module, RoundPipe):
-                self.module_param_uploaded_events.append(module.layer_param_uploaded_events)
-                self.module_gradient_ready_events.append(module.layer_gradient_ready_events)
+                self.module_param_uploaded_events.append(
+                    module.layer_param_uploaded_events
+                )
+                self.module_gradient_ready_events.append(
+                    module.layer_gradient_ready_events
+                )
                 self.module_gradient_copied.append(module.layer_gradient_copied)
 
         for param in model.parameters():
@@ -526,7 +655,9 @@ class AutoRoundPipe(RoundPipeBase):
                 event.synchronize()
         for layer_copied_events in self.module_gradient_copied:
             for copied_event in layer_copied_events:
-                assert not copied_event.is_set(), "lock_grad must be called before moving grad to optim."
+                assert (
+                    not copied_event.is_set()
+                ), "lock_grad must be called before moving grad to optim."
 
         for param in self.model.parameters():
             param_attr = ParamAttribute.get(param)
@@ -535,13 +666,17 @@ class AutoRoundPipe(RoundPipeBase):
                     if param_attr.optim_grad is not None:
                         param_attr.data_optim.grad = param_attr.optim_grad
                     else:
-                        param_attr.data_optim.grad = torch.empty_like(param_attr.data_optim)
+                        param_attr.data_optim.grad = torch.empty_like(
+                            param_attr.data_optim
+                        )
                     param_attr.data_optim.grad.copy_(param_attr.data_grad)
                 else:
-                    param_attr.data_optim.grad.add_(param_attr.data_grad.to(dtype=param_attr.data_optim.dtype))
+                    param_attr.data_optim.grad.add_(
+                        param_attr.data_grad.to(dtype=param_attr.data_optim.dtype)
+                    )
                 param_attr.optim_grad = param_attr.data_optim.grad
             else:
-                param_attr.optim_grad = None # clear optim_grad reference if no grad
+                param_attr.optim_grad = None  # clear optim_grad reference if no grad
 
         for layer_copied_events in self.module_gradient_copied:
             for copied_event in layer_copied_events:

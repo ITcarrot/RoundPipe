@@ -15,9 +15,10 @@ import importlib
 from ..roundpipe import RoundPipe
 
 SUPPORTED_MODELS = {
-    'function': '.function',
-    'Qwen3ForCausalLM': '.qwen3',
+    "function": ".function",
+    "Qwen3ForCausalLM": ".qwen3",
 }
+
 
 def wrap_model(model: Any, **roundpipe_kwargs: Any) -> RoundPipe:
     """Wrap a supported model with RoundPipe's sequential preset.
@@ -36,13 +37,20 @@ def wrap_model(model: Any, **roundpipe_kwargs: Any) -> RoundPipe:
     """
     model_type = type(model).__name__
     if model_type in SUPPORTED_MODELS:
-        module = importlib.import_module(SUPPORTED_MODELS[model_type], package=__package__)
-        expected_class = getattr(module, 'EXPECTED_MODEL_CLASS')
+        module = importlib.import_module(
+            SUPPORTED_MODELS[model_type], package=__package__
+        )
+        expected_class = getattr(module, "EXPECTED_MODEL_CLASS")
         if not isinstance(model, expected_class):
-            raise NotImplementedError(f'Model class {type(model)} is not an instance of expected class {expected_class}.')
-        wrap_func = getattr(module, 'wrap_model')
+            raise NotImplementedError(
+                f"Model class {type(model)} is not an instance of expected class {expected_class}."
+            )
+        wrap_func = getattr(module, "wrap_model")
         return wrap_func(model, **roundpipe_kwargs)
     else:
-        raise NotImplementedError(f'Model type {model_type} does not have a sequential preset.')
+        raise NotImplementedError(
+            f"Model type {model_type} does not have a sequential preset."
+        )
 
-__all__ = ['wrap_model']
+
+__all__ = ["wrap_model"]
