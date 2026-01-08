@@ -114,7 +114,7 @@ class ModelTimer:
         """Create a context manager to time a backward layer.
 
         Args:
-            layer_idx: Index of the layer being timed.
+            layer_ids: Range of layer indices being timed.
             stream: CUDA stream on which to record events.
 
         Returns:
