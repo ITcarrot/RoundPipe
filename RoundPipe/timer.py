@@ -40,9 +40,9 @@ class LayerTimingContext:
 
 class ModelTimer:
     """Tracks per-layer forward/recompute/backward timing using CUDA events.
-    Before recording any events for a layer, the timer uses model size-based
-    estimates. Once events have been recorded, the timer updates its estimates
-    using an exponential moving average.
+    Before having any records, the timer uses model size-based estimates.
+    After one warm-up run, the timer updates its estimates using an exponential
+    moving average from 0.
     
     Attributes:
         SMOOTH_RATE: Smoothing factor for time estimates.
@@ -50,8 +50,10 @@ class ModelTimer:
             from forward time.
         VERBOSE: Whether to print timing updates.
         n_layers: Number of layers being timed.
-        stage: 0 if no events recorded yet, 1 if first event recorded,
+        stage: 0 if no events recorded yet, 1 if first result dropped,
             2 if time-based estimate has been computed.
+        scale: Scaling factors for each type. Since moving average starts
+            from 0, this tracks the ineffective weight of averages.
         estimate: Smoothed time estimates for each layer and type.
         fwd_events: Recorded forward/recompute events for each layer
             from current iteration.
@@ -65,10 +67,11 @@ class ModelTimer:
     VERBOSE: bool = False
     def __init__(self, layers: List[torch.nn.Module]):
         self.n_layers: int = len(layers)
-        self.stage : Dict[Literal['fwd', 're', 'bwd'], List[Literal[0, 1, 2]]] = {
-            'fwd': [0] * len(layers),
-            're': [0] * len(layers),
-            'bwd': [0] * len(layers),
+        self.stage: Dict[Literal['fwd', 're', 'bwd'],  Literal[0, 1, 2]] = {
+            'fwd': 0, 're': 0, 'bwd': 0,
+        }
+        self.scale: Dict[Literal['fwd', 're', 'bwd'], float] = {
+            'fwd': 0.0, 're': 0.0, 'bwd': 0.0,
         }
         self.estimate: Dict[Literal['fwd', 're', 'bwd'], List[float]] = {
             'fwd': [float(get_model_size(layer)) for layer in layers],
@@ -103,10 +106,7 @@ class ModelTimer:
         """
         start_event = cast(torch.cuda.Event, torch.cuda.Event(enable_timing=True))
         end_event = cast(torch.cuda.Event, torch.cuda.Event(enable_timing=True))
-        if self.stage[action][layer_idx] > 0:
-            self.fwd_events[action][layer_idx].append((start_event, end_event))
-        else:
-            self.stage[action][layer_idx] = 1
+        self.fwd_events[action][layer_idx].append((start_event, end_event))
         return LayerTimingContext(start_event, end_event, stream)
 
     def time_bwd(self, layer_ids: range, stream: torch.cuda.Stream
@@ -122,12 +122,7 @@ class ModelTimer:
         """
         start_event = cast(torch.cuda.Event, torch.cuda.Event(enable_timing=True))
         end_event = cast(torch.cuda.Event, torch.cuda.Event(enable_timing=True))
-        if all(self.stage['bwd'][i] != 0 for i in layer_ids):
-            self.bwd_events.setdefault(layer_ids, []) \
-                           .append((start_event, end_event))
-        else:
-            for i in layer_ids:
-                self.stage['bwd'][i] = 1
+        self.bwd_events.setdefault(layer_ids, []).append((start_event, end_event))
         return LayerTimingContext(start_event, end_event, stream)
 
     def update_times(self):
@@ -169,23 +164,29 @@ class ModelTimer:
             "Mismatched backward event counts across layers"
         # Update estimates with smoothed averages
         for action in self.estimate.keys():
-            for layer_idx in range(self.n_layers):
-                if cnts[action][layer_idx] > 0:
+            if cnts[action][0] > 0:
+                if self.stage[action] == 0:
+                    self.stage[action] = 1
+                    continue  # Drop first result to avoid startup noise
+                if self.stage[action] == 1:
+                    self.stage[action] = 2
+                    self.scale[action] = 1.0
+                    for layer_idx in range(self.n_layers):
+                        self.estimate[action][layer_idx] = 0.0
+
+                self.scale[action] *= self.SMOOTH_RATE
+                for layer_idx in range(self.n_layers):
                     avg_time = sums[action][layer_idx] / cnts[action][layer_idx]
-                    if self.stage[action][layer_idx] < 2:
-                        self.estimate[action][layer_idx] = avg_time
-                        self.stage[action][layer_idx] = 2
-                    else:
-                        self.estimate[action][layer_idx] \
-                            = self.SMOOTH_RATE * self.estimate[action][layer_idx] \
-                            + (1 - self.SMOOTH_RATE) * avg_time
+                    self.estimate[action][layer_idx] \
+                        = self.SMOOTH_RATE * self.estimate[action][layer_idx] \
+                        + (1 - self.SMOOTH_RATE) * avg_time
         if self.VERBOSE:
             for action in self.estimate.keys():
                 if cnts[action][0] > 0:
                     for layer_idx in range(self.n_layers):
                         print(f"Layer {layer_idx} {action}  "
                               f"new record: {sums[action][layer_idx] / cnts[action][layer_idx]:.3f} ms  "
-                              f"new estimate: {self.estimate[action][layer_idx]:.3f} ms")
+                              f"new estimate: {self.estimate[action][layer_idx] / (1.0 - self.scale[action]):.3f} ms")
         # Move current events to pending and clear current
         self.pending_fwd = self.fwd_events
         self.pending_bwd = self.bwd_events
