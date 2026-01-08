@@ -1,5 +1,3 @@
-black==25.12.0  # Formatter version should sync with pre-commit and gh-action config
-clang-format==21.1.8  # Formatter version should sync with pre-commit and gh-action config
 nvtx
 pre-commit
 pyright
