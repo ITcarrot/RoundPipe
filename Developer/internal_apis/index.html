@@ -8360,6 +8360,13 @@ It ensures that all necessary keys are present in the state dictionary</p>
 <p><span class="doc-section-title">Attributes:</span></p>
     <ul>
         <li class="doc-section-item field-body">
+          <b><code><span title="roundpipe.optim_stream.KernelQueueType">KernelQueueType</span></code></b>
+          –
+          <div class="doc-md-description">
+            <p>queue.Queue[Tuple[Callable, Tuple, Dict[str, Any]]]</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
           <b><code><span title="roundpipe.optim_stream.kernel_queue">kernel_queue</span></code></b>
               (<code><span title="roundpipe.optim_stream.KernelQueueType">KernelQueueType</span></code>)
           –
@@ -8369,6 +8376,7 @@ It ensures that all necessary keys are present in the state dictionary</p>
         </li>
         <li class="doc-section-item field-body">
           <b><code><span title="roundpipe.optim_stream.optim_shutdown">optim_shutdown</span></code></b>
+              (<code><span title="bool">bool</span></code>)
           –
           <div class="doc-md-description">
             <p>Flag to signal optimizer stream shutdown.</p>
