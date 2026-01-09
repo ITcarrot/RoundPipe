@@ -4,6 +4,7 @@ from typing_extensions import *
 import traceback
 import functools
 import copy
+import sys
 
 import torch
 from torch.utils.checkpoint import _get_autocast_kwargs
@@ -319,7 +320,8 @@ def run_forward(
                 with thread_exception_print_lock:
                     traceback.print_exc()
                     print(
-                        f"The above error occurred in {model.name} layer {layer_id} during forward pass."
+                        f"The above error occurred in {model.name} layer {layer_id} during forward pass.",
+                        file=sys.stderr,
                     )
                 raise SystemExit(1)
         batch.flatten_states[batch_idx], batch.flatten_specs[batch_idx] = tree_flatten(
@@ -427,7 +429,8 @@ def run_backward(
                     with thread_exception_print_lock:
                         traceback.print_exc()
                         print(
-                            f"The above error occurred in {model.name} layer {layer_id} during recomputation in backward pass."
+                            f"The above error occurred in {model.name} layer {layer_id} during recomputation in backward pass.",
+                            file=sys.stderr,
                         )
                     raise SystemExit(1)
 
@@ -452,13 +455,10 @@ def run_backward(
             with thread_exception_print_lock:
                 traceback.print_exc()
                 print(
-                    f"The above error occurred in {model.name} layers {layer_ids} during backward pass."
-                )
-                print(
-                    f"Outputs requiring grad: {[out.shape for out in outputs_requires_grad]}"
-                )
-                print(
-                    f"Provided gradients: {[grad.shape if isinstance(grad, torch.Tensor) else type(grad) for grad in outputs_grad]}"
+                    f"The above error occurred in {model.name} layers {layer_ids} during backward pass.\n"
+                    f"Outputs requiring grad: {[out.shape for out in outputs_requires_grad]}\n"
+                    f"Provided gradients: {[grad.shape if isinstance(grad, torch.Tensor) else type(grad) for grad in outputs_grad]}",
+                    file=sys.stderr,
                 )
             raise SystemExit(1)
     flatten_grad_inputs_gpu = [
@@ -549,7 +549,8 @@ def run_forward_backward(
                 with thread_exception_print_lock:
                     traceback.print_exc()
                     print(
-                        f"The above error occurred in {model.name} layer {layer_id} during forward pass."
+                        f"The above error occurred in {model.name} layer {layer_id} during forward pass.",
+                        file=sys.stderr,
                     )
                 raise SystemExit(1)
 
@@ -594,7 +595,8 @@ def run_forward_backward(
             with thread_exception_print_lock:
                 traceback.print_exc()
                 print(
-                    f"The above error occurred in {model.name} layers {layer_ids} during backward pass."
+                    f"The above error occurred in {model.name} layers {layer_ids} during backward pass.",
+                    file=sys.stderr,
                 )
             raise SystemExit(1)
     flatten_grad_inputs_gpu = [

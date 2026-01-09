@@ -1,6 +1,7 @@
 """Optimizer execute stream and related functions.
 
 Attributes:
+    KernelQueueType: queue.Queue[Tuple[Callable, Tuple, Dict[str, Any]]]
     kernel_queue: Queue of optimizer kernel tasks.
     optim_shutdown: Flag to signal optimizer stream shutdown.
     optim_active: Lock to indicate if the optimizer stream is active.
@@ -24,7 +25,7 @@ if sys.version_info >= (3, 9):
 else:
     KernelQueueType = queue.Queue
 kernel_queue: KernelQueueType = queue.Queue()
-optim_shutdown = False
+optim_shutdown: bool = False
 optim_active: _thread.LockType = threading.Lock()
 
 

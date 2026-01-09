@@ -2,6 +2,7 @@
 
 from typing_extensions import *
 import copy
+import sys
 
 import torch
 import torch.nn as nn
@@ -162,10 +163,9 @@ def wrap_model_to_roundpipe(
             )
             if use_sequential_preset is None:
                 print(
-                    f'[INFO] Replace model "{name}" of type {model.__class__.__name__} with a sequential preset from RoundPipe.models'
-                )
-                print(
-                    f"[INFO] If this is not expected, please call wrap_model_to_roundpipe with use_sequential_preset=False or rename the model class to avoid conflicts."
+                    f'[INFO] Replace model "{name}" of type {model.__class__.__name__} with a sequential preset from RoundPipe.models\n'
+                    f"[INFO] If this is not expected, please call wrap_model_to_roundpipe with use_sequential_preset=False or rename the model class to avoid conflicts.",
+                    file=sys.stderr,
                 )
             return model
     except NotImplementedError:

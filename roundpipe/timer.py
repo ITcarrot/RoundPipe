@@ -212,7 +212,8 @@ class ModelTimer:
                         print(
                             f"Layer {layer_idx} {action}  "
                             f"new record: {sums[action][layer_idx] / cnts[action][layer_idx]:.3f} ms  "
-                            f"new estimate: {self.estimate[action][layer_idx] / (1.0 - self.scale[action]):.3f} ms"
+                            f"new estimate: {self.estimate[action][layer_idx] / (1.0 - self.scale[action]):.3f} ms",
+                            file=sys.stderr,
                         )
         # Move current events to pending and clear current
         self.pending_fwd = self.fwd_events

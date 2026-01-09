@@ -100,10 +100,10 @@ def print_trimmed_traceback(frame: Optional[types.FrameType]):
 def dump_all_active_threads():
     """Print trimmed stack traces for all currently active RoundPipe threads."""
     cur_frames = sys._current_frames()
-    print("\n=== Dumping all active RoundPipe threads ===")
+    print("\n=== Dumping all active RoundPipe threads ===", file=sys.stderr)
     for t in roundpipe_threads:
         if t.is_active and t.ident is not None:
-            print(f"\n--- Thread: {t.name} (id={t.ident}) ---")
+            print(f"\n--- Thread: {t.name} (id={t.ident}) ---", file=sys.stderr)
             print_trimmed_traceback(cur_frames[t.ident])
-            print("")
-    print("=== End dumping all active RoundPipe threads ===\n")
+            print("", file=sys.stderr)
+    print("=== End dumping all active RoundPipe threads ===\n", file=sys.stderr)
