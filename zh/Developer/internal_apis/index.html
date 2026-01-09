@@ -2894,6 +2894,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#roundpipe.utils.get_call_location" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_call_location
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#roundpipe.utils.get_model_size" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5194,6 +5205,17 @@
   
     <nav class="md-nav" aria-label=" utils">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#roundpipe.utils.get_call_location" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_call_location
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#roundpipe.utils.get_model_size" class="md-nav__link">
@@ -7553,7 +7575,7 @@ unmodified.</p>
     <ul>
         <li class="doc-section-item field-body">
             <b><code>optimizer</code></b>
-              (<code><span title="torch.optim.Optimizer">Optimizer</span></code>)
+              (<code><span title="torch.optim.optimizer.Optimizer">Optimizer</span></code>)
           –
           <div class="doc-md-description">
             <p>Optimizer that applies the gradients.</p>
@@ -7622,7 +7644,7 @@ launched and synchronized on the optimizer stream.</p>
     <ul>
         <li class="doc-section-item field-body">
             <b><code>optimizer</code></b>
-              (<code><span title="torch.optim.Optimizer">Optimizer</span></code>)
+              (<code><span title="torch.optim.optimizer.Optimizer">Optimizer</span></code>)
           –
           <div class="doc-md-description">
             <p>Optimizer that owns the gradients to be unscaled.</p>
@@ -7961,7 +7983,7 @@ all parameters in all groups should be named</p>
         </li>
         <li class="doc-section-item field-body">
             <b><code>betas</code></b>
-              (<code><span title="tuple">tuple</span>[<span title="Union">Union</span>[<span title="float">float</span>, <span title="torch.Tensor">Tensor</span>], <span title="Union">Union</span>[<span title="float">float</span>, <span title="torch.Tensor">Tensor</span>]]</code>, default:
+              (<code><span title="Tuple">Tuple</span>[<span title="Union">Union</span>[<span title="float">float</span>, <span title="torch.Tensor">Tensor</span>], <span title="Union">Union</span>[<span title="float">float</span>, <span title="torch.Tensor">Tensor</span>]]</code>, default:
                   <code>(0.9, 0.999)</code>
 )
           –
@@ -8088,7 +8110,7 @@ It ensures that all necessary keys are present in the state dictionary</p>
     <ul>
         <li class="doc-section-item field-body">
             <b><code>state</code></b>
-              (<code><span title="dict">dict</span>[<span title="str">str</span>, <span title="Any">Any</span>]</code>)
+              (<code><span title="Dict">Dict</span>[<span title="str">str</span>, <span title="Any">Any</span>]</code>)
           –
           <div class="doc-md-description">
             <p>The state dictionary to set.</p>
@@ -8182,7 +8204,7 @@ It ensures that all necessary keys are present in the state dictionary</p>
     <ul>
         <li class="doc-section-item field-body">
           <b><code><span title="roundpipe.optim.optim_builder.loaded_optim_functions">loaded_optim_functions</span></code></b>
-              (<code><span title="dict">dict</span>[<span title="str">str</span>, <span title="Callable">Callable</span>]</code>)
+              (<code><span title="Dict">Dict</span>[<span title="str">str</span>, <span title="Callable">Callable</span>]</code>)
           –
           <div class="doc-md-description">
             <p>A dictionary caching loaded optimizer functions.</p>
@@ -8341,7 +8363,7 @@ It ensures that all necessary keys are present in the state dictionary</p>
     <ul>
         <li class="doc-section-item field-body">
           <b><code><span title="roundpipe.optim_stream.kernel_queue">kernel_queue</span></code></b>
-              (<code><span title="queue.Queue">Queue</span>[<span title="Tuple">Tuple</span>[<span title="Callable">Callable</span>, <span title="Tuple">Tuple</span>, <span title="Dict">Dict</span>[<span title="str">str</span>, <span title="Any">Any</span>]]]</code>)
+              (<code><span title="roundpipe.optim_stream.KernelQueueType">KernelQueueType</span></code>)
           –
           <div class="doc-md-description">
             <p>Queue of optimizer kernel tasks.</p>
@@ -9936,7 +9958,7 @@ and redirect to optim_named_parameters under optimizer context.</p>
 <p><span class="doc-section-title">Yields:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><span title="tuple">tuple</span>[<span title="str">str</span>, <span title="torch.Tensor">Tensor</span>]</code>
+              <code><span title="Tuple">Tuple</span>[<span title="str">str</span>, <span title="torch.Tensor">Tensor</span>]</code>
           –
           <div class="doc-md-description">
             <p>Tuples of parameter names and their optimizer-ready tensors.</p>
@@ -13801,6 +13823,49 @@ externally.</p>
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="roundpipe.utils.get_call_location" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">get_call_location</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Get the call location in 'filename:lineno' format.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>depth</code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>The depth in the call stack to inspect.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="str">str</span></code>
+          –
+          <div class="doc-md-description">
+            <p>A string representing the call location.</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-function">
 
