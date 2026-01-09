@@ -1,7 +1,6 @@
 """Utilities that wrap user models with RoundPipe sequential presets."""
 
 from typing_extensions import *
-import traceback
 import copy
 
 import torch
@@ -15,7 +14,7 @@ except ImportError:
 from .models import wrap_model
 from .roundpipe import RoundPipe, AutoRoundPipe
 from .run_config import RoundPipeRunConfig
-from .utils import get_model_size
+from .utils import get_model_size, get_call_location
 
 
 def wrap_model_recursive(
@@ -154,8 +153,7 @@ def wrap_model_to_roundpipe(
             but no preset exists for the model type.
     """
     if name is None:
-        filename, lineno, _, _ = traceback.extract_stack()[-3]
-        name = f'{filename.split("/")[-1]}:{lineno}'
+        name = get_call_location(1)
 
     try:
         if use_sequential_preset is None or use_sequential_preset:

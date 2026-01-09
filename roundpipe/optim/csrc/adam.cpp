@@ -88,7 +88,12 @@ void adam(vector<Tensor> params, vector<Tensor> grads, vector<Tensor> exp_avg,
     }
 }
 
-PYBIND11_MODULE(TORCH_EXTENSION_NAME, m, py::mod_gil_not_used()) {
+#if PYBIND11_VERSION_HEX >= 0x020D0000 // pybind11 >= 2.13
+PYBIND11_MODULE(TORCH_EXTENSION_NAME, m, py::mod_gil_not_used())
+#else
+PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
+#endif
+{
     m.def("adam", &adam, py::call_guard<py::gil_scoped_release>(),
           "Adam optimizer step implementation in C++");
 }

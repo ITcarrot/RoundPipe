@@ -5,6 +5,7 @@ from typing_extensions import *
 import threading
 
 import torch
+from torch.optim.optimizer import Optimizer
 
 from .optim_stream import on_optim_stream, launch_optim_kernel, synchronize_optim
 
@@ -92,9 +93,9 @@ class GradScaler:
     @overload
     def scale(self, outputs: torch.Tensor) -> torch.Tensor: ...
     @overload
-    def scale(self, outputs: list[torch.Tensor]) -> list[torch.Tensor]: ...
+    def scale(self, outputs: List[torch.Tensor]) -> List[torch.Tensor]: ...
     @overload
-    def scale(self, outputs: tuple[torch.Tensor, ...]) -> tuple[torch.Tensor, ...]: ...
+    def scale(self, outputs: Tuple[torch.Tensor, ...]) -> Tuple[torch.Tensor, ...]: ...
     @overload
     def scale(self, outputs: Iterable[torch.Tensor]) -> Iterable[torch.Tensor]: ...
     def scale(
@@ -117,7 +118,7 @@ class GradScaler:
         else:
             return self.scale_scaler.scale(outputs)
 
-    def unscale_(self, optimizer: torch.optim.Optimizer) -> None:
+    def unscale_(self, optimizer: Optimizer) -> None:
         """
         Divides ("unscales") the optimizer's gradient tensors by the scale factor.
         `unscale_` is optional, serving cases where you need to modify or inspect
@@ -134,9 +135,7 @@ class GradScaler:
             return
         self._launch_kernel(self.main_scaler.unscale_, True, optimizer)
 
-    def step(
-        self, optimizer: torch.optim.Optimizer, *args: Any, **kwargs: Any
-    ) -> Optional[float]:
+    def step(self, optimizer: Optimizer, *args: Any, **kwargs: Any) -> Optional[float]:
         """Invoke ``unscale_(optimizer)`` followed by parameter update, if gradients are not infs/NaN.
 
         `step` carries out the following two operations:

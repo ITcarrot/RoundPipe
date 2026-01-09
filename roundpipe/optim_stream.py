@@ -9,6 +9,7 @@ Attributes:
 
 from typing_extensions import *
 
+import sys
 import queue
 import threading
 import _thread
@@ -18,7 +19,11 @@ import torch
 
 from .threads import RoundPipeThread
 
-kernel_queue: queue.Queue[Tuple[Callable, Tuple, Dict[str, Any]]] = queue.Queue()
+if sys.version_info >= (3, 9):
+    KernelQueueType = queue.Queue[Tuple[Callable, Tuple, Dict[str, Any]]]
+else:
+    KernelQueueType = queue.Queue
+kernel_queue: KernelQueueType = queue.Queue()
 optim_shutdown = False
 optim_active: _thread.LockType = threading.Lock()
 

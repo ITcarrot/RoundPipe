@@ -17,7 +17,7 @@ SRC_PATH = pathlib.Path(__file__).parent / "csrc"
 CPP_FLAGS = ["-Ofast", "-fopenmp", "-mtune=native", "-march=native"]
 # CPP_FLAGS.append("-fopt-info-vec-all=vec.log")
 
-loaded_optim_functions: dict[str, Callable] = {}
+loaded_optim_functions: Dict[str, Callable] = {}
 
 
 def get_cpu_flags_hash() -> str:

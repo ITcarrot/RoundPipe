@@ -4,4 +4,5 @@
     ],
     "typeCheckingMode": "standard",
     "reportWildcardImportFromLibrary": "none",
+    "reportMissingImports": "warning",
 }

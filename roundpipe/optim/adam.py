@@ -15,7 +15,7 @@ class Adam(Optimizer):
         self,
         params: ParamsT,
         lr: Union[float, torch.Tensor] = 1e-3,
-        betas: tuple[Union[float, torch.Tensor], Union[float, torch.Tensor]] = (
+        betas: Tuple[Union[float, torch.Tensor], Union[float, torch.Tensor]] = (
             0.9,
             0.999,
         ),
@@ -90,7 +90,7 @@ class Adam(Optimizer):
         )
         super().__init__(params, defaults)
 
-    def __setstate__(self, state: dict[str, Any]):
+    def __setstate__(self, state: Dict[str, Any]):
         """Sets the state of the optimizer.
         This method is used when loading a saved optimizer state.
         It ensures that all necessary keys are present in the state dictionary
@@ -219,12 +219,12 @@ class Adam(Optimizer):
 
 
 def adam(
-    params: list[torch.Tensor],
-    grads: list[torch.Tensor],
-    exp_avgs: list[torch.Tensor],
-    exp_avg_sqs: list[torch.Tensor],
-    max_exp_avg_sqs: list[torch.Tensor],
-    state_steps: list[torch.Tensor],
+    params: List[torch.Tensor],
+    grads: List[torch.Tensor],
+    exp_avgs: List[torch.Tensor],
+    exp_avg_sqs: List[torch.Tensor],
+    max_exp_avg_sqs: List[torch.Tensor],
+    state_steps: List[torch.Tensor],
     foreach: Optional[bool] = None,
     capturable: bool = False,
     differentiable: bool = False,

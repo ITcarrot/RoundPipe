@@ -1,7 +1,6 @@
 """The RoundPipe model wrapper and execution runtime."""
 
 from typing_extensions import *
-import traceback
 import copy
 import warnings
 import threading
@@ -24,7 +23,7 @@ from .run import (
 from .run_config import RoundPipeRunConfig, FullRoundPipeRunConfig
 from .scheduler import ModelExecutePlan, backward_schedule_simulator
 from .timer import ModelTimer
-from .utils import get_model_size
+from .utils import get_model_size, get_call_location
 
 
 class RoundPipeBase(nn.Module):
@@ -54,9 +53,8 @@ class RoundPipeBase(nn.Module):
                 as the parameter data type.
         """
         super().__init__()
-        # call stack: beartype -> (Auto)RoundPipe -> beartype -> RoundPipeBase
-        filename, lineno, _, _ = traceback.extract_stack()[-5]
-        self.name: str = name if name else f'{filename.split("/")[-1]}:{lineno}'
+        # call stack: -> (Auto)RoundPipe -> RoundPipeBase
+        self.name: str = name if name else get_call_location(2)
         self.model: nn.Module = model
         self.original_model: Optional[nn.Module] = (
             None  # placeholder for original model if needing its functions
@@ -103,13 +101,13 @@ class RoundPipeBase(nn.Module):
 
     def named_parameters(
         self, prefix: str = "", recurse: bool = True, remove_duplicate: bool = True
-    ) -> Iterator[tuple[str, nn.Parameter]]:
+    ) -> Iterator[Tuple[str, nn.Parameter]]:
         """Iterator over named parameters. Overrides to warn against direct use,
         and redirect to optim_named_parameters under optimizer context.
         """
         if doing_optimizer() and recurse:
             return cast(
-                Iterator[tuple[str, nn.Parameter]],
+                Iterator[Tuple[str, nn.Parameter]],
                 self.optim_named_parameters(prefix, remove_duplicate),
             )
         warnings.warn(
@@ -132,7 +130,7 @@ class RoundPipeBase(nn.Module):
 
     def optim_named_parameters(
         self, prefix: str = "", remove_duplicate: bool = True
-    ) -> Iterator[tuple[str, torch.Tensor]]:
+    ) -> Iterator[Tuple[str, torch.Tensor]]:
         """Iterator over named parameters suitable for optimizer consumption.
 
         Args:

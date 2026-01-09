@@ -1,4 +1,0 @@
-nvtx
-pre-commit
-pyright
-transformers
