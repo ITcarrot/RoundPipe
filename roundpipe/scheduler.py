@@ -18,8 +18,9 @@ else:
     RoundPipe = TypeAliasType("RoundPipe", "roundpipe.roundpipe.RoundPipe")
 
 
-class ModelExecutePlan:
-    """Encodes layer grouping and synchronization for forward/backward.
+class ModelTracker:
+    """Tracks forward and backward execution plans for a RoundPipe model.
+    Contains semaphores to coordinate layer groups execution.
 
     Attributes:
         fwd_plan: List of layer ranges executed during forward.

@@ -21,7 +21,7 @@ from .run import (
     RoundPipeInputBackward,
 )
 from .run_config import RoundPipeRunConfig, FullRoundPipeRunConfig
-from .scheduler import ModelExecutePlan, backward_schedule_simulator
+from .scheduler import ModelTracker, backward_schedule_simulator
 from .timer import ModelTimer
 from .utils import get_model_size, get_call_location
 
@@ -422,11 +422,11 @@ class RoundPipe(RoundPipeBase):
             )
         batch = Batch(args, kwargs, full_run_config)
         self.model_timer.update_times()
-        execute_plan = ModelExecutePlan(self, False)
+        tracker = ModelTracker(self, False)
         run_context = [
             RoundPipeRunContext(
                 self,
-                execute_plan,
+                tracker,
                 full_run_config.requires_grad,
                 i,
                 batch.num_microbatch,
@@ -434,17 +434,17 @@ class RoundPipe(RoundPipeBase):
             )
             for i in range(batch.num_microbatch)
         ]
-        for layer_group_id in range(len(execute_plan.fwd_plan)):
+        for layer_group_id in range(len(tracker.fwd_plan)):
             device = get_next_device()
             device.launch_forward(layer_group_id, batch, run_context)
-        execute_plan.forward_wait_complete(batch.num_microbatch)
+        tracker.forward_wait_complete(batch.num_microbatch)
 
         if any(
             isinstance(tensor, torch.Tensor) and tensor.requires_grad
             for batch_output in batch.flatten_states
             for tensor in batch_output
         ):
-            if len(execute_plan.bwd_plan) == 1:
+            if len(tracker.bwd_plan) == 1:
                 tag = backward_schedule_simulator.get_next_tag()
                 for context in reversed(run_context):
                     tag, output_require_grad_idx, *output_require_grad = cast(
@@ -524,11 +524,11 @@ class RoundPipe(RoundPipeBase):
         ), "train_iter requires gradients to be enabled."
         batch = Batch(input_args, input_kwargs, full_run_config, label)
         self.model_timer.update_times()
-        execute_plan = ModelExecutePlan(self, True)
+        tracker = ModelTracker(self, True)
         run_context = [
             RoundPipeRunContext(
                 self,
-                execute_plan,
+                tracker,
                 full_run_config.requires_grad,
                 i,
                 batch.num_microbatch,
@@ -546,16 +546,16 @@ class RoundPipe(RoundPipeBase):
             torch.Tensor, RoundPipeInputBackward.apply(run_context, *all_inputs)
         )
 
-        for layer_group_id in range(len(execute_plan.fwd_plan)):
+        for layer_group_id in range(len(tracker.fwd_plan)):
             device = get_next_device()
             device.launch_forward(layer_group_id, batch, run_context)
-        execute_plan.forward_wait_complete(batch.num_microbatch)
+        tracker.forward_wait_complete(batch.num_microbatch)
         device = get_next_device()
         device.launch_forward_backward(batch, run_context, loss_fn, return_outputs)
-        for layer_group_id in range(1, len(execute_plan.bwd_plan)):
+        for layer_group_id in range(1, len(tracker.bwd_plan)):
             device = get_next_device()
             device.launch_backward(layer_group_id, run_context)
-        execute_plan.backward_wait_complete(batch.num_microbatch)
+        tracker.backward_wait_complete(batch.num_microbatch)
 
         if input_backward_handle.requires_grad:
             input_backward_handle.backward()

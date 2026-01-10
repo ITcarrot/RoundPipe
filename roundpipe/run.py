@@ -13,7 +13,7 @@ from torch.utils._pytree import tree_unflatten, tree_flatten, TreeSpec
 from .batch import Batch
 from .context import ForwardCtx, RecomputeCtx
 from .profile import annotate
-from .scheduler import ModelExecutePlan
+from .scheduler import ModelTracker
 from .threads import thread_exception_print_lock
 from .transfer import async_h2d, async_d2h, upload_layers, download_layer, free_layer
 
@@ -30,7 +30,7 @@ class RoundPipeRunContext:
 
     Attributes:
         model: The running ``RoundPipe`` instance.
-        execute_plan: Plan describing fwd/bwd ordering.
+        tracker: Tracker describing fwd/bwd ordering across layers.
         enable_grad: Whether to store data for backward pass.
         microbatch_id: Index of the microbatch this context tracks.
         num_microbatches: Total number of microbatches scheduled.
@@ -50,7 +50,7 @@ class RoundPipeRunContext:
     """
 
     model: "RoundPipe"
-    execute_plan: ModelExecutePlan
+    tracker: ModelTracker
     enable_grad: bool
     microbatch_id: int
     num_microbatches: int
@@ -71,7 +71,7 @@ class RoundPipeRunContext:
     def __init__(
         self,
         model: "RoundPipe",
-        execute_plan: ModelExecutePlan,
+        tracker: ModelTracker,
         enable_grad: bool,
         microbatch_id: int,
         num_microbatches: int,
@@ -81,14 +81,14 @@ class RoundPipeRunContext:
 
         Args:
             model: The running ``RoundPipe`` instance.
-            execute_plan: Plan describing fwd/bwd ordering.
+            tracker: Tracker describing fwd/bwd ordering across layers.
             enable_grad: Whether to store data for backward pass.
             microbatch_id: Microbatch index for this context.
             num_microbatches: Total number of microbatches in the batch.
             preserve_rng_state: Whether to snapshot RNG for recomputation.
         """
         self.model = model
-        self.execute_plan = execute_plan
+        self.tracker = tracker
         self.enable_grad = enable_grad
         self.microbatch_id = microbatch_id
         self.num_microbatches = num_microbatches
@@ -122,7 +122,7 @@ class RoundPipeRunContext:
             batch: Batch holding the flattened tensors to snapshot.
             device: Device manager whose streams guard the transfer.
         """
-        if not (self.enable_grad and self.execute_plan.backward_need_input(layer_id)):
+        if not (self.enable_grad and self.tracker.backward_need_input(layer_id)):
             return
 
         self.flatten_inputs[layer_id] = copy.copy(
@@ -278,7 +278,7 @@ def run_forward(
     """
     model = context.model
     batch_idx = context.microbatch_id
-    layer_ids = context.execute_plan.fwd_plan[layer_group_id]
+    layer_ids = context.tracker.fwd_plan[layer_group_id]
     grad_context = torch.enable_grad() if context.enable_grad else torch.no_grad()
     if batch_idx == 0:
         for layer_id in layer_ids:
@@ -288,7 +288,7 @@ def run_forward(
         )
         for layer_id in layer_ids:
             model.layer_param_uploaded_events[layer_id] = finish_event
-    context.execute_plan.forward_wait_for(layer_group_id - 1)
+    context.tracker.forward_wait_for(layer_group_id - 1)
     for layer_id in layer_ids:
         context.save_input(layer_id, batch, device)
         if layer_id == layer_ids[0]:
@@ -346,7 +346,7 @@ def run_forward(
     if batch_idx == context.num_microbatches - 1:
         for layer_id in layer_ids:
             free_layer(model.layers[layer_id], device)
-    context.execute_plan.forward_notify(layer_group_id)
+    context.tracker.forward_notify(layer_group_id)
 
 
 @torch.no_grad()
@@ -379,7 +379,7 @@ def run_backward(
         )
     model = context.model
     batch_idx = context.microbatch_id
-    layer_ids = context.execute_plan.bwd_plan[layer_group_id]
+    layer_ids = context.tracker.bwd_plan[layer_group_id]
     if batch_idx == 0:
         for layer_id in layer_ids:
             model.layer_param_copied[layer_id].wait()
@@ -435,7 +435,7 @@ def run_backward(
                     raise SystemExit(1)
 
     flatten_outputs_gpu, _ = tree_flatten(hidden_state)
-    context.execute_plan.backward_wait_for(layer_group_id - 1)
+    context.tracker.backward_wait_for(layer_group_id - 1)
     flatten_grad_outputs_gpu = async_h2d(
         device, context.output_backward_events, context.grad_states
     )
@@ -482,7 +482,7 @@ def run_backward(
             download_finish_event = cast(torch.cuda.Event, torch.cuda.Event())
             download_finish_event.record(device.downstream)
             model.layer_gradient_ready_events[layer_id] = download_finish_event
-    context.execute_plan.backward_notify(layer_group_id)
+    context.tracker.backward_notify(layer_group_id)
 
 
 @torch.no_grad()
@@ -512,7 +512,7 @@ def run_forward_backward(
     """
     model = context.model
     batch_idx = context.microbatch_id
-    layer_ids = context.execute_plan.bwd_plan[0]
+    layer_ids = context.tracker.bwd_plan[0]
     if batch_idx == 0:
         for layer_id in layer_ids:
             model.layer_param_copied[layer_id].wait()
@@ -620,7 +620,7 @@ def run_forward_backward(
             download_finish_event = cast(torch.cuda.Event, torch.cuda.Event())
             download_finish_event.record(device.downstream)
             model.layer_gradient_ready_events[layer_id] = download_finish_event
-    context.execute_plan.backward_notify(0)
+    context.tracker.backward_notify(0)
 
 
 class RoundPipeBatchedBackward(torch.autograd.Function):
@@ -714,10 +714,10 @@ class RoundPipeBatchedBackward(torch.autograd.Function):
                 ctx.saved_tensors[idx]
             )
 
-        for layer_group_id in range(len(run_contexts[0].execute_plan.bwd_plan)):
+        for layer_group_id in range(len(run_contexts[0].tracker.bwd_plan)):
             device = get_next_device()
             device.launch_backward(layer_group_id, run_contexts)
-        run_contexts[0].execute_plan.backward_wait_complete(len(run_contexts))
+        run_contexts[0].tracker.backward_wait_complete(len(run_contexts))
 
         grad_inputs = [item for context in run_contexts for item in context.grad_states]
         for context in run_contexts:
