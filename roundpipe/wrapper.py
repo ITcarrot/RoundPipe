@@ -119,6 +119,30 @@ def wrap_model_recursive(
         return model
 
 
+@overload
+def wrap_model_to_roundpipe(
+    model: nn.Module,
+    use_sequential_preset: Literal[True],
+    lower_threshold: int = 16 * 1024,
+    upper_threshold: Optional[int] = None,
+    skip_modules: Container[nn.Module] = [],
+    override_config: Dict[nn.Module, RoundPipeRunConfig] = {},
+    model_run_config: RoundPipeRunConfig = RoundPipeRunConfig(),
+    name: Optional[str] = None,
+    **roundpipe_kwargs: Any,
+) -> RoundPipe: ...
+@overload
+def wrap_model_to_roundpipe(
+    model: nn.Module,
+    use_sequential_preset: Optional[bool] = None,
+    lower_threshold: int = 16 * 1024,
+    upper_threshold: Optional[int] = None,
+    skip_modules: Container[nn.Module] = [],
+    override_config: Dict[nn.Module, RoundPipeRunConfig] = {},
+    model_run_config: RoundPipeRunConfig = RoundPipeRunConfig(),
+    name: Optional[str] = None,
+    **roundpipe_kwargs: Any,
+) -> Union[RoundPipe, AutoRoundPipe]: ...
 def wrap_model_to_roundpipe(
     model: nn.Module,
     use_sequential_preset: Optional[bool] = None,
