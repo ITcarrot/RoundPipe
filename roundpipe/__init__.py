@@ -4,12 +4,12 @@ from beartype import BeartypeConf
 from beartype.claw import beartype_this_package
 
 beartype_version = tuple(map(int, version("beartype").split(".")[:2]))
-ENABLE_BEAR = beartype_version >= (0, 22)
+ENABLE_BEAR = beartype_version >= (0, 23)
 if ENABLE_BEAR:
     beartype_this_package(conf=BeartypeConf(violation_type=UserWarning))
 else:
     print(
-        "[info] Upgrade beartype to >= 0.22 can enable runtime type checking for RoundPipe.",
+        "[info] Upgrade beartype to >= 0.23 can enable runtime type checking for RoundPipe.",
         file=sys.stderr,
     )
 

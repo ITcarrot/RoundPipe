@@ -284,7 +284,7 @@ class PinnedUpload(torch.autograd.Function):
     @staticmethod
     def backward(  # pyright: ignore[reportIncompatibleMethodOverride]
         ctx: Any, g: torch.Tensor
-    ) -> Any:
+    ) -> Tuple[torch.Tensor, None]:
         """Move gradients back to pinned host memory.
 
         Args:
@@ -320,7 +320,7 @@ class RegisterBackwardEvent(torch.autograd.Function):
     @staticmethod
     def backward(  # pyright: ignore[reportIncompatibleMethodOverride]
         ctx: Any, grad_outputs: torch.Tensor
-    ) -> Any:
+    ) -> Tuple[torch.Tensor, None]:
         """Synchronize on the recorded event before returning gradients.
 
         Args:

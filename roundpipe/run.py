@@ -66,7 +66,7 @@ class RoundPipeRunContext:
     cpu_rng_states: List[Optional[torch.Tensor]]
     input_backward_events: Sequence[torch.cuda.Event]
     output_backward_events: Sequence[torch.cuda.Event]
-    grad_states: List[Any]
+    grad_states: List[Optional[torch.Tensor]]
 
     def __init__(
         self,
@@ -633,7 +633,7 @@ class RoundPipeBatchedBackward(torch.autograd.Function):
         batch: Batch,
         tag: torch.Tensor,
         *all_inputs: Any,
-    ) -> Any:
+    ) -> Tuple[List[Tuple[int, int]], Unpack[Tuple[torch.Tensor, ...]]]:
         """Prepare shared backward state for all microbatches.
 
         Args:
@@ -682,7 +682,7 @@ class RoundPipeBatchedBackward(torch.autograd.Function):
     @staticmethod
     def backward(  # pyright: ignore[reportIncompatibleMethodOverride]
         ctx: Any, _, *grad_outputs: Any
-    ) -> Any:
+    ) -> Tuple[None, None, None, Unpack[Tuple[Optional[torch.Tensor], ...]]]:
         """Launch backward passes for all microbatches from saved state.
 
         Args:
@@ -735,7 +735,7 @@ class RoundPipeMicrobatchBackward(torch.autograd.Function):
         batch: Batch,
         tag: torch.Tensor,
         *all_inputs: Any,
-    ) -> Any:
+    ) -> Tuple[torch.Tensor, List[int], Unpack[Tuple[torch.Tensor, ...]]]:
         """Prepare backward state for a single microbatch.
 
         Args:
@@ -786,7 +786,7 @@ class RoundPipeMicrobatchBackward(torch.autograd.Function):
     @staticmethod
     def backward(  # pyright: ignore[reportIncompatibleMethodOverride]
         ctx: Any, device_id: torch.Tensor, _, *grad_outputs: Any
-    ) -> Any:
+    ) -> Tuple[None, None, torch.Tensor, Unpack[Tuple[Optional[torch.Tensor], ...]]]:
         """Kick off backward recomputation for a single microbatch.
 
         Args:
@@ -849,7 +849,7 @@ class RoundPipeInputBackward(torch.autograd.Function):
     @staticmethod
     def backward(
         ctx: Any, *grad_outputs: Any
-    ) -> Any:  # pyright: ignore[reportIncompatibleMethodOverride]
+    ) -> Tuple[None, Unpack[Tuple[Optional[torch.Tensor], ...]]]:
         """Return gradients captured in each ``RoundPipeRunContext``.
 
         Args:
