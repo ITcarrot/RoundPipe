@@ -21,7 +21,7 @@ from .run import (
     RoundPipeInputBackward,
 )
 from .run_config import RoundPipeRunConfig, FullRoundPipeRunConfig
-from .scheduler import ModelTracker, backward_schedule_simulator
+from .scheduler import ModelExecutePlan, ModelTracker, backward_schedule_simulator
 from .timer import ModelTimer
 from .utils import get_model_size, get_call_location
 
@@ -422,7 +422,16 @@ class RoundPipe(RoundPipeBase):
             )
         batch = Batch(args, kwargs, full_run_config)
         self.model_timer.update_times()
-        tracker = ModelTracker(self, False)
+        execute_plan = full_run_config.execute_plan
+        if execute_plan is None:
+            execute_plan = ModelExecutePlan.auto(
+                "train" if full_run_config.requires_grad else "infer", self
+            )
+        execute_plan.check_valid(
+            self.num_layers,
+            "train" if full_run_config.requires_grad else "infer",
+        )
+        tracker = ModelTracker(execute_plan)
         run_context = [
             RoundPipeRunContext(
                 self,
@@ -524,7 +533,11 @@ class RoundPipe(RoundPipeBase):
         ), "train_iter requires gradients to be enabled."
         batch = Batch(input_args, input_kwargs, full_run_config, label)
         self.model_timer.update_times()
-        tracker = ModelTracker(self, True)
+        execute_plan = full_run_config.execute_plan
+        if execute_plan is None:
+            execute_plan = ModelExecutePlan.auto("fused", self)
+        execute_plan.check_valid(self.num_layers, "fused")
+        tracker = ModelTracker(execute_plan)
         run_context = [
             RoundPipeRunContext(
                 self,

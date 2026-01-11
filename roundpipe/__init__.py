@@ -23,6 +23,7 @@ from .grad_scaler import GradScaler
 from . import optim
 from .roundpipe import RoundPipe
 from .run_config import RoundPipeRunConfig
+from .scheduler import ModelExecutePlan
 from .wrapper import wrap_model_to_roundpipe
 
 __version__ = "0.1.0"
@@ -35,5 +36,6 @@ __all__ = [
     "optim",
     "RoundPipe",
     "RoundPipeRunConfig",
+    "ModelExecutePlan",
     "wrap_model_to_roundpipe",
 ]

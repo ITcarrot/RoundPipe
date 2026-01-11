@@ -7,6 +7,7 @@ Attributes:
 from typing_extensions import *
 import threading
 import heapq
+import copy
 
 import torch
 
@@ -16,6 +17,228 @@ if TYPE_CHECKING:
     from .roundpipe import RoundPipe
 else:
     RoundPipe = TypeAliasType("RoundPipe", "roundpipe.roundpipe.RoundPipe")
+
+
+class ModelExecutePlan:
+    """Execution plans for a RoundPipe model.
+
+    Attributes:
+        fwd_plan: List of layers execution orders during forward.
+        bwd_plan: List of layers execution orders during backward.
+    """
+
+    def __init__(self) -> None:
+        """Initialize empty execution plans."""
+        self.fwd_plan: List[range] = []
+        self.bwd_plan: List[range] = []
+
+    def __repr__(self) -> str:
+        """Return string representation of the execution plans."""
+        return f"Fwd Plan: {self.fwd_plan}, Bwd Plan: {self.bwd_plan}"
+
+    def check_valid(
+        self, num_layers: int, run_type: Literal["infer", "train", "fused"]
+    ) -> None:
+        """Validate that the execution plans cover all layers exactly once.
+
+        Args:
+            num_layers: Total number of layers in the model.
+            run_type: Type of model run.
+
+        Raises:
+            ValueError: If the plans do not cover all layers exactly once.
+        """
+        cur_fwd_layer = -1
+        for layer_range in self.fwd_plan:
+            if len(layer_range) == 0:
+                raise ValueError("Empty layer range in forward plan")
+            for layer_id in layer_range:
+                if layer_id != cur_fwd_layer + 1:
+                    raise ValueError(
+                        f"Specify {layer_id} after {cur_fwd_layer} in forward plan"
+                    )
+                cur_fwd_layer = layer_id
+        if run_type in ("infer", "train"):
+            if cur_fwd_layer != num_layers - 1:
+                raise ValueError(
+                    f"Forward plan does not cover all layers, ending at {cur_fwd_layer}"
+                )
+        if run_type == "infer":
+            return
+        cur_bwd_layer = -1
+        for layer_range in reversed(self.bwd_plan):
+            if len(layer_range) == 0:
+                raise ValueError("Empty layer range in backward plan")
+            for layer_id in layer_range:
+                if layer_id != cur_bwd_layer + 1:
+                    raise ValueError(
+                        f"Specify {layer_id} before {cur_bwd_layer} in backward plan"
+                    )
+                cur_bwd_layer = layer_id
+        if run_type == "train" and cur_bwd_layer != num_layers - 1:
+            raise ValueError(
+                f"Backward plan does not cover all layers, ending at {cur_bwd_layer}"
+            )
+        if run_type == "fused" and cur_fwd_layer + 1 != self.bwd_plan[0][0]:
+            raise ValueError(
+                f"Fused plan does not cover all layers, "
+                f"mismatch forward between {cur_fwd_layer} and {self.bwd_plan[0][0]}"
+            )
+
+    @overload
+    @classmethod
+    def auto(
+        cls,
+        run_type: Literal["infer", "train", "fused"],
+        model: "RoundPipe",
+        /,
+        *,
+        min_stages: int = torch.cuda.device_count(),
+        upper_threshold: float = 1.5,
+    ) -> "ModelExecutePlan": ...
+    @overload
+    @classmethod
+    def auto(
+        cls,
+        run_type: Literal["infer", "train", "fused"],
+        model1: "RoundPipe",
+        model2: "RoundPipe",
+        /,
+        *models: "RoundPipe",
+        min_stages: int = torch.cuda.device_count(),
+        upper_threshold: float = 1.5,
+    ) -> List["ModelExecutePlan"]: ...
+    @classmethod
+    def auto(
+        cls,
+        run_type: Literal["infer", "train", "fused"],
+        /,
+        *models: "RoundPipe",
+        min_stages: int = torch.cuda.device_count(),
+        upper_threshold: float = 1.1,
+    ) -> Union["ModelExecutePlan", List["ModelExecutePlan"]]:
+        """Generate automatic execution plans based on model timings.
+
+        Args:
+            run_type: Type of model run.
+            models: One or more ``RoundPipe`` models to base the plans on.
+            min_stages: Minimum number of pipeline stages to use. This is
+                a hint for the planner, and the actual number of stages could
+                be lower depending on the model size.
+            upper_threshold: Upper threshold for stage balancing. This limits
+                the maximum allowed ratio between stages and the slowest layer.
+                Increasing this value provides more flexibility in balancing
+                stages at the cost of consuming more GPU memory.
+
+        Returns:
+            List of ``ModelExecutePlan`` instances, one per model.
+        """
+        if len(models) == 0:
+            return []
+        n_models = len(models)
+
+        workloads: List[Tuple[List[float], List[float]]] = []
+        max_layer_workload = 0.0
+        for model in models:
+            src, fwd_times, bwd_times = model.model_timer.get_estimate(run_type)
+            if src == "memory" and len(models) > 1:
+                return [
+                    cls.auto(
+                        run_type,
+                        model,
+                        min_stages=min_stages,
+                        upper_threshold=upper_threshold,
+                    )
+                    for model in models
+                ]
+            max_layer_workload = max(max_layer_workload, *fwd_times, *bwd_times)
+            workloads.append((fwd_times, bwd_times))
+
+        stage_workload_candidates: List[float] = []
+        for model_times in workloads:
+            for run_times in model_times:
+                for start in range(len(run_times)):
+                    prefix_sum = 0.0
+                    for end in range(start, len(run_times)):
+                        prefix_sum += run_times[end]
+                        if prefix_sum > max_layer_workload * upper_threshold:
+                            break
+                        if prefix_sum >= max_layer_workload:
+                            stage_workload_candidates.append(prefix_sum)
+        stage_workload_candidates.sort()
+
+        min_cost = float("inf")
+        best_plan: List[ModelExecutePlan] = []
+        for max_stage_workload in stage_workload_candidates:
+            total_stages = 0
+            cur_plans: List[ModelExecutePlan] = []
+            for idx, (fwd_times, bwd_times) in enumerate(workloads):
+                plan = ModelExecutePlan()
+                if run_type == "infer":
+                    reversed_plan: List[List[int]] = []
+                    stage_sum = float("inf")
+                    for layer_id in range(len(fwd_times) - 1, -1, -1):
+                        if stage_sum + fwd_times[layer_id] > max_stage_workload:
+                            reversed_plan.append([])
+                            stage_sum = 0.0
+                        reversed_plan[-1].append(layer_id)
+                        stage_sum += fwd_times[layer_id]
+                    for reversed_stage in reversed(reversed_plan):
+                        plan.fwd_plan.append(
+                            range(reversed_stage[-1], reversed_stage[0] + 1)
+                        )
+                else:
+                    layer_end = len(fwd_times)
+                    if run_type == "fused" and idx == n_models - 1:
+                        fused_stage_sum = 0.0
+                        for layer_id in range(len(bwd_times) - 1, -1, -1):
+                            if (
+                                fused_stage_sum + bwd_times[layer_id]
+                                > max_stage_workload
+                            ):
+                                break
+                            fused_stage_sum += bwd_times[layer_id]
+                            layer_end = layer_id
+
+                    reversed_plan: List[List[int]] = []
+                    stage_sum = float("inf")
+                    for layer_id in range(layer_end - 1, -1, -1):
+                        if stage_sum + fwd_times[layer_id] > max_stage_workload:
+                            reversed_plan.append([])
+                            stage_sum = 0.0
+                        reversed_plan[-1].append(layer_id)
+                        stage_sum += fwd_times[layer_id]
+                    for reversed_stage in reversed(reversed_plan):
+                        plan.fwd_plan.append(
+                            range(reversed_stage[-1], reversed_stage[0] + 1)
+                        )
+
+                    reversed_plan = []
+                    stage_sum = float("inf")
+                    for layer_id in range(layer_end):
+                        if stage_sum + bwd_times[layer_id] > max_stage_workload:
+                            reversed_plan.append([])
+                            stage_sum = 0.0
+                        reversed_plan[-1].append(layer_id)
+                        stage_sum += bwd_times[layer_id]
+                    if run_type == "fused" and idx == n_models - 1:
+                        plan.bwd_plan.append(range(layer_end, len(bwd_times)))
+                    for stage in reversed(reversed_plan):
+                        plan.bwd_plan.append(range(stage[0], stage[-1] + 1))
+
+                cur_plans.append(plan)
+                total_stages += len(plan.fwd_plan) + len(plan.bwd_plan)
+            cur_cost = max(total_stages, min_stages) * max_stage_workload
+            if cur_cost < min_cost:
+                min_cost = cur_cost
+                best_plan = cur_plans
+
+        for idx, (model, plan) in enumerate(zip(models, best_plan)):
+            actual_type = run_type
+            if actual_type == "fused" and idx != n_models - 1:
+                actual_type = "train"
+            plan.check_valid(model.num_layers, actual_type)
+        return best_plan[0] if len(best_plan) == 1 else best_plan
 
 
 class ModelTracker:
@@ -29,23 +252,14 @@ class ModelTracker:
         bwd_sem: Per-layer semaphores used to gate backward progress.
     """
 
-    def __init__(self, model: "RoundPipe", fuse_fwd_bwd: bool) -> None:
-        """Initialize execution plans based on the model configuration.
+    def __init__(self, execute_plan: ModelExecutePlan) -> None:
+        """Initialize ModelTracker based on the model configuration.
 
         Args:
-            model: ``RoundPipe`` wrapper whose layers are being scheduled.
-            fuse_fwd_bwd: Whether forward/backward stages are fused.
+            execute_plan: ``ModelExecutePlan`` instance with execution plans.
         """
-        self.fwd_plan: List[range] = []
-        self.bwd_plan: List[range] = []
-
-        if fuse_fwd_bwd:
-            self.fwd_plan = [range(i, i + 1) for i in range(model.num_layers - 1)]
-            self.bwd_plan = [range(i, i + 1) for i in reversed(range(model.num_layers))]
-        else:
-            self.fwd_plan = [range(i, i + 1) for i in range(model.num_layers)]
-            self.bwd_plan = list(reversed(self.fwd_plan))
-
+        self.fwd_plan: List[range] = copy.deepcopy(execute_plan.fwd_plan)
+        self.bwd_plan: List[range] = copy.deepcopy(execute_plan.bwd_plan)
         self.fwd_sem: List[threading.Semaphore] = [
             threading.Semaphore(0) for _ in self.fwd_plan
         ]

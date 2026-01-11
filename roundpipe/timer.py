@@ -56,9 +56,11 @@ class ModelTimer:
         VERBOSE: Whether to print timing updates.
         n_layers: Number of layers being timed.
         stage: 0 if no events recorded yet, 1 if first result dropped,
-            2 if time-based estimate has been computed.
+            2 if time-based estimate has been computed. Stage of recompute
+            and backward should be the same.
         scale: Scaling factors for each type. Since moving average starts
-            from 0, this tracks the ineffective weight of averages.
+            from 0, this tracks the ineffective weight of averages. Scale
+            of recompute and backward should be the same.
         estimate: Smoothed time estimates for each layer and type.
         fwd_events: Recorded forward/recompute events for each layer
             from current iteration.
@@ -146,6 +148,36 @@ class ModelTimer:
         self.bwd_events.setdefault(layer_ids, []).append((start_event, end_event))
         return LayerTimingContext(start_event, end_event, stream)
 
+    def get_estimate(
+        self, run_type: Literal["infer", "train", "fused"]
+    ) -> Tuple[Literal["time", "memory"], List[float], List[float]]:
+        """Get current time and memory estimates for all layers.
+
+        Args:
+            run_type: Type of model run.
+
+        Returns:
+            Source of estimates
+            List of per-layer forward time estimates (ms / bytes)
+            List of per-layer backward time estimates (ms / bytes)
+        """
+        if run_type == "infer":
+            return (
+                "time" if self.stage["fwd"] == 2 else "memory",
+                [t / (1.0 - self.scale["fwd"]) for t in self.estimate["fwd"]],
+                [],
+            )
+        else:
+            return (
+                "time" if self.stage["bwd"] == 2 else "memory",
+                [t / (1.0 - self.scale["re"]) for t in self.estimate["re"]],
+                [
+                    (self.estimate["re"][i] + self.estimate["bwd"][i])
+                    / (1.0 - self.scale["re"])
+                    for i in range(self.n_layers)
+                ],
+            )
+
     def update_times(self):
         """Update time estimates based on recorded events."""
         sums = {
@@ -186,6 +218,7 @@ class ModelTimer:
         assert all(
             cnts["bwd"][i] == cnts["bwd"][0] for i in range(self.n_layers)
         ), "Mismatched backward event counts across layers"
+        assert cnts["re"] == cnts["bwd"], "Mismatched recompute/backward event counts"
         # Update estimates with smoothed averages
         for action in self.estimate.keys():
             if cnts[action][0] > 0:

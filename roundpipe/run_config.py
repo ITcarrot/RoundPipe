@@ -1,8 +1,11 @@
 """Runtime configuration objects shared across RoundPipe components."""
 
 from typing_extensions import *
+import copy
 
 import torch
+
+from .scheduler import ModelExecutePlan
 
 
 class RoundPipeRunConfig:
@@ -23,19 +26,30 @@ class RoundPipeRunConfig:
         ] = None,
         split_label: Union[Any, Callable[[Any, int], List[Any]], None] = None,
         merge_output: Union[Any, Callable[[List[Any]], Any], bool, None] = None,
+        execute_plan: Optional[ModelExecutePlan] = None,
     ) -> None:
         """
         Configuration for running RoundPipe models.
-        User may specify model-level configuration when initializing RoundPipe, and/or function-level configuration when calling forward().
+        User may specify model-level configuration when initializing RoundPipe,
+        and/or function-level configuration when calling forward().
 
         Parameters:
-            requires_grad: Whether to enable gradient computation. If None, defaults to the global setting.
-            output_device: The device where the output tensors will be placed. If None, defaults to CPU.
-            preserve_rng_state: Whether to preserve the random number generator state. If None, defaults to True.
-            num_microbatch: The number of microbatches to split the input into. If None, defaults to the number of available CUDA devices plus one.
-            split_input (-): Specifies how to split input arguments into microbatches. If None, defaults to automatic splitting.
-            split_label (-): Specifies how to split labels into microbatches. If None, defaults to automatic splitting.
-            merge_output (-): Specifies how to merge output microbatches back into a single output. If None, defaults to automatic merging.
+            requires_grad: Whether to enable gradient computation.
+                If None, defaults to the global setting.
+            output_device: The device where the output tensors will be placed.
+                If None, defaults to CPU.
+            preserve_rng_state: Whether to preserve the random number generator state.
+                If None, defaults to True.
+            num_microbatch: The number of microbatches to split the input into.
+                If None, defaults to the number of available CUDA devices plus one.
+            split_input (-): Specifies how to split input arguments into microbatches.
+                If None, defaults to automatic splitting.
+            split_label (-): Specifies how to split labels into microbatches.
+                If None, defaults to automatic splitting.
+            merge_output (-): Specifies how to merge output microbatches back into a single output.
+                If None, defaults to automatic merging.
+            execute_plan: An optional ModelExecutePlan to dictate execution strategy.
+                If None, defaults to auto tuned execution.
 
         """
         self.requires_grad = requires_grad
@@ -45,6 +59,7 @@ class RoundPipeRunConfig:
         self.split_input = split_input
         self.split_label = split_label
         self.merge_output = merge_output
+        self.execute_plan = copy.deepcopy(execute_plan)
 
     def __str__(self) -> str:
         string = f"RoundPipeRunConfig("
@@ -62,6 +77,8 @@ class RoundPipeRunConfig:
             string += f"split_label={self.split_label}, "
         if self.merge_output is not None:
             string += f"merge_output={self.merge_output}, "
+        if self.execute_plan is not None:
+            string += f"execute_plan={self.execute_plan}, "
         return string[:-2] + ")" if string.endswith(", ") else string + ")"
 
     def __repr__(self) -> str:
@@ -139,4 +156,9 @@ class FullRoundPipeRunConfig:
             function_run_config.merge_output
             if function_run_config.merge_output is not None
             else model_run_config.merge_output
+        )
+        self.execute_plan = (
+            function_run_config.execute_plan
+            if function_run_config.execute_plan is not None
+            else model_run_config.execute_plan
         )
