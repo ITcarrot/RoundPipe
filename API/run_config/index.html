@@ -969,7 +969,7 @@
 
 
 <h2 id="roundpipe.run_config.RoundPipeRunConfig.__init__" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">requires_grad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preserve_rng_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_input</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">merge_output</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">requires_grad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preserve_rng_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_input</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">merge_output</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">execute_plan</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 </h2>
 
@@ -977,7 +977,8 @@
     <div class="doc doc-contents first">
 
         <p>Configuration for running RoundPipe models.
-User may specify model-level configuration when initializing RoundPipe, and/or function-level configuration when calling forward().</p>
+User may specify model-level configuration when initializing RoundPipe,
+and/or function-level configuration when calling forward().</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -989,7 +990,8 @@ User may specify model-level configuration when initializing RoundPipe, and/or f
 )
           –
           <div class="doc-md-description">
-            <p>Whether to enable gradient computation. If None, defaults to the global setting.</p>
+            <p>Whether to enable gradient computation.
+If None, defaults to the global setting.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -999,7 +1001,8 @@ User may specify model-level configuration when initializing RoundPipe, and/or f
 )
           –
           <div class="doc-md-description">
-            <p>The device where the output tensors will be placed. If None, defaults to CPU.</p>
+            <p>The device where the output tensors will be placed.
+If None, defaults to CPU.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -1009,7 +1012,8 @@ User may specify model-level configuration when initializing RoundPipe, and/or f
 )
           –
           <div class="doc-md-description">
-            <p>Whether to preserve the random number generator state. If None, defaults to True.</p>
+            <p>Whether to preserve the random number generator state.
+If None, defaults to True.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -1019,7 +1023,8 @@ User may specify model-level configuration when initializing RoundPipe, and/or f
 )
           –
           <div class="doc-md-description">
-            <p>The number of microbatches to split the input into. If None, defaults to the number of available CUDA devices plus one.</p>
+            <p>The number of microbatches to split the input into.
+If None, defaults to the number of available CUDA devices plus one.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -1029,7 +1034,8 @@ User may specify model-level configuration when initializing RoundPipe, and/or f
 )
           –
           <div class="doc-md-description">
-            <p>Specifies how to split input arguments into microbatches. If None, defaults to automatic splitting.</p>
+            <p>Specifies how to split input arguments into microbatches.
+If None, defaults to automatic splitting.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -1039,7 +1045,8 @@ User may specify model-level configuration when initializing RoundPipe, and/or f
 )
           –
           <div class="doc-md-description">
-            <p>Specifies how to split labels into microbatches. If None, defaults to automatic splitting.</p>
+            <p>Specifies how to split labels into microbatches.
+If None, defaults to automatic splitting.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -1049,7 +1056,19 @@ User may specify model-level configuration when initializing RoundPipe, and/or f
 )
           –
           <div class="doc-md-description">
-            <p>Specifies how to merge output microbatches back into a single output. If None, defaults to automatic merging.</p>
+            <p>Specifies how to merge output microbatches back into a single output.
+If None, defaults to automatic merging.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>execute_plan</code></b>
+              (<code><span title="Optional">Optional</span>[<a class="autorefs autorefs-internal" title="            ModelExecutePlan (roundpipe.scheduler.ModelExecutePlan)" href="../../Developer/internal_apis/#roundpipe.scheduler.ModelExecutePlan">ModelExecutePlan</a>]</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>An optional ModelExecutePlan to dictate execution strategy.
+If None, defaults to auto tuned execution.</p>
           </div>
         </li>
     </ul>
