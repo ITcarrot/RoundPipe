@@ -5,7 +5,12 @@ import copy
 
 import torch
 
-from .scheduler import ModelExecutePlan
+if TYPE_CHECKING:
+    from .scheduler import ModelExecutePlan
+else:
+    ModelExecutePlan = TypeAliasType(
+        "ModelExecutePlan", "roundpipe.scheduler.ModelExecutePlan"
+    )
 
 
 class RoundPipeRunConfig:
@@ -26,7 +31,7 @@ class RoundPipeRunConfig:
         ] = None,
         split_label: Union[Any, Callable[[Any, int], List[Any]], None] = None,
         merge_output: Union[Any, Callable[[List[Any]], Any], bool, None] = None,
-        execute_plan: Optional[ModelExecutePlan] = None,
+        execute_plan: "Optional[ModelExecutePlan]" = None,
     ) -> None:
         """
         Configuration for running RoundPipe models.
@@ -102,6 +107,8 @@ class FullRoundPipeRunConfig:
             function_run_config: Configuration passed to ``RoundPipe.forward``.
             model_run_config: Baseline configuration stored on the model.
         """
+        from .device import get_num_devices
+
         self.requires_grad = (
             function_run_config.requires_grad
             if function_run_config.requires_grad is not None
@@ -135,7 +142,7 @@ class FullRoundPipeRunConfig:
             else (
                 model_run_config.num_microbatch
                 if model_run_config.num_microbatch is not None
-                else torch.cuda.device_count() + 1
+                else get_num_devices() + 1
             )
         )
         self.split_input = (

@@ -11,6 +11,7 @@ import copy
 
 import torch
 
+from .device import get_num_devices
 from .threads import dump_all_active_threads, KeyboardInterruptRoundPipeThreads
 
 if TYPE_CHECKING:
@@ -93,7 +94,7 @@ class ModelExecutePlan:
         model: "RoundPipe",
         /,
         *,
-        min_stages: int = torch.cuda.device_count(),
+        min_stages: int = get_num_devices(),
         upper_threshold: float = 1.5,
     ) -> "ModelExecutePlan": ...
     @overload
@@ -105,7 +106,7 @@ class ModelExecutePlan:
         model2: "RoundPipe",
         /,
         *models: "RoundPipe",
-        min_stages: int = torch.cuda.device_count(),
+        min_stages: int = get_num_devices(),
         upper_threshold: float = 1.5,
     ) -> List["ModelExecutePlan"]: ...
     @classmethod
@@ -114,7 +115,7 @@ class ModelExecutePlan:
         run_type: Literal["infer", "train", "fused"],
         /,
         *models: "RoundPipe",
-        min_stages: int = torch.cuda.device_count(),
+        min_stages: int = get_num_devices(),
         upper_threshold: float = 1.1,
     ) -> Union["ModelExecutePlan", List["ModelExecutePlan"]]:
         """Generate automatic execution plans based on model timings.
@@ -343,10 +344,10 @@ class BackwardScheduleSimulator:
         """Pre-allocate gradient anchor tensors per CUDA device."""
         self.tags: List[torch.Tensor] = [
             torch.tensor(0.0, dtype=torch.float32, requires_grad=True)
-            for _ in range(torch.cuda.device_count())
+            for _ in range(get_num_devices())
         ]
         self.cur_device: int = 0
-        self.n_devices: int = torch.cuda.device_count()
+        self.n_devices: int = get_num_devices()
 
     def get_next_tag(self) -> torch.Tensor:
         """Return the tag tensor assigned to the next device in rotation."""
@@ -363,7 +364,7 @@ class BackwardScheduleSimulator:
         self.cur_device = 0
         self.tags = [
             torch.tensor(0.0, dtype=torch.float32, requires_grad=True)
-            for _ in range(torch.cuda.device_count())
+            for _ in range(get_num_devices())
         ]
 
 

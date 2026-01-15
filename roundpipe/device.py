@@ -11,13 +11,17 @@ import itertools
 
 import torch
 
-from .batch import Batch
 from .run import run_forward, run_backward, run_forward_backward, RoundPipeRunContext
 from .threads import (
     RoundPipeThread,
     dump_all_active_threads,
     KeyboardInterruptRoundPipeThreads,
 )
+
+if TYPE_CHECKING:
+    from .batch import Batch
+else:
+    Batch = TypeAliasType("Batch", "roundpipe.batch.Batch")
 
 
 class InterStreamMemManager:
@@ -237,7 +241,10 @@ class DeviceManager:
             self.is_idle.release()
 
     def launch_forward(
-        self, layer_group_id: int, batch: Batch, run_context: List[RoundPipeRunContext]
+        self,
+        layer_group_id: int,
+        batch: "Batch",
+        run_context: List[RoundPipeRunContext],
     ) -> None:
         """Schedule a forward-only job on this device.
 
@@ -273,7 +280,7 @@ class DeviceManager:
 
     def launch_forward_backward(
         self,
-        batch: Batch,
+        batch: "Batch",
         run_context: List[RoundPipeRunContext],
         loss_fn: Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]],
         return_outputs: bool,
@@ -305,6 +312,15 @@ cur_device: int = 0
 for i in range(torch.cuda.device_count()):
     device = DeviceManager(i, torch.device(f"cuda:{i}"))
     device_list.append(device)
+
+
+def get_num_devices() -> int:
+    """Return the number of managed GPU devices.
+
+    Returns:
+        Number of instantiated ``DeviceManager`` objects.
+    """
+    return len(device_list)
 
 
 def get_next_device() -> DeviceManager:

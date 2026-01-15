@@ -18,6 +18,7 @@ import atexit
 
 import torch
 
+from .device import get_num_devices
 from .threads import RoundPipeThread
 
 if sys.version_info >= (3, 9):
@@ -32,7 +33,7 @@ optim_active: _thread.LockType = threading.Lock()
 def controller() -> None:
     """Optimizer Stream thread function."""
     num_cpu = torch.get_num_threads()
-    num_gpu = torch.cuda.device_count()
+    num_gpu = get_num_devices()
     if num_cpu > num_gpu * 4:
         torch.set_num_threads(num_cpu - num_gpu)
 

@@ -11,7 +11,6 @@ import math
 import torch
 
 from .param import ParamAttribute
-from .scheduler import chunk_layer_params
 
 if TYPE_CHECKING:
     from .device import DeviceManager
@@ -150,6 +149,8 @@ def upload_layers(
     Returns:
         Event that signals when the upload is complete.
     """
+    from .scheduler import chunk_layer_params
+
     chunk_events = device.flush_upload_marks()
     if len(chunk_events) == 0:
         chunk_events.append(cast(torch.cuda.Event, torch.cuda.Event()))

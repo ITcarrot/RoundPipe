@@ -10,19 +10,21 @@ import torch
 from torch.utils.checkpoint import _get_autocast_kwargs
 from torch.utils._pytree import tree_unflatten, tree_flatten, TreeSpec
 
-from .batch import Batch
 from .context import ForwardCtx, RecomputeCtx
 from .profile import annotate
-from .scheduler import ModelTracker
 from .threads import thread_exception_print_lock
 from .transfer import async_h2d, async_d2h, upload_layers, download_layer, free_layer
 
 if TYPE_CHECKING:
+    from .batch import Batch
     from .device import DeviceManager
     from .roundpipe import RoundPipe
+    from .scheduler import ModelTracker
 else:
+    Batch = TypeAliasType("Batch", "roundpipe.batch.Batch")
     DeviceManager = TypeAliasType("DeviceManager", "roundpipe.device.DeviceManager")
     RoundPipe = TypeAliasType("RoundPipe", "roundpipe.roundpipe.RoundPipe")
+    ModelTracker = TypeAliasType("ModelTracker", "roundpipe.scheduler.ModelTracker")
 
 
 class RoundPipeRunContext:
@@ -50,7 +52,7 @@ class RoundPipeRunContext:
     """
 
     model: "RoundPipe"
-    tracker: ModelTracker
+    tracker: "ModelTracker"
     enable_grad: bool
     microbatch_id: int
     num_microbatches: int
@@ -71,7 +73,7 @@ class RoundPipeRunContext:
     def __init__(
         self,
         model: "RoundPipe",
-        tracker: ModelTracker,
+        tracker: "ModelTracker",
         enable_grad: bool,
         microbatch_id: int,
         num_microbatches: int,
@@ -111,7 +113,9 @@ class RoundPipeRunContext:
         self.device_rng_states = [None for _ in range(model.num_layers)]
         self.cpu_rng_states = [None for _ in range(model.num_layers)]
 
-    def save_input(self, layer_id: int, batch: Batch, device: "DeviceManager") -> None:
+    def save_input(
+        self, layer_id: int, batch: "Batch", device: "DeviceManager"
+    ) -> None:
         """Stash flattened inputs (and optionally RNG) for backward recompute.
 
         If gradients are not enabled or the layer is not the first layer of a
@@ -258,7 +262,7 @@ def run_forward(
     device: "DeviceManager",
     context: RoundPipeRunContext,
     layer_group_id: int,
-    batch: Batch,
+    batch: "Batch",
 ) -> None:
     """Upload layers, execute forward compute, and copy outputs back to host.
     !!! info
@@ -489,7 +493,7 @@ def run_backward(
 def run_forward_backward(
     device: "DeviceManager",
     context: RoundPipeRunContext,
-    batch: Batch,
+    batch: "Batch",
     loss_fn: Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]],
     return_outputs: bool,
 ) -> None:
@@ -630,7 +634,7 @@ class RoundPipeBatchedBackward(torch.autograd.Function):
     def forward(
         ctx: Any,
         roundpipe_context: List[RoundPipeRunContext],
-        batch: Batch,
+        batch: "Batch",
         tag: torch.Tensor,
         *all_inputs: Any,
     ) -> Tuple[List[Tuple[int, int]], Unpack[Tuple[torch.Tensor, ...]]]:
@@ -732,7 +736,7 @@ class RoundPipeMicrobatchBackward(torch.autograd.Function):
     def forward(
         ctx: Any,
         roundpipe_context: RoundPipeRunContext,
-        batch: Batch,
+        batch: "Batch",
         tag: torch.Tensor,
         *all_inputs: Any,
     ) -> Tuple[torch.Tensor, List[int], Unpack[Tuple[torch.Tensor, ...]]]:

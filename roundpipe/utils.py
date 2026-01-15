@@ -4,8 +4,6 @@ import traceback
 
 import torch.nn as nn
 
-from . import ENABLE_BEAR
-
 
 def get_model_size(model: nn.Module, recurse: bool = True) -> int:
     """Return the combined parameter + buffer bytes for ``model``.
@@ -31,6 +29,8 @@ def get_call_location(depth: int) -> str:
     Returns:
         A string representing the call location.
     """
+    from . import ENABLE_BEAR
+
     depth += 1  # Adjust for this function's frame
     if ENABLE_BEAR:
         depth *= 2  # Adjust for beartype frames

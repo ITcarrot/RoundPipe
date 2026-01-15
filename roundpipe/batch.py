@@ -22,8 +22,14 @@ from torch.distributed.pipelining.microbatch import (
 )
 from torch.utils._pytree import tree_flatten, tree_unflatten, TreeSpec
 
-from .run_config import FullRoundPipeRunConfig
 from .transfer import PinnedUpload, RegisterBackwardEvent
+
+if TYPE_CHECKING:
+    from .run_config import FullRoundPipeRunConfig
+else:
+    FullRoundPipeRunConfig = TypeAliasType(
+        "FullRoundPipeRunConfig", "roundpipe.run_config.FullRoundPipeRunConfig"
+    )
 
 
 class RoundPipePackedData(list):
@@ -174,7 +180,7 @@ class Batch:
         self,
         args: Tuple,
         kwargs: Dict[str, Any],
-        run_config: FullRoundPipeRunConfig,
+        run_config: "FullRoundPipeRunConfig",
         label: Any = None,
     ) -> None:
         """Split inputs and reconcile chained ``RoundPipePackedData`` sources.
@@ -301,7 +307,7 @@ class Batch:
         ]
         self.loss_ready: torch.cuda.Event = cast(torch.cuda.Event, torch.cuda.Event())
 
-    def dump(self, run_config: FullRoundPipeRunConfig) -> Any:
+    def dump(self, run_config: "FullRoundPipeRunConfig") -> Any:
         """Merge microbatch outputs according to the provided config.
 
         When ``merge_output`` is ``False`` a ``RoundPipePackedData`` is

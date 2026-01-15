@@ -12,6 +12,7 @@ try:
 except ImportError:
     HFPreTrainedModel = None
 
+from .device import get_num_devices
 from .models import wrap_model
 from .roundpipe import RoundPipe, AutoRoundPipe
 from .run_config import RoundPipeRunConfig
@@ -197,7 +198,7 @@ def wrap_model_to_roundpipe(
             raise
 
     if upper_threshold is None:
-        upper_threshold = get_model_size(model) // (torch.cuda.device_count() + 1)
+        upper_threshold = get_model_size(model) // (get_num_devices() + 1)
     wrapped_model = wrap_model_recursive(
         model,
         lower_threshold,
