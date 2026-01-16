@@ -94,7 +94,7 @@ class ModelExecutePlan:
         model: "RoundPipe",
         /,
         *,
-        min_stages: int = get_num_devices(),
+        min_stages: Optional[int] = None,
         upper_threshold: float = 1.5,
     ) -> "ModelExecutePlan": ...
     @overload
@@ -106,7 +106,7 @@ class ModelExecutePlan:
         model2: "RoundPipe",
         /,
         *models: "RoundPipe",
-        min_stages: int = get_num_devices(),
+        min_stages: Optional[int] = None,
         upper_threshold: float = 1.5,
     ) -> List["ModelExecutePlan"]: ...
     @classmethod
@@ -115,7 +115,7 @@ class ModelExecutePlan:
         run_type: Literal["infer", "train", "fused"],
         /,
         *models: "RoundPipe",
-        min_stages: int = get_num_devices(),
+        min_stages: Optional[int] = None,
         upper_threshold: float = 1.1,
     ) -> Union["ModelExecutePlan", List["ModelExecutePlan"]]:
         """Generate automatic execution plans based on model timings.
@@ -137,6 +137,10 @@ class ModelExecutePlan:
         if len(models) == 0:
             return []
         n_models = len(models)
+        if min_stages is None:
+            min_stages = (
+                get_num_devices() if run_type == "infer" else 2 * get_num_devices()
+            )
 
         workloads: List[Tuple[List[float], List[float]]] = []
         max_layer_workload = 0.0
