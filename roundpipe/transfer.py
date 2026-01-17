@@ -10,7 +10,7 @@ import math
 
 import torch
 
-from .param import ParamAttribute
+from .attribute import ParamAttribute, LayerAttribute
 
 if TYPE_CHECKING:
     from .device import DeviceManager
@@ -137,17 +137,18 @@ def create_upload_pair(
 
 
 def upload_layers(
-    layers: List[torch.nn.Module], device: "DeviceManager", upload_grad: bool
-) -> torch.cuda.Event:
+    layers: List[torch.nn.Module],
+    layer_attrs: List[LayerAttribute],
+    device: "DeviceManager",
+    upload_grad: bool,
+) -> None:
     """Move parameters/buffers (and optionally grads) onto the target device.
 
     Args:
         layers: Sequence of layers to upload.
+        layer_attrs: Sequence of layer attributes corresponding to layers.
         device: Device manager orchestrating the transfer.
         upload_grad: Whether to copy gradient buffers alongside parameters.
-
-    Returns:
-        Event that signals when the upload is complete.
     """
     from .scheduler import chunk_layer_params
 
@@ -174,8 +175,6 @@ def upload_layers(
                 buffer.data = create_upload_pair(
                     tensor_pair, buffer_attr.data_cpu, device.device
                 )
-    if len(tensor_pair) == 0:
-        return cast(torch.cuda.Event, torch.cuda.Event())
     chunked_tensor_pairs = chunk_layer_params(tensor_pair, len(chunk_events))
 
     with torch.cuda.stream(device.param_upstream):
@@ -187,7 +186,12 @@ def upload_layers(
     finish_event.record(device.param_upstream)
     device.wait_stream(device.compute_stream, device.param_upstream)
     device.wait_stream(device.param_upstream, device.compute_stream)
-    return finish_event
+    for layer_attr in layer_attrs:
+        assert (
+            not layer_attr.param_upload_started.is_set()
+        ), "Parameter upload already started for this layer!"
+        layer_attr.param_uploaded = finish_event
+        layer_attr.param_upload_started.set()
 
 
 def free_layer(layer: torch.nn.Module, device: "DeviceManager"):
@@ -210,13 +214,16 @@ def free_layer(layer: torch.nn.Module, device: "DeviceManager"):
         buffer.data = buffer_attr.data_cpu
 
 
-def download_layer(layer: torch.nn.Module, device: "DeviceManager"):
+def download_layer(
+    layer: torch.nn.Module, layer_attr: LayerAttribute, device: "DeviceManager"
+):
     """Copy layer params/buffers (and grads) back to the host asynchronously.
     Note that this only issues the copies; synchronization must be handled
     externally.
 
     Args:
         layer: Module whose tensors should be copied to host memory.
+        layer_attr: Layer attribute tracking the transfer events.
         device: Device manager orchestrating the transfer.
     """
     with torch.cuda.stream(device.downstream):
@@ -259,6 +266,14 @@ def download_layer(layer: torch.nn.Module, device: "DeviceManager"):
             buffer_attr = ParamAttribute.get(buffer)
             buffer_attr.data_cpu.copy_(buffer.data, non_blocking=True)
             buffer.data = buffer_attr.data_cpu
+
+    assert (
+        not layer_attr.grad_download_started.is_set()
+    ), "Gradient download already started for this layer!"
+    finish_event = cast(torch.cuda.Event, torch.cuda.Event())
+    finish_event.record(device.downstream)
+    layer_attr.grad_downloaded = finish_event
+    layer_attr.grad_download_started.set()
 
 
 class PinnedUpload(torch.autograd.Function):

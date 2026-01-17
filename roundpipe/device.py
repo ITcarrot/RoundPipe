@@ -11,6 +11,7 @@ import itertools
 
 import torch
 
+from .attribute import LayerAttribute
 from .run import run_forward, run_backward, run_forward_backward, RoundPipeRunContext
 from .threads import (
     RoundPipeThread,
@@ -243,6 +244,7 @@ class DeviceManager:
     def launch_forward(
         self,
         layer_group_id: int,
+        layer_attrs: List[LayerAttribute],
         batch: "Batch",
         run_context: List[RoundPipeRunContext],
     ) -> None:
@@ -250,6 +252,7 @@ class DeviceManager:
 
         Args:
             layer_group_id: Index into the execute plan's forward ordering.
+            layer_attrs: List of layer attributes for the layers in this group.
             batch: Batch container shared across microbatches.
             run_context: Per-microbatch execution contexts.
         """
@@ -258,16 +261,22 @@ class DeviceManager:
         except KeyboardInterrupt:
             dump_all_active_threads()
             raise KeyboardInterruptRoundPipeThreads from None
+        for layer_attr in layer_attrs:
+            layer_attr.forward_fence()
         self.cur_job = (run_forward, run_context, (layer_group_id, batch))
         self.job_arrived.release()
 
     def launch_backward(
-        self, layer_group_id: int, run_context: List[RoundPipeRunContext]
+        self,
+        layer_group_id: int,
+        layer_attrs: List[LayerAttribute],
+        run_context: List[RoundPipeRunContext],
     ) -> None:
         """Schedule a backward-only job on this device.
 
         Args:
             layer_group_id: Index into the execute plan's backward ordering.
+            layer_attrs: List of layer attributes for the layers in this group.
             run_context: Per-microbatch execution contexts.
         """
         try:
@@ -275,11 +284,14 @@ class DeviceManager:
         except KeyboardInterrupt:
             dump_all_active_threads()
             raise KeyboardInterruptRoundPipeThreads from None
+        for layer_attr in layer_attrs:
+            layer_attr.backward_fence()
         self.cur_job = run_backward, run_context, (layer_group_id,)
         self.job_arrived.release()
 
     def launch_forward_backward(
         self,
+        layer_attrs: List[LayerAttribute],
         batch: "Batch",
         run_context: List[RoundPipeRunContext],
         loss_fn: Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]],
@@ -298,6 +310,8 @@ class DeviceManager:
         except KeyboardInterrupt:
             dump_all_active_threads()
             raise KeyboardInterruptRoundPipeThreads from None
+        for layer_attr in layer_attrs:
+            layer_attr.forward_backward_fence()
         self.cur_job = (
             run_forward_backward,
             run_context,

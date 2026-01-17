@@ -3,6 +3,8 @@
 
 This section documents the internal APIs of RoundPipe that are intended for developers. Users typically do not need to interact with these APIs directly.
 
+::: roundpipe.attribute
+
 ::: roundpipe.batch
 
 ::: roundpipe.context
@@ -18,8 +20,6 @@ This section documents the internal APIs of RoundPipe that are intended for deve
 ::: roundpipe.optim.optim_builder
 
 ::: roundpipe.optim_stream
-
-::: roundpipe.param
 
 ::: roundpipe.profile
 

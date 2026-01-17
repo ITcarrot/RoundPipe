@@ -285,13 +285,12 @@ def run_forward(
     layer_ids = context.tracker.fwd_plan[layer_group_id]
     grad_context = torch.enable_grad() if context.enable_grad else torch.no_grad()
     if batch_idx == 0:
-        for layer_id in layer_ids:
-            model.layer_param_copied[layer_id].wait()
-        finish_event = upload_layers(
-            [model.layers[layer_id] for layer_id in layer_ids], device, False
+        upload_layers(
+            [model.layers[layer_id] for layer_id in layer_ids],
+            [model.layer_attrs[layer_id] for layer_id in layer_ids],
+            device,
+            False,
         )
-        for layer_id in layer_ids:
-            model.layer_param_uploaded_events[layer_id] = finish_event
     context.tracker.forward_wait_for(layer_group_id - 1)
     for layer_id in layer_ids:
         context.save_input(layer_id, batch, device)
@@ -385,13 +384,12 @@ def run_backward(
     batch_idx = context.microbatch_id
     layer_ids = context.tracker.bwd_plan[layer_group_id]
     if batch_idx == 0:
-        for layer_id in layer_ids:
-            model.layer_param_copied[layer_id].wait()
-        finish_event = upload_layers(
-            [model.layers[layer_id] for layer_id in layer_ids], device, True
+        upload_layers(
+            [model.layers[layer_id] for layer_id in layer_ids],
+            [model.layer_attrs[layer_id] for layer_id in layer_ids],
+            device,
+            True,
         )
-        for layer_id in layer_ids:
-            model.layer_param_uploaded_events[layer_id] = finish_event
     for layer_id in layer_ids:
         context.fetch_recompute_data(layer_id, device)
     flatten_inputs_gpu = async_h2d(
@@ -481,11 +479,7 @@ def run_backward(
     device.mem_manager.flush()
     if batch_idx == context.num_microbatches - 1:
         for layer_id in layer_ids:
-            model.layer_gradient_copied[layer_id].wait()
-            download_layer(model.layers[layer_id], device)
-            download_finish_event = cast(torch.cuda.Event, torch.cuda.Event())
-            download_finish_event.record(device.downstream)
-            model.layer_gradient_ready_events[layer_id] = download_finish_event
+            download_layer(model.layers[layer_id], model.layer_attrs[layer_id], device)
     context.tracker.backward_notify(layer_group_id)
 
 
@@ -518,13 +512,12 @@ def run_forward_backward(
     batch_idx = context.microbatch_id
     layer_ids = context.tracker.bwd_plan[0]
     if batch_idx == 0:
-        for layer_id in layer_ids:
-            model.layer_param_copied[layer_id].wait()
-        finish_event = upload_layers(
-            [model.layers[layer_id] for layer_id in layer_ids], device, True
+        upload_layers(
+            [model.layers[layer_id] for layer_id in layer_ids],
+            [model.layer_attrs[layer_id] for layer_id in layer_ids],
+            device,
+            True,
         )
-        for layer_id in layer_ids:
-            model.layer_param_uploaded_events[layer_id] = finish_event
     flatten_inputs_gpu = async_h2d(
         device, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], True
     )
@@ -619,11 +612,7 @@ def run_forward_backward(
     device.mem_manager.flush()
     if batch_idx == context.num_microbatches - 1:
         for layer_id in layer_ids:
-            model.layer_gradient_copied[layer_id].wait()
-            download_layer(model.layers[layer_id], device)
-            download_finish_event = cast(torch.cuda.Event, torch.cuda.Event())
-            download_finish_event.record(device.downstream)
-            model.layer_gradient_ready_events[layer_id] = download_finish_event
+            download_layer(model.layers[layer_id], model.layer_attrs[layer_id], device)
     context.tracker.backward_notify(0)
 
 
@@ -720,7 +709,14 @@ class RoundPipeBatchedBackward(torch.autograd.Function):
 
         for layer_group_id in range(len(run_contexts[0].tracker.bwd_plan)):
             device = get_next_device()
-            device.launch_backward(layer_group_id, run_contexts)
+            device.launch_backward(
+                layer_group_id,
+                [
+                    run_contexts[0].model.layer_attrs[i]
+                    for i in run_contexts[0].tracker.bwd_plan[layer_group_id]
+                ],
+                run_contexts,
+            )
         run_contexts[0].tracker.backward_wait_complete(len(run_contexts))
 
         grad_inputs = [item for context in run_contexts for item in context.grad_states]
@@ -821,6 +817,8 @@ class RoundPipeMicrobatchBackward(torch.autograd.Function):
         if context.microbatch_id == 0:
             device = get_next_device()
             device_id = torch.tensor(device.id, dtype=torch.float32)
+            for layer_id in context.tracker.bwd_plan[0]:
+                context.model.layer_attrs[layer_id].backward_fence()
         else:
             device = device_list[int(device_id.item())]
         run_backward(device, context, 0)

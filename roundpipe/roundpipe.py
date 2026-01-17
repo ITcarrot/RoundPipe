@@ -9,11 +9,11 @@ import tqdm
 import torch
 import torch.nn as nn
 
+from .attribute import ParamAttribute, LayerAttribute
 from .batch import Batch
 from .context import doing_optimizer
 from .device import get_next_device
 from .optim_stream import launch_optim_kernel, on_optim_stream
-from .param import ParamAttribute
 from .run import (
     RoundPipeRunContext,
     RoundPipeBatchedBackward,
@@ -22,8 +22,9 @@ from .run import (
 )
 from .run_config import RoundPipeRunConfig, FullRoundPipeRunConfig
 from .scheduler import ModelExecutePlan, ModelTracker, backward_schedule_simulator
+from .threads import dump_all_active_threads, KeyboardInterruptRoundPipeThreads
 from .timer import ModelTimer
-from .utils import get_model_size, get_call_location
+from .utils import get_call_location
 
 
 class RoundPipeBase(nn.Module):
@@ -34,6 +35,7 @@ class RoundPipeBase(nn.Module):
         model: The provided module wrapped for RoundPipe execution.
         original_model: Reference to the pre-wrapped module when shimming
             attribute access.
+        layer_attrs: List of ``LayerAttribute`` storing per-layer events.
         optim_dtype: Data type for optimizer parameters.
         optim_updated: Event signaling optimizer have updated.
     """
@@ -59,6 +61,8 @@ class RoundPipeBase(nn.Module):
         self.original_model: Optional[nn.Module] = (
             None  # placeholder for original model if needing its functions
         )
+
+        self.layer_attrs: List[LayerAttribute] = []
 
         self.optim_dtype: Optional[torch.dtype] = optim_dtype
         self.optim_updated: threading.Event = threading.Event()
@@ -157,25 +161,15 @@ class RoundPipeBase(nn.Module):
         for _, parm in self.optim_named_parameters():
             yield parm
 
-    def lock_param(self) -> None:
-        """Lock parameter data during optimizer -> parameter copy"""
-        raise NotImplementedError("lock_param only available in class RoundPipe.")
-
     def sync_optim_param(self) -> None:
         """Ensure optimizer updated results are copied back to parameters."""
         raise NotImplementedError("sync_optim_param must be implemented in subclasses.")
 
-    def move_grad_to_optim(self) -> None:
+    def _move_grad_to_optim(self) -> None:
         """Move parameter gradients to optimizer parameters."""
         raise NotImplementedError(
             "move_grad_to_optim must be implemented in subclasses."
         )
-
-    def lock_grad(self) -> None:
-        """Lock parameter gradients and transfer events to avoid being
-        overwritten by next backward.
-        """
-        raise NotImplementedError("lock_grad must be implemented in subclasses.")
 
     def step(
         self,
@@ -201,28 +195,20 @@ class RoundPipeBase(nn.Module):
             *args: Positional arguments forwarded to ``step_fn``.
             **kwargs: Keyword arguments forwarded to ``step_fn``.
         """
-        self.optim_updated.wait()  # ensure previous step is done to avoid data race
-        self.lock_grad()
-        for name, param in super().named_parameters():
-            param_attr = ParamAttribute.get(param)
-            if param.grad is not None and not param_attr.optim_inited():
-                raise RuntimeError(
-                    f"Parameter {name} has gradient but optimizer data is not "
-                    "initialized. This is likely because you did not use optim_parameters() to "
-                    "create your optimizer, or you changed parameter requires_grad after optimizer "
-                    "creation. Please make sure to create optimizer with optim_parameters()."
-                )
-            # Move grad reference away from param to avoid accidental modification
-            param_attr.data_grad = param.grad
-            param.grad = None
+        try:
+            self.optim_updated.wait()  # ensure previous step is done to avoid data race
+            for layer_attr in self.layer_attrs:
+                layer_attr.param_copied.wait()
+                layer_attr.param_copied.clear()
+                layer_attr.grad_copied.wait()
+                layer_attr.grad_copied.clear()
+        except KeyboardInterrupt:
+            dump_all_active_threads()
+            raise KeyboardInterruptRoundPipeThreads from None
 
         if is_async:
-            if isinstance(self, RoundPipe):
-                self.lock_param()
-                launch_optim_kernel(self.sync_optim_param)
-            else:
-                self.sync_optim_param()
-        launch_optim_kernel(self.move_grad_to_optim)
+            launch_optim_kernel(self.sync_optim_param)
+        launch_optim_kernel(self._move_grad_to_optim)
         self.optim_updated.clear()
         launch_optim_kernel(step_fn, *args, **kwargs)
         launch_optim_kernel(lambda: self.optim_updated.set())
@@ -236,16 +222,9 @@ class RoundPipe(RoundPipeBase):
     Attributes:
         model_run_config: Default run configuration used when callers do not
             override parameters per invocation.
-        layers: Sequence of logical pipeline stages.
-        num_layers: Total number of layer groups in the pipeline.
-        layer_workload: Estimated byte size per layer, used for scheduling.
-        layer_param_copied: Event signaling a new version of parameters
-            has been copied from optimizer.
-        layer_param_uploaded_events: Event signaling params is copied to gpu.
-        layer_gradient_ready_events: Event signaling gradient is copied to cpu.
-        layer_gradient_copied: Event signaling gradient has been moved to optimizer.
-            This can avoid allocating doubled gradient memory on cpu. When this is
-            set, it implies the ParamAttribute.data_grad can be reused for next backward.
+        layers: Sequence of model layers.
+        num_layers: Total number of layers in the pipeline.
+        layer_attrs: List of ``LayerAttribute`` storing per-layer events.
         model_timer: ``ModelTimer`` measuring per-layer latency.
     """
 
@@ -276,27 +255,10 @@ class RoundPipe(RoundPipeBase):
             self.layers = [model]
 
         self.num_layers: int = len(self.layers)
-        self.layer_workload: List[float] = []
-        for layer in self.layers:
-            self.layer_workload.append(get_model_size(layer))
+        self.layer_attrs: List[LayerAttribute] = [
+            LayerAttribute() for _ in range(self.num_layers)
+        ]
         self.model_timer: ModelTimer = ModelTimer(self.layers)
-
-        self.layer_param_copied: List[threading.Event] = [
-            threading.Event() for _ in range(self.num_layers)
-        ]
-        for e in self.layer_param_copied:
-            e.set()
-        self.layer_param_uploaded_events: List[torch.cuda.Event] = [
-            cast(torch.cuda.Event, torch.cuda.Event()) for _ in range(self.num_layers)
-        ]
-        self.layer_gradient_ready_events: List[torch.cuda.Event] = [
-            cast(torch.cuda.Event, torch.cuda.Event()) for _ in range(self.num_layers)
-        ]
-        self.layer_gradient_copied: List[threading.Event] = [
-            threading.Event() for _ in range(self.num_layers)
-        ]
-        for e in self.layer_gradient_copied:
-            e.set()
 
         for parm in tqdm.tqdm(
             self.model.parameters(),
@@ -322,49 +284,48 @@ class RoundPipe(RoundPipeBase):
         self.RoundPipe_initialized = True
 
     @override
-    def lock_param(self) -> None:
-        """Lock parameter data during optimizer -> parameter copy"""
-        for event in self.layer_param_copied:
-            event.clear()
-
-    @override
     def sync_optim_param(self) -> None:
         """Ensure optimizer updated results are copied back to parameters.
         This fuction can run in either the main thread or optimizer thread.
         """
         if not on_optim_stream():
             self.optim_updated.wait()
-        for layer, event, copied_event in zip(
-            self.layers, self.layer_param_uploaded_events, self.layer_param_copied
-        ):
-            event.synchronize()
-            if on_optim_stream():
-                assert (
-                    not copied_event.is_set()
-                ), "lock_param must be called before syncing optim param."
+        for layer, layer_attr in zip(self.layers, self.layer_attrs):
+            layer_attr.param_upload_started.wait()
+            layer_attr.param_uploaded.synchronize()
             for param in layer.parameters():
                 param_attr = ParamAttribute.get(param)
                 if param_attr.optim_inited():
                     param_attr.data_cpu.copy_(param_attr.data_optim)
-            if on_optim_stream():
-                copied_event.set()
+            if on_optim_stream() and layer_attr.param_copied.is_set():
+                raise RuntimeError(
+                    "param_copied is not cleared as expected, data consistency issue may happen."
+                )
+            layer_attr.param_copied.set()
 
     @override
-    def move_grad_to_optim(self) -> None:
+    def _move_grad_to_optim(self) -> None:
         """Move parameter gradients to optimizer parameters.
         This function is designed to run in the optimizer thread only.
         """
-        for layer, ready_event, copied_event in zip(
+        for layer, layer_attr in zip(
             reversed(self.layers),
-            reversed(self.layer_gradient_ready_events),
-            reversed(self.layer_gradient_copied),
+            reversed(self.layer_attrs),
         ):
-            assert (
-                not copied_event.is_set()
-            ), "lock_grad must be called before moving grad to optim."
-            ready_event.synchronize()
-            for param in layer.parameters():
+            layer_attr.grad_download_started.wait()
+            layer_attr.grad_downloaded.synchronize()
+            for name, param in layer.named_parameters():
                 param_attr = ParamAttribute.get(param)
+                if param.grad is not None and not param_attr.optim_inited():
+                    raise RuntimeError(
+                        f"Parameter {name} has gradient but optimizer data is not "
+                        "initialized. This is likely because you did not use optim_parameters() to "
+                        "create your optimizer, or you changed parameter requires_grad after optimizer "
+                        "creation. Please make sure to create optimizer with optim_parameters()."
+                    )
+                param_attr.data_grad = param.grad
+                param.grad = None
+
                 if param_attr.data_grad is not None:
                     if param_attr.data_optim.grad is None:
                         if param_attr.optim_grad is not None:
@@ -383,15 +344,11 @@ class RoundPipe(RoundPipeBase):
                     param_attr.optim_grad = (
                         None  # clear optim_grad reference if no grad
                     )
-            copied_event.set()
-
-    @override
-    def lock_grad(self) -> None:
-        """Lock parameter gradients and transfer events to avoid being
-        overwritten by next backward.
-        """
-        for copied_event in self.layer_gradient_copied:
-            copied_event.clear()
+            if layer_attr.grad_copied.is_set():
+                raise RuntimeError(
+                    "grad_copied is not cleared as expected, data consistency issue may happen."
+                )
+            layer_attr.grad_copied.set()
 
     def forward(
         self,
@@ -445,7 +402,12 @@ class RoundPipe(RoundPipeBase):
         ]
         for layer_group_id in range(len(tracker.fwd_plan)):
             device = get_next_device()
-            device.launch_forward(layer_group_id, batch, run_context)
+            device.launch_forward(
+                layer_group_id,
+                [self.layer_attrs[i] for i in tracker.fwd_plan[layer_group_id]],
+                batch,
+                run_context,
+            )
         tracker.forward_wait_complete(batch.num_microbatch)
 
         if any(
@@ -561,13 +523,28 @@ class RoundPipe(RoundPipeBase):
 
         for layer_group_id in range(len(tracker.fwd_plan)):
             device = get_next_device()
-            device.launch_forward(layer_group_id, batch, run_context)
+            device.launch_forward(
+                layer_group_id,
+                [self.layer_attrs[i] for i in tracker.fwd_plan[layer_group_id]],
+                batch,
+                run_context,
+            )
         tracker.forward_wait_complete(batch.num_microbatch)
         device = get_next_device()
-        device.launch_forward_backward(batch, run_context, loss_fn, return_outputs)
+        device.launch_forward_backward(
+            [self.layer_attrs[i] for i in tracker.bwd_plan[0]],
+            batch,
+            run_context,
+            loss_fn,
+            return_outputs,
+        )
         for layer_group_id in range(1, len(tracker.bwd_plan)):
             device = get_next_device()
-            device.launch_backward(layer_group_id, run_context)
+            device.launch_backward(
+                layer_group_id,
+                [self.layer_attrs[i] for i in tracker.bwd_plan[layer_group_id]],
+                run_context,
+            )
         tracker.backward_wait_complete(batch.num_microbatch)
 
         if input_backward_handle.requires_grad:
@@ -624,19 +601,12 @@ class AutoRoundPipe(RoundPipeBase):
             **kwargs: Placeholder for unused keyword arguments.
         """
         super().__init__(model, name, optim_dtype)
-        self.module_param_uploaded_events: List[List[torch.cuda.Event]] = []
-        self.module_gradient_ready_events: List[List[torch.cuda.Event]] = []
-        self.module_gradient_copied: List[List[threading.Event]] = []
 
+        self.virtual_layer_attr = LayerAttribute()
+        self.layer_attrs.append(self.virtual_layer_attr)
         for module in self.model.modules():
             if isinstance(module, RoundPipe):
-                self.module_param_uploaded_events.append(
-                    module.layer_param_uploaded_events
-                )
-                self.module_gradient_ready_events.append(
-                    module.layer_gradient_ready_events
-                )
-                self.module_gradient_copied.append(module.layer_gradient_copied)
+                self.layer_attrs.extend(module.layer_attrs)
 
         for param in model.parameters():
             if not ParamAttribute.has(param):
@@ -646,32 +616,46 @@ class AutoRoundPipe(RoundPipeBase):
 
     @override
     def sync_optim_param(self) -> None:
-        """Ensure optimizer updated results are copied back to parameters."""
-        self.optim_updated.wait()
-        for layer_events in self.module_param_uploaded_events:
-            for event in layer_events:
-                event.synchronize()
+        """Ensure optimizer updated results are copied back to parameters.
+        This fuction can run in either the main thread or optimizer thread.
+        """
+        if not on_optim_stream():
+            self.optim_updated.wait()
+        for layer_attr in self.layer_attrs:
+            layer_attr.param_upload_started.wait()
+            layer_attr.param_uploaded.synchronize()
         for param in self.model.parameters():
-            parm_attr = ParamAttribute.get(param)
-            if parm_attr.optim_inited():
-                parm_attr.data_cpu.copy_(parm_attr.data_optim)
+            param_attr = ParamAttribute.get(param)
+            if param_attr.optim_inited():
+                param_attr.data_cpu.copy_(param_attr.data_optim)
+        for layer_attr in self.layer_attrs:
+            if on_optim_stream() and layer_attr.param_copied.is_set():
+                raise RuntimeError(
+                    "param_copied is not cleared as expected, data consistency issue may happen."
+                )
+            layer_attr.param_copied.set()
 
     @override
-    def move_grad_to_optim(self) -> None:
+    def _move_grad_to_optim(self) -> None:
         """Move parameter gradients to optimizer parameters.
         This function is designed to run in the optimizer thread only.
         """
-        for layer_events in self.module_gradient_ready_events:
-            for event in layer_events:
-                event.synchronize()
-        for layer_copied_events in self.module_gradient_copied:
-            for copied_event in layer_copied_events:
-                assert (
-                    not copied_event.is_set()
-                ), "lock_grad must be called before moving grad to optim."
+        for layer_attr in self.layer_attrs:
+            layer_attr.grad_download_started.wait()
+            layer_attr.grad_downloaded.synchronize()
 
-        for param in self.model.parameters():
+        for name, param in self.model.named_parameters():
             param_attr = ParamAttribute.get(param)
+            if param.grad is not None and not param_attr.optim_inited():
+                raise RuntimeError(
+                    f"Parameter {name} has gradient but optimizer data is not "
+                    "initialized. This is likely because you did not use optim_parameters() to "
+                    "create your optimizer, or you changed parameter requires_grad after optimizer "
+                    "creation. Please make sure to create optimizer with optim_parameters()."
+                )
+            param_attr.data_grad = param.grad
+            param.grad = None
+
             if param_attr.data_grad is not None:
                 if param_attr.data_optim.grad is None:
                     if param_attr.optim_grad is not None:
@@ -689,18 +673,12 @@ class AutoRoundPipe(RoundPipeBase):
             else:
                 param_attr.optim_grad = None  # clear optim_grad reference if no grad
 
-        for layer_copied_events in self.module_gradient_copied:
-            for copied_event in layer_copied_events:
-                copied_event.set()
-
-    @override
-    def lock_grad(self) -> None:
-        """Lock parameter gradients and transfer events to avoid being
-        overwritten by next backward.
-        """
-        for layer_copied_events in self.module_gradient_copied:
-            for copied_event in layer_copied_events:
-                copied_event.clear()
+        for layer_attr in self.layer_attrs:
+            if layer_attr.grad_copied.is_set():
+                raise RuntimeError(
+                    "grad_copied is not cleared as expected, data consistency issue may happen."
+                )
+            layer_attr.grad_copied.set()
 
     def forward(self, *args: Any, **kwargs: Any) -> Any:
         """Execute a forward pass.
@@ -712,4 +690,7 @@ class AutoRoundPipe(RoundPipeBase):
         Returns:
             Output produced by the underlying ``model``.
         """
-        return self.model(*args, **kwargs)
+        self.virtual_layer_attr.forward_fence(False)
+        ret = self.model(*args, **kwargs)
+        self.virtual_layer_attr.backward_fence(False)
+        return ret
