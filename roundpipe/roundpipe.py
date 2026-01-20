@@ -321,11 +321,13 @@ class RoundPipe(RoundPipeBase):
         """
         if not on_optim_stream():
             self.optim_updated.wait()
-        visited_params: Set[int] = set()
-        for layer, layer_attr in zip(self.layers, self.layer_attrs):
+        # In case of shared params, wait all uploads first
+        for layer_attr in self.layer_attrs:
             layer_attr.param_upload_started.wait()
             layer_attr.param_uploaded.synchronize()
 
+        visited_params: Set[int] = set()
+        for layer, layer_attr in zip(self.layers, self.layer_attrs):
             for param in layer.parameters():
                 param_attr = ParamAttribute.get(param)
                 if param_attr.optim is not None and id(param) not in visited_params:
