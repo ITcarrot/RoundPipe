@@ -3,8 +3,7 @@
 Attributes:
     KernelQueueType: queue.Queue[Tuple[Callable, Tuple, Dict[str, Any]]]
     kernel_queue: Queue of optimizer kernel tasks.
-    optim_shutdown: Flag to signal optimizer stream shutdown.
-    optim_active: Lock to indicate if the optimizer stream is active.
+    OPTIM_STOP: Sentinel object to signal optimizer stream shutdown.
     optim_thread: Daemon thread that executes optimizer tasks.
 """
 
@@ -13,12 +12,12 @@ from typing_extensions import *
 import sys
 import queue
 import threading
-import _thread
 import atexit
 
 import torch
 
 from .device import get_num_devices
+from .profile import annotate
 from .threads import RoundPipeThread
 
 if sys.version_info >= (3, 9):
@@ -42,7 +41,8 @@ def controller() -> None:
             break
         fn, args, kwargs = cast(Tuple[Callable, Tuple, Dict[str, Any]], job)
         optim_thread.is_active = True
-        fn(*args, **kwargs)
+        with annotate(fn.__name__):
+            fn(*args, **kwargs)
         optim_thread.is_active = False
 
 
