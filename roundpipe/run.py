@@ -13,7 +13,7 @@ from torch.utils._pytree import tree_unflatten, tree_flatten, TreeSpec
 from .context import ForwardCtx, RecomputeCtx
 from .profile import annotate
 from .threads import thread_exception_print_lock
-from .transfer import async_h2d, async_d2h, upload_layers, download_layer, free_layer
+from .transfer import async_h2d, async_d2h, upload_layers, download_layer
 
 if TYPE_CHECKING:
     from .batch import Batch
@@ -32,6 +32,8 @@ class RoundPipeRunContext:
 
     Attributes:
         model: The running ``RoundPipe`` instance.
+        gpu_fwd_layers: GPU-resident layers for current forward batch.
+        gpu_bwd_layers: GPU-resident layers for current backward batch.
         tracker: Tracker describing fwd/bwd ordering across layers.
         enable_grad: Whether to store data for backward pass.
         microbatch_id: Index of the microbatch this context tracks.
@@ -43,6 +45,8 @@ class RoundPipeRunContext:
         flatten_specs: Tree specs that rebuild flattened inputs.
         recompute_data: Saved data for backward recompute.
         recompute_data_specs: Tree specs that rebuild recompute data.
+        saved_buffers: Buffers saved for recomputation. Only applied at
+            microbatch 0.
         download_event: Events to signal when saved data download is done.
         device_rng_states: Saved CUDA RNG states per layer when requested.
         cpu_rng_states: Saved CPU RNG states per layer when requested.
@@ -52,6 +56,8 @@ class RoundPipeRunContext:
     """
 
     model: "RoundPipe"
+    gpu_fwd_layers: List[torch.nn.Module]
+    gpu_bwd_layers: List[torch.nn.Module]
     tracker: "ModelTracker"
     enable_grad: bool
     microbatch_id: int
@@ -63,6 +69,7 @@ class RoundPipeRunContext:
     flatten_specs: List[Optional[TreeSpec]]
     recompute_data: List[List[Any]]
     recompute_data_specs: List[Optional[TreeSpec]]
+    saved_buffers: Dict[torch.Tensor, torch.Tensor]
     download_event: List[torch.cuda.Event]
     device_rng_states: List[Optional[torch.Tensor]]
     cpu_rng_states: List[Optional[torch.Tensor]]
@@ -73,6 +80,8 @@ class RoundPipeRunContext:
     def __init__(
         self,
         model: "RoundPipe",
+        gpu_fwd_layers: List[torch.nn.Module],
+        gpu_bwd_layers: List[torch.nn.Module],
         tracker: "ModelTracker",
         enable_grad: bool,
         microbatch_id: int,
@@ -83,6 +92,10 @@ class RoundPipeRunContext:
 
         Args:
             model: The running ``RoundPipe`` instance.
+            gpu_fwd_layers: A list for sharing GPU-resident layers
+                among forward microbatches.
+            gpu_bwd_layers: A list for sharing GPU-resident layers
+                among backward microbatches.
             tracker: Tracker describing fwd/bwd ordering across layers.
             enable_grad: Whether to store data for backward pass.
             microbatch_id: Microbatch index for this context.
@@ -90,6 +103,8 @@ class RoundPipeRunContext:
             preserve_rng_state: Whether to snapshot RNG for recomputation.
         """
         self.model = model
+        self.gpu_fwd_layers = gpu_fwd_layers
+        self.gpu_bwd_layers = gpu_bwd_layers
         self.tracker = tracker
         self.enable_grad = enable_grad
         self.microbatch_id = microbatch_id
@@ -107,6 +122,11 @@ class RoundPipeRunContext:
         self.flatten_specs = [None for _ in range(model.num_layers)]
         self.recompute_data = [[] for _ in range(model.num_layers)]
         self.recompute_data_specs = [None for _ in range(model.num_layers)]
+        self.saved_buffers = {}
+        if microbatch_id == 0 and enable_grad:
+            for buffer in model.model.buffers():
+                self.saved_buffers[buffer] = torch.empty_like(buffer, pin_memory=True)
+
         self.download_event = [
             cast(torch.cuda.Event, torch.cuda.Event()) for _ in range(model.num_layers)
         ]
@@ -153,6 +173,17 @@ class RoundPipeRunContext:
             with device.device:
                 self.device_rng_states[layer_id] = torch.cuda.get_rng_state()
             self.cpu_rng_states[layer_id] = torch.get_rng_state()
+
+    def save_buffer(self, layer: torch.nn.Module) -> None:
+        """Save layer buffers for recomputation. Only called at microbatch 0.
+
+        Args:
+            layer: Layer whose buffers should be saved.
+        """
+        if self.microbatch_id != 0 or not self.enable_grad:
+            return
+        for buffer in layer.buffers():
+            self.saved_buffers[buffer].copy_(buffer.data)
 
     def save_for_recompute(
         self, layer_id: int, device: "DeviceManager", *data: Any
@@ -285,12 +316,15 @@ def run_forward(
     layer_ids = context.tracker.fwd_plan[layer_group_id]
     grad_context = torch.enable_grad() if context.enable_grad else torch.no_grad()
     if batch_idx == 0:
-        upload_layers(
+        gpu_layers = upload_layers(
             [model.layers[layer_id] for layer_id in layer_ids],
             [model.layer_attrs[layer_id] for layer_id in layer_ids],
             device,
             False,
         )
+        for layer_id, gpu_layer in zip(layer_ids, gpu_layers):
+            context.save_buffer(model.layers[layer_id])
+            context.gpu_fwd_layers[layer_id] = gpu_layer
     context.tracker.forward_wait_for(layer_group_id - 1)
     for layer_id in layer_ids:
         context.save_input(layer_id, batch, device)
@@ -316,9 +350,13 @@ def run_forward(
             try:
                 if layer_id == 0:
                     args, kwargs = hidden_state
-                    hidden_state = model.layers[layer_id].forward(*args, **kwargs)
+                    hidden_state = context.gpu_fwd_layers[layer_id].forward(
+                        *args, **kwargs
+                    )
                 else:
-                    hidden_state = model.layers[layer_id].forward(hidden_state)
+                    hidden_state = context.gpu_fwd_layers[layer_id].forward(
+                        hidden_state
+                    )
             except Exception:
                 with thread_exception_print_lock:
                     traceback.print_exc()
@@ -348,7 +386,15 @@ def run_forward(
     device.mem_manager.flush()
     if batch_idx == context.num_microbatches - 1:
         for layer_id in layer_ids:
-            free_layer(model.layers[layer_id], device)
+            download_layer(
+                model.layers[layer_id],
+                context.gpu_fwd_layers[layer_id],
+                model.layer_attrs[layer_id],
+                device,
+                True,
+                False,
+            )
+            context.gpu_fwd_layers[layer_id] = torch.nn.Module()  # Free GPU memory
     context.tracker.forward_notify(layer_group_id)
 
 
@@ -384,12 +430,15 @@ def run_backward(
     batch_idx = context.microbatch_id
     layer_ids = context.tracker.bwd_plan[layer_group_id]
     if batch_idx == 0:
-        upload_layers(
+        gpu_layers = upload_layers(
             [model.layers[layer_id] for layer_id in layer_ids],
             [model.layer_attrs[layer_id] for layer_id in layer_ids],
             device,
             True,
+            context.saved_buffers,
         )
+        for layer_id, gpu_layer in zip(layer_ids, gpu_layers):
+            context.gpu_bwd_layers[layer_id] = gpu_layer
     for layer_id in layer_ids:
         context.fetch_recompute_data(layer_id, device)
     flatten_inputs_gpu = async_h2d(
@@ -424,9 +473,13 @@ def run_backward(
                 try:
                     if layer_id == 0:
                         args, kwargs = hidden_state
-                        hidden_state = model.layers[layer_id].forward(*args, **kwargs)
+                        hidden_state = context.gpu_bwd_layers[layer_id].forward(
+                            *args, **kwargs
+                        )
                     else:
-                        hidden_state = model.layers[layer_id].forward(hidden_state)
+                        hidden_state = context.gpu_bwd_layers[layer_id].forward(
+                            hidden_state
+                        )
                 except Exception:
                     with thread_exception_print_lock:
                         traceback.print_exc()
@@ -479,7 +532,15 @@ def run_backward(
     device.mem_manager.flush()
     if batch_idx == context.num_microbatches - 1:
         for layer_id in layer_ids:
-            download_layer(model.layers[layer_id], model.layer_attrs[layer_id], device)
+            download_layer(
+                model.layers[layer_id],
+                context.gpu_bwd_layers[layer_id],
+                model.layer_attrs[layer_id],
+                device,
+                False,
+                True,
+            )
+            context.gpu_bwd_layers[layer_id] = torch.nn.Module()  # Free GPU memory
     context.tracker.backward_notify(layer_group_id)
 
 
@@ -512,12 +573,14 @@ def run_forward_backward(
     batch_idx = context.microbatch_id
     layer_ids = context.tracker.bwd_plan[0]
     if batch_idx == 0:
-        upload_layers(
+        gpu_layers = upload_layers(
             [model.layers[layer_id] for layer_id in layer_ids],
             [model.layer_attrs[layer_id] for layer_id in layer_ids],
             device,
             True,
         )
+        for layer_id, gpu_layer in zip(layer_ids, gpu_layers):
+            context.gpu_bwd_layers[layer_id] = gpu_layer
     flatten_inputs_gpu = async_h2d(
         device, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], True
     )
@@ -539,9 +602,13 @@ def run_forward_backward(
             try:
                 if layer_id == 0:
                     args, kwargs = hidden_state
-                    hidden_state = model.layers[layer_id].forward(*args, **kwargs)
+                    hidden_state = context.gpu_bwd_layers[layer_id].forward(
+                        *args, **kwargs
+                    )
                 else:
-                    hidden_state = model.layers[layer_id].forward(hidden_state)
+                    hidden_state = context.gpu_bwd_layers[layer_id].forward(
+                        hidden_state
+                    )
             except Exception:
                 with thread_exception_print_lock:
                     traceback.print_exc()
@@ -612,7 +679,15 @@ def run_forward_backward(
     device.mem_manager.flush()
     if batch_idx == context.num_microbatches - 1:
         for layer_id in layer_ids:
-            download_layer(model.layers[layer_id], model.layer_attrs[layer_id], device)
+            download_layer(
+                model.layers[layer_id],
+                context.gpu_bwd_layers[layer_id],
+                model.layer_attrs[layer_id],
+                device,
+                True,
+                True,
+            )
+            context.gpu_bwd_layers[layer_id] = torch.nn.Module()  # Free GPU memory
     context.tracker.backward_notify(0)
 
 

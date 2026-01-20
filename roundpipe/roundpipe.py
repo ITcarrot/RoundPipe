@@ -103,6 +103,7 @@ class RoundPipeBase(nn.Module):
         """
         object.__setattr__(self, "original_model", original_model)
 
+    @override
     def named_parameters(
         self, prefix: str = "", recurse: bool = True, remove_duplicate: bool = True
     ) -> Iterator[Tuple[str, nn.Parameter]]:
@@ -110,10 +111,7 @@ class RoundPipeBase(nn.Module):
         and redirect to optim_named_parameters under optimizer context.
         """
         if doing_optimizer() and recurse:
-            return cast(
-                Iterator[Tuple[str, nn.Parameter]],
-                self.optim_named_parameters(prefix, remove_duplicate),
-            )
+            return self.optim_named_parameters(prefix, remove_duplicate)
         warnings.warn(
             "RoundPipe will manage parameter location and dtype internally. "
             "\nAccessing parameters() or named_parameters() directly may "
@@ -124,17 +122,18 @@ class RoundPipeBase(nn.Module):
         )
         return super().named_parameters(prefix, recurse, remove_duplicate)
 
+    @override
     def parameters(self, recurse: bool = True) -> Iterator[nn.Parameter]:
         """Iterator over parameters. Overrides to redirect to optim_parameters
         under optimizer context.
         """
         if doing_optimizer() and recurse:
-            return cast(Iterator[nn.Parameter], self.optim_parameters())
+            return self.optim_parameters()
         return super().parameters(recurse)
 
     def optim_named_parameters(
         self, prefix: str = "", remove_duplicate: bool = True
-    ) -> Iterator[Tuple[str, torch.Tensor]]:
+    ) -> Iterator[Tuple[str, torch.nn.Parameter]]:
         """Iterator over named parameters suitable for optimizer consumption.
 
         Args:
@@ -144,22 +143,23 @@ class RoundPipeBase(nn.Module):
         Yields:
             Tuples of parameter names and their optimizer-ready tensors.
         """
-        for name, parm in super().named_parameters(prefix, True, remove_duplicate):
-            parm_attr = ParamAttribute.get(parm)
-            if not parm_attr.optim_inited() and parm.requires_grad:
-                parm_attr.data_optim = parm_attr.data_cpu.to(
-                    dtype=self.optim_dtype, copy=True
+        for name, param in super().named_parameters(prefix, True, remove_duplicate):
+            param_attr = ParamAttribute.get(param)
+            if param_attr.optim is None and param.requires_grad:
+                param_attr.optim = torch.nn.Parameter(
+                    param.to(dtype=self.optim_dtype, copy=True), param.requires_grad
                 )
-            yield name, parm_attr.data_optim
+            if param_attr.optim is not None:
+                yield name, param_attr.optim
 
-    def optim_parameters(self) -> Iterator[torch.Tensor]:
+    def optim_parameters(self) -> Iterator[torch.nn.Parameter]:
         """Iterator over parameters suitable for optimizer consumption.
 
         Yields:
             Parameters stored in their optimizer-ready format.
         """
-        for _, parm in self.optim_named_parameters():
-            yield parm
+        for _, param in self.optim_named_parameters():
+            yield param
 
     def sync_optim_param(self) -> None:
         """Ensure optimizer updated results are copied back to parameters."""
@@ -215,6 +215,35 @@ class RoundPipeBase(nn.Module):
         if not is_async:
             self.sync_optim_param()
 
+    def synchronize(self) -> None:
+        """Synchronize optimizer parameters and backward gradients
+        back to model parameters.
+        """
+        try:
+            self.optim_updated.wait()
+            for layer_attr in self.layer_attrs:
+                layer_attr.param_copied.wait()
+                layer_attr.param_copied.clear()
+        except KeyboardInterrupt:
+            dump_all_active_threads()
+            raise KeyboardInterruptRoundPipeThreads from None
+        self.sync_optim_param()
+        for layer_attr in self.layer_attrs:
+            layer_attr.forward_fence(False)
+            layer_attr.backward_fence(False)
+        # Move gradients to parameters .grad
+        for param in self.model.parameters():
+            param_attr = ParamAttribute.get(param)
+            grads: List[torch.Tensor] = []
+            if param.grad is not None:
+                grads.append(param.grad)
+            for key, grad in param_attr.grad_cpu.items():
+                if grad is not None:
+                    grads.append(grad)
+                    param_attr.grad_cpu[key] = None
+            if len(grads) > 0:
+                param.grad = cast(torch.Tensor, sum(grads))
+
 
 class RoundPipe(RoundPipeBase):
     """Wraps an ``nn.Module`` with RoundPipe's pipelined execution runtime.
@@ -260,26 +289,28 @@ class RoundPipe(RoundPipeBase):
         ]
         self.model_timer: ModelTimer = ModelTimer(self.layers)
 
-        for parm in tqdm.tqdm(
-            self.model.parameters(),
-            total=sum(1 for _ in self.model.parameters()),
+        for layer in tqdm.tqdm(
+            self.layers,
             desc=f"Roundpipe: Process params in {self.name}",
             leave=False,
         ):
-            pinned_tensor = torch.empty_like(parm.data, pin_memory=True)
-            pinned_tensor.copy_(parm.data)
-            parm.data = pinned_tensor
-            ParamAttribute.set(parm)
+            for param in layer.parameters():
+                if not param.is_pinned():
+                    pinned_tensor = torch.empty_like(param.data, pin_memory=True)
+                    pinned_tensor.copy_(param.data)
+                    param.data = pinned_tensor
+                ParamAttribute.set(param, id(layer))
         for buffer in tqdm.tqdm(
             self.model.buffers(),
             total=sum(1 for _ in self.model.buffers()),
             desc=f"Roundpipe: Process buffers in {self.name}",
             leave=False,
         ):
-            pinned_tensor = torch.empty_like(buffer.data, pin_memory=True)
-            pinned_tensor.copy_(buffer.data)
-            buffer.data = pinned_tensor
-            ParamAttribute.set(buffer)
+            assert not buffer.requires_grad, "Buffers should not require grad."
+            if not buffer.is_pinned():
+                pinned_tensor = torch.empty_like(buffer.data, pin_memory=True)
+                pinned_tensor.copy_(buffer.data)
+                buffer.data = pinned_tensor
 
         self.RoundPipe_initialized = True
 
@@ -290,13 +321,17 @@ class RoundPipe(RoundPipeBase):
         """
         if not on_optim_stream():
             self.optim_updated.wait()
+        visited_params: Set[int] = set()
         for layer, layer_attr in zip(self.layers, self.layer_attrs):
             layer_attr.param_upload_started.wait()
             layer_attr.param_uploaded.synchronize()
+
             for param in layer.parameters():
                 param_attr = ParamAttribute.get(param)
-                if param_attr.optim_inited():
-                    param_attr.data_cpu.copy_(param_attr.data_optim)
+                if param_attr.optim is not None and id(param) not in visited_params:
+                    param.data.copy_(param_attr.optim)
+                    visited_params.add(id(param))
+
             if on_optim_stream() and layer_attr.param_copied.is_set():
                 raise RuntimeError(
                     "param_copied is not cleared as expected, data consistency issue may happen."
@@ -316,34 +351,30 @@ class RoundPipe(RoundPipeBase):
             layer_attr.grad_downloaded.synchronize()
             for name, param in layer.named_parameters():
                 param_attr = ParamAttribute.get(param)
-                if param.grad is not None and not param_attr.optim_inited():
+                grad = param_attr.grad_cpu[id(layer)]
+                # Grad buffer keep reference for 1 iteration only
+                param_attr.grad_buffer[id(layer)] = grad
+                param_attr.grad_cpu[id(layer)] = None
+                if grad is None:
+                    param_attr.optim_grad_buffer = None
+                    continue
+                if param_attr.optim is None:
                     raise RuntimeError(
                         f"Parameter {name} has gradient but optimizer data is not "
                         "initialized. This is likely because you did not use optim_parameters() to "
                         "create your optimizer, or you changed parameter requires_grad after optimizer "
                         "creation. Please make sure to create optimizer with optim_parameters()."
                     )
-                param_attr.data_grad = param.grad
-                param.grad = None
 
-                if param_attr.data_grad is not None:
-                    if param_attr.data_optim.grad is None:
-                        if param_attr.optim_grad is not None:
-                            param_attr.data_optim.grad = param_attr.optim_grad
-                        else:
-                            param_attr.data_optim.grad = torch.empty_like(
-                                param_attr.data_optim
-                            )
-                        param_attr.data_optim.grad.copy_(param_attr.data_grad)
-                    else:
-                        param_attr.data_optim.grad.add_(
-                            param_attr.data_grad.to(dtype=param_attr.data_optim.dtype)
-                        )
-                    param_attr.optim_grad = param_attr.data_optim.grad
+                if param_attr.optim.grad is None:
+                    param_attr.optim.grad = param_attr.optim_grad_buffer
+                    if param_attr.optim.grad is None:
+                        param_attr.optim.grad = torch.empty_like(param_attr.optim)
+                    param_attr.optim.grad.copy_(grad)
                 else:
-                    param_attr.optim_grad = (
-                        None  # clear optim_grad reference if no grad
-                    )
+                    param_attr.optim.grad.add_(grad.to(dtype=param_attr.optim.dtype))
+                param_attr.optim_grad_buffer = param_attr.optim.grad
+
             if layer_attr.grad_copied.is_set():
                 raise RuntimeError(
                     "grad_copied is not cleared as expected, data consistency issue may happen."
@@ -389,9 +420,13 @@ class RoundPipe(RoundPipeBase):
             "train" if full_run_config.requires_grad else "infer",
         )
         tracker = ModelTracker(execute_plan)
+        gpu_fwd_layers = [torch.nn.Module() for _ in range(self.num_layers)]
+        gpu_bwd_layers = [torch.nn.Module() for _ in range(self.num_layers)]
         run_context = [
             RoundPipeRunContext(
                 self,
+                gpu_fwd_layers,
+                gpu_bwd_layers,
                 tracker,
                 full_run_config.requires_grad,
                 i,
@@ -500,9 +535,13 @@ class RoundPipe(RoundPipeBase):
             execute_plan = ModelExecutePlan.auto("fused", self)
         execute_plan.check_valid(self.num_layers, "fused")
         tracker = ModelTracker(execute_plan)
+        gpu_fwd_layers = [torch.nn.Module() for _ in range(self.num_layers)]
+        gpu_bwd_layers = [torch.nn.Module() for _ in range(self.num_layers)]
         run_context = [
             RoundPipeRunContext(
                 self,
+                gpu_fwd_layers,
+                gpu_bwd_layers,
                 tracker,
                 full_run_config.requires_grad,
                 i,
@@ -610,7 +649,7 @@ class AutoRoundPipe(RoundPipeBase):
 
         for param in model.parameters():
             if not ParamAttribute.has(param):
-                ParamAttribute.set(param)
+                ParamAttribute.set(param, None)
 
         self.RoundPipe_initialized = True
 
@@ -624,10 +663,12 @@ class AutoRoundPipe(RoundPipeBase):
         for layer_attr in self.layer_attrs:
             layer_attr.param_upload_started.wait()
             layer_attr.param_uploaded.synchronize()
+
         for param in self.model.parameters():
             param_attr = ParamAttribute.get(param)
-            if param_attr.optim_inited():
-                param_attr.data_cpu.copy_(param_attr.data_optim)
+            if param_attr.optim is not None:
+                param.data.copy_(param_attr.optim)
+
         for layer_attr in self.layer_attrs:
             if on_optim_stream() and layer_attr.param_copied.is_set():
                 raise RuntimeError(
@@ -646,32 +687,37 @@ class AutoRoundPipe(RoundPipeBase):
 
         for name, param in self.model.named_parameters():
             param_attr = ParamAttribute.get(param)
-            if param.grad is not None and not param_attr.optim_inited():
+            grads: List[torch.Tensor] = []
+            if param.grad is not None:
+                grads.append(param.grad)
+                param.grad = None
+            for key, grad in param_attr.grad_cpu.items():
+                if grad is not None:
+                    grads.append(grad)
+                # Grad buffer keep reference for 1 iteration only
+                param_attr.grad_buffer[key] = grad
+                param_attr.grad_cpu[key] = None
+            if len(grads) == 0:
+                param_attr.optim_grad_buffer = None
+                continue
+            if param_attr.optim is None:
                 raise RuntimeError(
                     f"Parameter {name} has gradient but optimizer data is not "
                     "initialized. This is likely because you did not use optim_parameters() to "
                     "create your optimizer, or you changed parameter requires_grad after optimizer "
                     "creation. Please make sure to create optimizer with optim_parameters()."
                 )
-            param_attr.data_grad = param.grad
-            param.grad = None
 
-            if param_attr.data_grad is not None:
-                if param_attr.data_optim.grad is None:
-                    if param_attr.optim_grad is not None:
-                        param_attr.data_optim.grad = param_attr.optim_grad
-                    else:
-                        param_attr.data_optim.grad = torch.empty_like(
-                            param_attr.data_optim
-                        )
-                    param_attr.data_optim.grad.copy_(param_attr.data_grad)
-                else:
-                    param_attr.data_optim.grad.add_(
-                        param_attr.data_grad.to(dtype=param_attr.data_optim.dtype)
-                    )
-                param_attr.optim_grad = param_attr.data_optim.grad
+            if param_attr.optim.grad is None:
+                param_attr.optim.grad = param_attr.optim_grad_buffer
+                if param_attr.optim.grad is None:
+                    param_attr.optim.grad = torch.empty_like(param_attr.optim)
+                param_attr.optim.grad.copy_(grads[0])
             else:
-                param_attr.optim_grad = None  # clear optim_grad reference if no grad
+                param_attr.optim.grad.add_(grads[0].to(dtype=param_attr.optim.dtype))
+            for grad in grads[1:]:
+                param_attr.optim.grad.add_(grad.to(dtype=param_attr.optim.dtype))
+            param_attr.optim_grad_buffer = param_attr.optim.grad
 
         for layer_attr in self.layer_attrs:
             if layer_attr.grad_copied.is_set():

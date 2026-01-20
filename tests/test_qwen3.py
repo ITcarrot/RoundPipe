@@ -90,8 +90,7 @@ def test_qwen3_miniumn(use_preset: bool):
             )
             loss.backward()
             losses.append(loss.item())
-            for i in range(torch.cuda.device_count()):
-                torch.cuda.synchronize(i)
+            model.synchronize()
             optim.step()
             optim.zero_grad()
 
@@ -141,6 +140,57 @@ def test_qwen3_classic(use_preset: bool, is_async: bool):
     assert sum(diff) / len(diff) < 0.01
 
 
+def test_qwen3_classic_accumulate():
+    raw_model = AutoModelForCausalLM.from_pretrained(
+        MODEL_PATH,
+        use_cache=False,
+        dtype=torch.float16,
+    )
+    model = wrap_model_to_roundpipe(
+        raw_model,
+        model_run_config=RoundPipeRunConfig(num_microbatch=1),
+        use_sequential_preset=False,
+        optim_dtype=torch.float32,
+    )
+
+    optim = Adam(model.optim_parameters(), lr=1e-5)
+    scaler = GradScaler(8192.0)
+    dataloader = get_dataloader()
+
+    losses = []
+    for epoch in range(2):
+        for input_dict in dataloader:
+            input_ids = input_dict["input_ids"].split(1)
+            attention_mask = input_dict["attention_mask"].split(1)
+            labels = input_dict["labels"].split(1)
+            num_items_in_batch = (input_dict["labels"][..., 1:] != -100).sum().item()
+            loss = 0.0
+            for mb_input_ids, mb_attention_mask, mb_labels in zip(
+                input_ids, attention_mask, labels
+            ):
+                mb_input_dict = {
+                    "input_ids": mb_input_ids,
+                    "attention_mask": mb_attention_mask,
+                }
+                mb_logits = model(**mb_input_dict).logits
+                mb_loss = ForCausalLMLoss(
+                    logits=mb_logits,
+                    labels=mb_labels,
+                    vocab_size=model.config.vocab_size,
+                    num_items_in_batch=num_items_in_batch,
+                )
+                scaler.scale(mb_loss).backward()
+                loss += mb_loss.item()
+            losses.append(loss)
+            model.step(
+                lambda: (scaler.step(optim), optim.zero_grad(), None)[-1],
+            )
+            scaler.update()
+
+    diff = [abs(v - ref) / ref for v, ref in zip(losses, REF_LOSS[True])]
+    assert sum(diff) / len(diff) < 0.01
+
+
 @pytest.mark.parametrize("is_async", [True, False])
 def test_qwen3_fused(is_async: bool):
     raw_model = AutoModelForCausalLM.from_pretrained(
@@ -163,7 +213,7 @@ def test_qwen3_fused(is_async: bool):
     for epoch in range(2):
         for input_dict in dataloader:
             labels = input_dict.pop("labels")
-            num_items_in_batch = (labels != -100).sum().item()
+            num_items_in_batch = (labels[..., 1:] != -100).sum().item()
             loss = cast(
                 torch.Tensor,
                 model.forward_backward(
@@ -187,4 +237,61 @@ def test_qwen3_fused(is_async: bool):
             scaler.update()
 
     diff = [abs(v - ref) / ref for v, ref in zip(losses, REF_LOSS[is_async])]
+    assert sum(diff) / len(diff) < 0.01
+
+
+def test_qwen3_fused_accumulate():
+    raw_model = AutoModelForCausalLM.from_pretrained(
+        MODEL_PATH,
+        use_cache=False,
+        dtype=torch.float16,
+    )
+    model = wrap_model_to_roundpipe(
+        raw_model,
+        model_run_config=RoundPipeRunConfig(num_microbatch=1),
+        use_sequential_preset=True,
+        optim_dtype=torch.float32,
+    )
+
+    optim = Adam(model.optim_parameters(), lr=1e-5)
+    scaler = GradScaler(8192.0)
+    dataloader = get_dataloader()
+
+    losses = []
+    for epoch in range(2):
+        for input_dict in dataloader:
+            input_ids = input_dict["input_ids"].split(1)
+            attention_mask = input_dict["attention_mask"].split(1)
+            labels = input_dict["labels"].split(1)
+            num_items_in_batch = (input_dict["labels"][..., 1:] != -100).sum().item()
+            loss = 0.0
+            for mb_input_ids, mb_attention_mask, mb_labels in zip(
+                input_ids, attention_mask, labels
+            ):
+                mb_loss = cast(
+                    torch.Tensor,
+                    model.forward_backward(
+                        input_kwargs={
+                            "input_ids": mb_input_ids,
+                            "attention_mask": mb_attention_mask,
+                        },
+                        label=mb_labels,
+                        loss_fn=lambda outputs, labels: scaler.scale(
+                            model.loss_function(
+                                logits=outputs.logits,
+                                labels=labels,
+                                vocab_size=model.vocab_size,
+                                num_items_in_batch=num_items_in_batch,
+                            )
+                        ),
+                    ),
+                )
+                loss += mb_loss.item()
+            losses.append(loss / scaler.get_scale())
+            model.step(
+                lambda: (scaler.step(optim), optim.zero_grad(), None)[-1],
+            )
+            scaler.update()
+
+    diff = [abs(v - ref) / ref for v, ref in zip(losses, REF_LOSS[True])]
     assert sum(diff) / len(diff) < 0.01

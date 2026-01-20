@@ -10,46 +10,48 @@ from .threads import dump_all_active_threads, KeyboardInterruptRoundPipeThreads
 
 class ParamAttribute:
     """Class storing parameter attributes for RoundPipe.
+    Note that parameters may be shared among multiple layers.
 
     Attributes:
-        data_cpu: The CPU copy of the parameter data.
-        data_grad: A temporary location to hold reference to gradient.
-        data_optim: The optimizer copy of the parameter data.
-        optim_grad: Hold reference to optimizer gradient to avoid reallocation.
-        uploaded_grad: Whether the gradient is uploaded from cpu.
+        grad_cpu: Dictionary mapping layer IDs to gradient tensors
+            stored on CPU.
+        grad_buffer: Dictionary mapping layer IDs to a temporary location
+            that hold reference to the respective gradient. This is used
+            to avoid memory re-allocation between gradient downloads.
+        optim: Tensor storing a copy of the parameter for optimizer use.
+        optim_grad_buffer: Hold reference to optimizer gradient to avoid reallocation.
     """
 
+    def __init__(self) -> None:
+        """Initialize the ParamAttribute with the given data."""
+        self.grad_cpu: Dict[int, Optional[torch.Tensor]] = {}
+        self.grad_buffer: Dict[int, Optional[torch.Tensor]] = {}
+        self.optim: Optional[torch.nn.Parameter] = None
+        self.optim_grad_buffer: Optional[torch.Tensor] = None
+
     @classmethod
-    def set(cls, t: torch.Tensor) -> None:
-        """Attach a ParamAttribute to a tensor."""
-        attr = cls(t.data)
+    def set(cls, t: torch.nn.Parameter, layer_id: Optional[int]) -> None:
+        """Attach a ParamAttribute to a tensor.
+
+        Args:
+            t: Tensor to attach the attribute to.
+            layer_id: Object ID of the layer this parameter belongs to.
+        """
+        attr: ParamAttribute = getattr(t, "roundpipe_param_attr", cls())
+        if layer_id is not None:
+            attr.grad_cpu[layer_id] = None
+            attr.grad_buffer[layer_id] = None
         t.roundpipe_param_attr = attr  # pyright: ignore[reportAttributeAccessIssue]
 
     @classmethod
-    def has(cls, t: torch.Tensor) -> bool:
+    def has(cls, t: torch.nn.Parameter) -> bool:
         """Check if a tensor has a ParamAttribute attached."""
         return hasattr(t, "roundpipe_param_attr")
 
     @classmethod
-    def get(cls, t: torch.Tensor) -> "ParamAttribute":
+    def get(cls, t: torch.nn.Parameter) -> "ParamAttribute":
         """Get the ParamAttribute attached to a tensor."""
         return t.roundpipe_param_attr  # pyright: ignore[reportAttributeAccessIssue]
-
-    def __init__(self, data: torch.Tensor) -> None:
-        """Initialize the ParamAttribute with the given data.
-
-        Args:
-            data: The `.data` object of the parameter tensor.
-        """
-        self.data_cpu: torch.Tensor = data
-        self.data_grad: Optional[torch.Tensor] = None
-        self.data_optim: torch.Tensor = data
-        self.optim_grad: Optional[torch.Tensor] = None
-        self.uploaded_grad: bool = False
-
-    def optim_inited(self) -> bool:
-        """Check if the optimizer copy has been initialized."""
-        return self.data_optim is not self.data_cpu
 
 
 class LayerAttribute:
@@ -89,6 +91,12 @@ class LayerAttribute:
             torch.cuda.Event, torch.cuda.Event()
         )
 
+        self.buffer_download_started: threading.Event = threading.Event()
+        self.buffer_download_started.set()
+        self.buffer_downloaded: torch.cuda.Event = cast(
+            torch.cuda.Event, torch.cuda.Event()
+        )
+
         self.grad_copied: threading.Event = threading.Event()
         self.grad_copied.set()
         self.grad_download_started: threading.Event = threading.Event()
@@ -106,11 +114,14 @@ class LayerAttribute:
         try:
             self.param_copied.wait()
             self.param_upload_started.wait()
+            self.buffer_download_started.wait()
+            self.buffer_downloaded.synchronize()
         except KeyboardInterrupt:
             dump_all_active_threads()
             raise KeyboardInterruptRoundPipeThreads from None
         if clear:
             self.param_upload_started.clear()
+            self.buffer_download_started.clear()
 
     def backward_fence(self, clear: bool = True) -> None:
         """Fence for backward pass to wait for parameter and gradient ready.
@@ -142,6 +153,9 @@ class LayerAttribute:
             self.param_copied.wait()
             self.param_upload_started.wait()
             self.param_upload_started.clear()
+            self.buffer_download_started.wait()
+            self.buffer_download_started.clear()
+            self.buffer_downloaded.synchronize()
             self.grad_copied.wait()
             self.grad_download_started.wait()
             self.grad_download_started.clear()

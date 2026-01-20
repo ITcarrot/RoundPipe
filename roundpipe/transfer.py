@@ -6,6 +6,7 @@ Attributes:
 """
 
 from typing_extensions import *
+import copy
 import math
 
 import torch
@@ -136,47 +137,81 @@ def create_upload_pair(
     return dst
 
 
+@torch.no_grad()
 def upload_layers(
     layers: List[torch.nn.Module],
     layer_attrs: List[LayerAttribute],
     device: "DeviceManager",
-    upload_grad: bool,
-) -> None:
-    """Move parameters/buffers (and optionally grads) onto the target device.
+    with_grad: bool,
+    saved_buffers: Optional[Dict[torch.Tensor, torch.Tensor]] = None,
+) -> List[torch.nn.Module]:
+    """Copy layers onto the target device.
 
     Args:
         layers: Sequence of layers to upload.
         layer_attrs: Sequence of layer attributes corresponding to layers.
         device: Device manager orchestrating the transfer.
-        upload_grad: Whether to copy gradient buffers alongside parameters.
+        with_grad: Whether to copy gradient buffers alongside parameters.
+        saved_buffers: Mapping to the saved buffers for doing recomputation.
+
+    Returns:
+        Layer copies now resident on the target device.
     """
     from .scheduler import chunk_layer_params
+
+    module_copies: Dict[Optional[torch.nn.Module], Optional[torch.nn.Module]] = {
+        None: None
+    }
+    param_copies: Dict[Optional[torch.nn.Parameter], Optional[torch.nn.Parameter]] = {
+        None: None
+    }
+    buffer_copies: Dict[Optional[torch.Tensor], Optional[torch.Tensor]] = {None: None}
+    tensor_pair: List[Tuple[torch.Tensor, torch.Tensor]] = []
+    with torch.cuda.stream(device.param_upstream):
+        for layer in layers:
+            for module in layer.modules():
+                if module not in module_copies:
+                    module_copies[module] = copy.copy(module)
+            for param in layer.parameters():
+                if param not in param_copies:
+                    param_copy = torch.nn.Parameter(
+                        create_upload_pair(tensor_pair, param.data, device.device),
+                        param.requires_grad,
+                    )
+                    param_attr = ParamAttribute.get(param)
+                    grad_cpu = param_attr.grad_cpu[id(layer)]
+                    if with_grad and grad_cpu is not None:
+                        param_copy.grad = create_upload_pair(
+                            tensor_pair, grad_cpu, device.device
+                        )
+                    param_copies[param] = param_copy
+            for buffer in layer.buffers():
+                if buffer not in buffer_copies:
+                    if saved_buffers is not None:
+                        data_src = saved_buffers[buffer]
+                    else:
+                        data_src = buffer.data
+                    buffer_copies[buffer] = create_upload_pair(
+                        tensor_pair, data_src, device.device
+                    )
+
+    for new_module in module_copies.values():
+        if new_module is None:
+            continue
+        new_module._modules = {
+            name: module_copies[mod] for name, mod in new_module._modules.items()
+        }
+        new_module._parameters = {
+            name: param_copies[param] for name, param in new_module._parameters.items()
+        }
+        new_module._buffers = {
+            name: buffer_copies[buf] for name, buf in new_module._buffers.items()
+        }
 
     chunk_events = device.flush_upload_marks()
     if len(chunk_events) == 0:
         chunk_events.append(cast(torch.cuda.Event, torch.cuda.Event()))
-    tensor_pair: List[Tuple[torch.Tensor, torch.Tensor]] = []
-    with torch.cuda.stream(device.param_upstream):
-        for layer in layers:
-            for param in layer.parameters():
-                param_attr = ParamAttribute.get(param)
-                param.data = create_upload_pair(
-                    tensor_pair, param_attr.data_cpu, device.device
-                )
-                if upload_grad and param.grad is not None:
-                    param.grad = create_upload_pair(
-                        tensor_pair, param.grad, device.device
-                    )
-                    param_attr.uploaded_grad = True
-                else:
-                    param_attr.uploaded_grad = False
-            for buffer in layer.buffers():
-                buffer_attr = ParamAttribute.get(buffer)
-                buffer.data = create_upload_pair(
-                    tensor_pair, buffer_attr.data_cpu, device.device
-                )
     chunked_tensor_pairs = chunk_layer_params(tensor_pair, len(chunk_events))
-
     with torch.cuda.stream(device.param_upstream):
         for tensor_chunk, chunk_event in zip(chunked_tensor_pairs, chunk_events):
             chunk_event.wait()
@@ -193,31 +228,19 @@ def upload_layers(
         layer_attr.param_uploaded = finish_event
         layer_attr.param_upload_started.set()
 
-
-def free_layer(layer: torch.nn.Module, device: "DeviceManager"):
-    """Swap layer tensors back to their CPU storage to free GPU memory.
-
-    Args:
-        layer: Module whose parameters/buffers should be restored to CPU.
-    """
-    for param in layer.parameters():
-        device.mem_manager.free(
-            param.data.untyped_storage(), device.param_upstream, device.compute_stream
-        )
-        param_attr = ParamAttribute.get(param)
-        param.data = param_attr.data_cpu
-    for buffer in layer.buffers():
-        device.mem_manager.free(
-            buffer.data.untyped_storage(), device.param_upstream, device.compute_stream
-        )
-        buffer_attr = ParamAttribute.get(buffer)
-        buffer.data = buffer_attr.data_cpu
+    return [cast(torch.nn.Module, module_copies[layer]) for layer in layers]
 
 
+@torch.no_grad()
 def download_layer(
-    layer: torch.nn.Module, layer_attr: LayerAttribute, device: "DeviceManager"
+    cpu_layer: torch.nn.Module,
+    gpu_layer: torch.nn.Module,
+    layer_attr: LayerAttribute,
+    device: "DeviceManager",
+    with_buffer: bool,
+    with_grad: bool,
 ):
-    """Copy layer params/buffers (and grads) back to the host asynchronously.
+    """Copy layer params/buffers/grads back to the host asynchronously.
     Note that this only issues the copies; synchronization must be handled
     externally.
 
@@ -225,55 +248,84 @@ def download_layer(
         layer: Module whose tensors should be copied to host memory.
         layer_attr: Layer attribute tracking the transfer events.
         device: Device manager orchestrating the transfer.
+        with_buffer: Whether to copy buffers back to host.
+        with_grad: Whether to copy gradients back to host.
     """
     with torch.cuda.stream(device.downstream):
-        for param in layer.parameters():
+        for (cpu_name, cpu_param), (gpu_name, gpu_param) in zip(
+            cpu_layer.named_parameters(),
+            gpu_layer.named_parameters(),
+        ):
+            assert (
+                cpu_name == gpu_name
+            ), "Modifying layer structure during forward is not allowed!"
             device.mem_manager.free(
-                param.data.untyped_storage(),
+                gpu_param.data.untyped_storage(),
                 device.param_upstream,
                 device.compute_stream,
             )
-            param_attr = ParamAttribute.get(param)
-            param.data = param_attr.data_cpu
-            if param.grad is not None:
-                if param_attr.uploaded_grad:
+            if with_grad and gpu_param.grad is not None:
+                param_attr = ParamAttribute.get(cpu_param)
+                if param_attr.grad_cpu[id(cpu_layer)] is None:
                     device.mem_manager.free(
-                        param.grad.untyped_storage(),
+                        gpu_param.grad.untyped_storage(),
+                        device.compute_stream,
+                        device.downstream,
+                    )
+                else:  # This means grad is upload from CPU
+                    device.mem_manager.free(
+                        gpu_param.grad.untyped_storage(),
                         device.param_upstream,
                         device.compute_stream,
                         device.downstream,
                     )
+                if param_attr.grad_cpu[id(cpu_layer)] is not None:
+                    grad_cpu = cast(torch.Tensor, param_attr.grad_cpu[id(cpu_layer)])
+                elif param_attr.grad_buffer[id(cpu_layer)] is not None:
+                    grad_cpu = cast(torch.Tensor, param_attr.grad_buffer[id(cpu_layer)])
                 else:
-                    device.mem_manager.free(
-                        param.grad.untyped_storage(),
-                        device.compute_stream,
-                        device.downstream,
+                    grad_cpu = torch.empty_like(
+                        gpu_param.grad, device=torch.device("cpu"), pin_memory=True
                     )
-                if (
-                    param_attr.data_grad is not None
-                ):  # reuse allocated grad buffer if exists
-                    param_attr.data_grad.copy_(param.grad, non_blocking=True)
-                    param.grad = param_attr.data_grad
-                else:
-                    param.grad = param.grad.to(torch.device("cpu"), non_blocking=True)
-        for buffer in layer.buffers():
-            device.mem_manager.free(
-                buffer.data.untyped_storage(),
-                device.param_upstream,
-                device.compute_stream,
-                device.downstream,
-            )
-            buffer_attr = ParamAttribute.get(buffer)
-            buffer_attr.data_cpu.copy_(buffer.data, non_blocking=True)
-            buffer.data = buffer_attr.data_cpu
+                grad_cpu.copy_(gpu_param.grad, non_blocking=True)
+                param_attr.grad_cpu[id(cpu_layer)] = grad_cpu
 
-    assert (
-        not layer_attr.grad_download_started.is_set()
-    ), "Gradient download already started for this layer!"
+        for (cpu_name, cpu_buffer), (gpu_name, gpu_buffer) in zip(
+            cpu_layer.named_buffers(),
+            gpu_layer.named_buffers(),
+        ):
+            assert (
+                cpu_name == gpu_name
+            ), "Modifying layer structure during forward is not allowed!"
+            if with_buffer:
+                device.mem_manager.free(
+                    gpu_buffer.data.untyped_storage(),
+                    device.param_upstream,
+                    device.compute_stream,
+                    device.downstream,
+                )
+                cpu_buffer.data.copy_(gpu_buffer.data, non_blocking=True)
+            else:
+                device.mem_manager.free(
+                    gpu_buffer.data.untyped_storage(),
+                    device.param_upstream,
+                    device.compute_stream,
+                )
+
     finish_event = cast(torch.cuda.Event, torch.cuda.Event())
     finish_event.record(device.downstream)
-    layer_attr.grad_downloaded = finish_event
-    layer_attr.grad_download_started.set()
+    if with_grad:
+        assert (
+            not layer_attr.grad_download_started.is_set()
+        ), "Gradient download already started for this layer!"
+        layer_attr.grad_downloaded = finish_event
+        layer_attr.grad_download_started.set()
+    if with_buffer:
+        assert (
+            not layer_attr.buffer_download_started.is_set()
+        ), "Buffer download already started for this layer!"
+        layer_attr.buffer_downloaded = finish_event
+        layer_attr.buffer_download_started.set()
 
 
 class PinnedUpload(torch.autograd.Function):
