@@ -22,12 +22,11 @@ from .device import get_num_devices
 from .threads import RoundPipeThread
 
 if sys.version_info >= (3, 9):
-    KernelQueueType = queue.Queue[Tuple[Callable, Tuple, Dict[str, Any]]]
+    KernelQueueType = queue.Queue[Union[Tuple[Callable, Tuple, Dict[str, Any]], object]]
 else:
     KernelQueueType = queue.Queue
 kernel_queue: KernelQueueType = queue.Queue()
-optim_shutdown: bool = False
-optim_active: _thread.LockType = threading.Lock()
+OPTIM_STOP = object()
 
 
 def controller() -> None:
@@ -37,12 +36,14 @@ def controller() -> None:
     if num_cpu > num_gpu * 4:
         torch.set_num_threads(num_cpu - num_gpu)
 
-    while not optim_shutdown:
-        fn, args, kwargs = kernel_queue.get()
-        with optim_active:
-            optim_thread.is_active = True
-            fn(*args, **kwargs)
-            optim_thread.is_active = False
+    while True:
+        job = kernel_queue.get()
+        if job is OPTIM_STOP:
+            break
+        fn, args, kwargs = cast(Tuple[Callable, Tuple, Dict[str, Any]], job)
+        optim_thread.is_active = True
+        fn(*args, **kwargs)
+        optim_thread.is_active = False
 
 
 optim_thread: RoundPipeThread = RoundPipeThread(
@@ -50,14 +51,11 @@ optim_thread: RoundPipeThread = RoundPipeThread(
 )
 
 
+@atexit.register
 def shutdown_optim() -> None:
     """Shut down the optimizer stream."""
-    global optim_shutdown
-    optim_shutdown = True
-    optim_active.acquire()  # Ensure no tasks are running
-
-
-atexit.register(shutdown_optim)
+    kernel_queue.put(OPTIM_STOP)
+    optim_thread.join()
 
 
 def launch_optim_kernel(fn: Callable, *args: Any, **kwargs: Any) -> None:

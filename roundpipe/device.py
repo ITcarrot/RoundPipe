@@ -8,6 +8,7 @@ Attributes:
 from typing_extensions import *
 import threading
 import itertools
+import atexit
 
 import torch
 
@@ -140,6 +141,7 @@ class DeviceManager:
     Attributes:
         id: Integer identifier matching ``cuda:{id}``.
         device: Corresponding Pytorch CUDA device handle.
+        shutdown: Flag to signal controller thread shutdown.
         param_upstream: Stream for model parameter uploads.
         upstream: Stream handling activation uploads.
         compute_stream: Default compute stream bound to ``device``.
@@ -161,6 +163,7 @@ class DeviceManager:
         """
         self.id: int = id
         self.device: torch.device = device
+        self.shutdown: bool = False
 
         self.param_upstream: torch.cuda.Stream = cast(
             torch.cuda.Stream, torch.cuda.Stream(device)
@@ -185,6 +188,7 @@ class DeviceManager:
         self.controller_thread: RoundPipeThread = RoundPipeThread(
             target=self.controller, name=f"RoundPipe DeviceController-{id}"
         )
+        atexit.register(self.shutdown_controller)
 
     def wait_stream(
         self, waiter: torch.cuda.Stream, wait_for: torch.cuda.Stream
@@ -228,6 +232,8 @@ class DeviceManager:
         """
         while True:
             self.job_arrived.acquire()
+            if self.shutdown:
+                break
             self.controller_thread.is_active = True
             assert self.cur_job is not None
             fn, run_context, args = self.cur_job
@@ -240,6 +246,12 @@ class DeviceManager:
             del fn, run_context, args
             self.controller_thread.is_active = False
             self.is_idle.release()
+
+    def shutdown_controller(self) -> None:
+        """Shut down the device controller thread."""
+        self.shutdown = True
+        self.job_arrived.release()
+        self.controller_thread.join()
 
     def launch_forward(
         self,
