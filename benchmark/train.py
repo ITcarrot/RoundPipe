@@ -1,33 +1,39 @@
 # Load model directly
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+import transformers
+from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
 from tqdm import tqdm
 import time
 import sys
-from roundpipe import wrap_model_to_roundpipe, RoundPipe
+from roundpipe import wrap_model_to_roundpipe, RoundPipeRunConfig
 from roundpipe.optim import Adam
 
+torch._dynamo.config.recompile_limit = 2
 torch.backends.cuda.matmul.allow_fp16_accumulation = True
+transformers.modeling_utils._init_weights = False
 
-if len(sys.argv) != 5:
+if len(sys.argv) != 6:
     print(
-        f"Usage: python {sys.argv[0]} <model_path> <batch_size> <seq_length> <accum_steps>"
+        f"Usage: python {sys.argv[0]} <model_path> <batch_size> <seq_length> <num_microbatch> <accum_steps>"
     )
     sys.exit(1)
 model_path = sys.argv[1]
 BS = int(sys.argv[2])
 SEQ_LENGTH = int(sys.argv[3])
-ACCUM_STEPS = int(sys.argv[4])
+NUM_MICROBATCH = int(sys.argv[4])
+ACCUM_STEPS = int(sys.argv[5])
 
 tokenizer = AutoTokenizer.from_pretrained(model_path)
-hf_model = AutoModelForCausalLM.from_pretrained(
-    model_path,
-    _attn_implementation="flash_attention_2",
-    use_cache=False,
-    dtype=torch.float16,
-)
+config = AutoConfig.from_pretrained(model_path)
+config._attn_implementation = "flash_attention_2"
+config.use_cache = False
+config.dtype = torch.float16
+hf_model = AutoModelForCausalLM.from_config(config)
 model = wrap_model_to_roundpipe(
-    hf_model, optim_dtype=torch.float32, use_sequential_preset=True
+    hf_model,
+    optim_dtype=torch.float32,
+    use_sequential_preset=True,
+    model_run_config=RoundPipeRunConfig(num_microbatch=NUM_MICROBATCH),
 )
 optim = Adam(model.optim_parameters(), lr=1e-5)
 
