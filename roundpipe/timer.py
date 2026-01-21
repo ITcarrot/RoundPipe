@@ -142,7 +142,10 @@ class ModelTimer:
         while True:
             if self.pending_fwd is None or self.pending_bwd is None:
                 try:
-                    self.pending_fwd, self.pending_bwd = self.iter_results.get_nowait()
+                    self.pending_fwd, self.pending_bwd = cast(
+                        Tuple[TimerFwdEventsType, TimerBwdEventsType],
+                        self.iter_results.get_nowait(),
+                    )
                 except queue.Empty:
                     return
             for model_events in self.pending_fwd.values():
