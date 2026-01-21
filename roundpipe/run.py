@@ -581,6 +581,7 @@ def run_forward_backward(
         )
         for layer_id, gpu_layer in zip(layer_ids, gpu_layers):
             context.gpu_bwd_layers[layer_id] = gpu_layer
+    context.tracker.forward_wait_for(len(context.tracker.fwd_plan) - 1)
     flatten_inputs_gpu = async_h2d(
         device, batch.forward_events[batch_idx], batch.flatten_states[batch_idx], True
     )
@@ -649,6 +650,7 @@ def run_forward_backward(
                     l, device.compute_stream, device.downstream
                 )
     batch.loss_ready.record(device.downstream)
+    context.tracker.fused_forward_notify()
 
     with annotate(
         f"{model.name}L[{layer_ids[0]}, {layer_ids[-1]}]B[{batch_idx}]Bwd"

@@ -523,7 +523,7 @@ class RoundPipe(RoundPipeBase):
             full_run_config.requires_grad and torch.is_grad_enabled()
         ), "train_iter requires gradients to be enabled."
         batch = Batch(input_args, input_kwargs, full_run_config, label)
-        self.model_timer.update_times()
+        # self.model_timer.update_times()
         execute_plan = full_run_config.execute_plan
         if execute_plan is None:
             execute_plan = ModelExecutePlan.auto("fused", self)
@@ -562,7 +562,6 @@ class RoundPipe(RoundPipeBase):
                 batch,
                 run_context,
             )
-        tracker.forward_wait_complete(batch.num_microbatch)
         device = get_next_device()
         device.launch_forward_backward(
             [self.layer_attrs[i] for i in tracker.bwd_plan[0]],
@@ -578,9 +577,10 @@ class RoundPipe(RoundPipeBase):
                 [self.layer_attrs[i] for i in tracker.bwd_plan[layer_group_id]],
                 run_context,
             )
-        tracker.backward_wait_complete(batch.num_microbatch)
 
+        tracker.fused_forward_wait_complete(batch.num_microbatch)
         if input_backward_handle.requires_grad:
+            tracker.backward_wait_complete(batch.num_microbatch)
             input_backward_handle.backward()
 
         batch.loss_ready.synchronize()

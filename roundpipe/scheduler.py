@@ -254,6 +254,8 @@ class ModelTracker:
         bwd_plan: List of layer ranges executed during backward.
         fwd_sem: Per-layer semaphores used to gate forward progress.
         bwd_sem: Per-layer semaphores used to gate backward progress.
+        fused_fwd_sem: Semaphore to signal forward part completion
+            of fused forward backward.
     """
 
     def __init__(self, execute_plan: ModelExecutePlan) -> None:
@@ -270,6 +272,7 @@ class ModelTracker:
         self.bwd_sem: List[AnnotatedSemaphore] = [
             AnnotatedSemaphore(f"Bstage{i}", 0) for i in range(len(self.bwd_plan))
         ]
+        self.fused_fwd_sem: AnnotatedSemaphore = AnnotatedSemaphore("Fstage -1", 0)
 
     def backward_need_input(self, layer_id: int) -> bool:
         """Return whether backward execution requires inputs for ``layer_id``."""
@@ -289,6 +292,10 @@ class ModelTracker:
         """Signal that the given forward group completed."""
         self.fwd_sem[layer_group_id].release()
 
+    def fused_forward_notify(self) -> None:
+        """Signal that forward part of fused forward backward completed."""
+        self.fused_fwd_sem.release()
+
     def forward_wait_complete(self, num_microbatch: int) -> None:
         """Wait for the last forward group to finish ``num_microbatch`` times.
 
@@ -299,6 +306,16 @@ class ModelTracker:
             return
         for _ in range(num_microbatch):
             self.fwd_sem[-1].acquire()
+
+    def fused_forward_wait_complete(self, num_microbatch: int) -> None:
+        """Wait for fused forward part of fused forward backward completion
+        across all microbatches.
+
+        Args:
+            num_microbatch: Number of microbatches that must finish.
+        """
+        for _ in range(num_microbatch):
+            self.fused_fwd_sem.acquire()
 
     def backward_wait_for(self, layer_group_id: int) -> None:
         """Block until the given backward group completes."""
