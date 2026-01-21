@@ -22,7 +22,7 @@ from .run import (
 from .run_config import RoundPipeRunConfig, FullRoundPipeRunConfig
 from .scheduler import ModelExecutePlan, ModelTracker, backward_schedule_simulator
 from .threads import AnnotatedEvent
-from .timer import ModelTimer
+from .timer import ModelTimer, IterTimer
 from .utils import get_call_location
 
 
@@ -413,6 +413,7 @@ class RoundPipe(RoundPipeBase):
             self.num_layers,
             "train" if full_run_config.requires_grad else "infer",
         )
+        timer = IterTimer(self.model_timer)
         tracker = ModelTracker(execute_plan)
         gpu_fwd_layers = [torch.nn.Module() for _ in range(self.num_layers)]
         gpu_bwd_layers = [torch.nn.Module() for _ in range(self.num_layers)]
@@ -421,6 +422,7 @@ class RoundPipe(RoundPipeBase):
                 self,
                 gpu_fwd_layers,
                 gpu_bwd_layers,
+                timer,
                 tracker,
                 full_run_config.requires_grad,
                 i,
@@ -523,11 +525,12 @@ class RoundPipe(RoundPipeBase):
             full_run_config.requires_grad and torch.is_grad_enabled()
         ), "train_iter requires gradients to be enabled."
         batch = Batch(input_args, input_kwargs, full_run_config, label)
-        # self.model_timer.update_times()
+        self.model_timer.update_times()
         execute_plan = full_run_config.execute_plan
         if execute_plan is None:
             execute_plan = ModelExecutePlan.auto("fused", self)
         execute_plan.check_valid(self.num_layers, "fused")
+        timer = IterTimer(self.model_timer)
         tracker = ModelTracker(execute_plan)
         gpu_fwd_layers = [torch.nn.Module() for _ in range(self.num_layers)]
         gpu_bwd_layers = [torch.nn.Module() for _ in range(self.num_layers)]
@@ -536,6 +539,7 @@ class RoundPipe(RoundPipeBase):
                 self,
                 gpu_fwd_layers,
                 gpu_bwd_layers,
+                timer,
                 tracker,
                 full_run_config.requires_grad,
                 i,

@@ -20,11 +20,13 @@ if TYPE_CHECKING:
     from .device import DeviceManager
     from .roundpipe import RoundPipe
     from .scheduler import ModelTracker
+    from .timer import IterTimer
 else:
     Batch = TypeAliasType("Batch", "roundpipe.batch.Batch")
     DeviceManager = TypeAliasType("DeviceManager", "roundpipe.device.DeviceManager")
     RoundPipe = TypeAliasType("RoundPipe", "roundpipe.roundpipe.RoundPipe")
     ModelTracker = TypeAliasType("ModelTracker", "roundpipe.scheduler.ModelTracker")
+    IterTimer = TypeAliasType("IterTimer", "roundpipe.timer.IterTimer")
 
 
 class RoundPipeRunContext:
@@ -34,6 +36,7 @@ class RoundPipeRunContext:
         model: The running ``RoundPipe`` instance.
         gpu_fwd_layers: GPU-resident layers for current forward batch.
         gpu_bwd_layers: GPU-resident layers for current backward batch.
+        timer: Iteration timer shared across microbatches.
         tracker: Tracker describing fwd/bwd ordering across layers.
         enable_grad: Whether to store data for backward pass.
         microbatch_id: Index of the microbatch this context tracks.
@@ -58,6 +61,7 @@ class RoundPipeRunContext:
     model: "RoundPipe"
     gpu_fwd_layers: List[torch.nn.Module]
     gpu_bwd_layers: List[torch.nn.Module]
+    timer: "IterTimer"
     tracker: "ModelTracker"
     enable_grad: bool
     microbatch_id: int
@@ -82,6 +86,7 @@ class RoundPipeRunContext:
         model: "RoundPipe",
         gpu_fwd_layers: List[torch.nn.Module],
         gpu_bwd_layers: List[torch.nn.Module],
+        timer: "IterTimer",
         tracker: "ModelTracker",
         enable_grad: bool,
         microbatch_id: int,
@@ -96,6 +101,7 @@ class RoundPipeRunContext:
                 among forward microbatches.
             gpu_bwd_layers: A list for sharing GPU-resident layers
                 among backward microbatches.
+            timer: Iteration timer shared across microbatches.
             tracker: Tracker describing fwd/bwd ordering across layers.
             enable_grad: Whether to store data for backward pass.
             microbatch_id: Microbatch index for this context.
@@ -105,6 +111,7 @@ class RoundPipeRunContext:
         self.model = model
         self.gpu_fwd_layers = gpu_fwd_layers
         self.gpu_bwd_layers = gpu_bwd_layers
+        self.timer = timer
         self.tracker = tracker
         self.enable_grad = enable_grad
         self.microbatch_id = microbatch_id
@@ -344,7 +351,7 @@ def run_forward(
             f"{model.name}L[{layer_id}]B[{batch_idx}]Fwd"
         ), ForwardCtx(
             functools.partial(context.save_for_recompute, layer_id, device)
-        ), model.model_timer.time_fwd(
+        ), context.timer.time_fwd(
             "fwd", layer_id, device.compute_stream
         ):
             try:
@@ -467,7 +474,7 @@ def run_backward(
                 f"{model.name}L[{layer_id}]B[{batch_idx}]Re"
             ), RecomputeCtx(
                 context.cut_recompute_data(layer_id)
-            ), model.model_timer.time_fwd(
+            ), context.timer.time_fwd(
                 "re", layer_id, device.compute_stream
             ):
                 try:
@@ -503,7 +510,7 @@ def run_backward(
             outputs_grad.append(grad_out)
     with annotate(
         f"{model.name}L[{layer_ids[0]}, {layer_ids[-1]}]B[{batch_idx}]Bwd"
-    ), model.model_timer.time_bwd(layer_ids, device.compute_stream):
+    ), context.timer.time_bwd(layer_ids, device.compute_stream):
         try:
             torch.autograd.backward(outputs_requires_grad, outputs_grad)
         except Exception:
@@ -595,9 +602,9 @@ def run_forward_backward(
             "cpu", **context.cpu_autocast_kwargs
         ), annotate(
             f"{model.name}L[{layer_id}]B[{batch_idx}]Fwd"
-        ), model.model_timer.time_fwd(
+        ), context.timer.time_fwd(
             "fwd", layer_id, device.compute_stream
-        ), model.model_timer.time_fwd(
+        ), context.timer.time_fwd(
             "re", layer_id, device.compute_stream
         ):
             try:
@@ -654,7 +661,7 @@ def run_forward_backward(
 
     with annotate(
         f"{model.name}L[{layer_ids[0]}, {layer_ids[-1]}]B[{batch_idx}]Bwd"
-    ), model.model_timer.time_bwd(layer_ids, device.compute_stream):
+    ), context.timer.time_bwd(layer_ids, device.compute_stream):
         try:
             torch.autograd.backward(loss)
         except Exception:
