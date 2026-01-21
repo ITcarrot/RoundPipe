@@ -446,6 +446,7 @@ def run_backward(
         )
         for layer_id, gpu_layer in zip(layer_ids, gpu_layers):
             context.gpu_bwd_layers[layer_id] = gpu_layer
+    context.tracker.backward_wait_for(layer_group_id - 1)
     for layer_id in layer_ids:
         context.fetch_recompute_data(layer_id, device)
     flatten_inputs_gpu = async_h2d(
@@ -497,7 +498,6 @@ def run_backward(
                     raise SystemExit(1)
 
     flatten_outputs_gpu, _ = tree_flatten(hidden_state)
-    context.tracker.backward_wait_for(layer_group_id - 1)
     flatten_grad_outputs_gpu = async_h2d(
         device, context.output_backward_events, context.grad_states
     )
