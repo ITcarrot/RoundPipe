@@ -64,6 +64,12 @@ KeyboardInterruptRoundPipeThreads: KeyboardInterrupt = KeyboardInterrupt(
 
 
 class AnnotatedSemaphore(threading.Semaphore):
+    """Semaphore that annotates waits for easier profile and debugging.
+
+    Attributes:
+        name: Friendly name to help annotate waits.
+    """
+
     def __init__(self, name: str, value: int):
         super().__init__(value)
         self.name = name
@@ -86,6 +92,12 @@ class AnnotatedSemaphore(threading.Semaphore):
 
 
 class AnnotatedEvent(threading.Event):
+    """Event that annotates waits for easier profile and debugging.
+
+    Attributes:
+        name: Friendly name to help annotate waits.
+    """
+
     def __init__(self, name: str):
         super().__init__()
         self.name = name
