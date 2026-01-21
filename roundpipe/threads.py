@@ -17,6 +17,8 @@ import sys
 import types
 import _thread
 
+from .profile import annotate
+
 
 class RoundPipeThread(threading.Thread):
     """Daemon thread wrapper that reports uncaught exceptions before exit.
@@ -59,6 +61,45 @@ KeyboardInterruptRoundPipeThreads: KeyboardInterrupt = KeyboardInterrupt(
     "KeyboardInterrupt when RoundPipe is waiting for its worker threads to finish their work. "
     "Check traceback of worker threads for more details."
 )
+
+
+class AnnotatedSemaphore(threading.Semaphore):
+    def __init__(self, name: str, value: int):
+        super().__init__(value)
+        self.name = name
+
+    @override
+    def acquire(
+        self, blocking: bool = True, timeout: Union[float, None] = None
+    ) -> bool:
+        if not blocking:
+            return super().acquire(blocking, timeout)
+        # override blocking acquire only
+        if super().acquire(blocking=False):
+            return True  # fast path
+        try:
+            with annotate(self.name, "orange"):
+                return super().acquire(blocking, timeout)
+        except KeyboardInterrupt:
+            dump_all_active_threads()
+            raise KeyboardInterruptRoundPipeThreads from None
+
+
+class AnnotatedEvent(threading.Event):
+    def __init__(self, name: str):
+        super().__init__()
+        self.name = name
+
+    @override
+    def wait(self, timeout: Union[float, None] = None) -> bool:
+        if self.is_set():
+            return True  # fast path
+        try:
+            with annotate(self.name, "orange"):
+                return super().wait(timeout)
+        except KeyboardInterrupt:
+            dump_all_active_threads()
+            raise KeyboardInterruptRoundPipeThreads from None
 
 
 def is_threading_internal(frame: types.FrameType) -> bool:

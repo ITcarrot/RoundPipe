@@ -18,7 +18,7 @@ import torch
 
 from .device import get_num_devices
 from .profile import annotate
-from .threads import RoundPipeThread
+from .threads import RoundPipeThread, AnnotatedEvent
 
 if sys.version_info >= (3, 9):
     KernelQueueType = queue.Queue[Union[Tuple[Callable, Tuple, Dict[str, Any]], object]]
@@ -71,7 +71,7 @@ def launch_optim_kernel(fn: Callable, *args: Any, **kwargs: Any) -> None:
 
 def synchronize_optim() -> None:
     """Synchronize the optimizer stream with the main thread."""
-    event = threading.Event()
+    event = AnnotatedEvent("opt_sync")
     launch_optim_kernel(event.set)
     event.wait()
 

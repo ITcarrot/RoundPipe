@@ -14,11 +14,7 @@ import torch
 
 from .attribute import LayerAttribute
 from .run import run_forward, run_backward, run_forward_backward, RoundPipeRunContext
-from .threads import (
-    RoundPipeThread,
-    dump_all_active_threads,
-    KeyboardInterruptRoundPipeThreads,
-)
+from .threads import RoundPipeThread, AnnotatedSemaphore
 
 if TYPE_CHECKING:
     from .batch import Batch
@@ -180,7 +176,7 @@ class DeviceManager:
         )
         self.upload_mark: List[torch.cuda.Event] = []
 
-        self.is_idle: threading.Semaphore = threading.Semaphore(1)
+        self.is_idle: AnnotatedSemaphore = AnnotatedSemaphore(f"dev{id}busy", 1)
         self.job_arrived: threading.Semaphore = threading.Semaphore(0)
         self.cur_job: Optional[
             Tuple[Callable[..., None], List[RoundPipeRunContext], Tuple]
@@ -268,13 +264,9 @@ class DeviceManager:
             batch: Batch container shared across microbatches.
             run_context: Per-microbatch execution contexts.
         """
-        try:
-            self.is_idle.acquire()
-        except KeyboardInterrupt:
-            dump_all_active_threads()
-            raise KeyboardInterruptRoundPipeThreads from None
         for layer_attr in layer_attrs:
             layer_attr.forward_fence()
+        self.is_idle.acquire()
         self.cur_job = (run_forward, run_context, (layer_group_id, batch))
         self.job_arrived.release()
 
@@ -291,13 +283,9 @@ class DeviceManager:
             layer_attrs: List of layer attributes for the layers in this group.
             run_context: Per-microbatch execution contexts.
         """
-        try:
-            self.is_idle.acquire()
-        except KeyboardInterrupt:
-            dump_all_active_threads()
-            raise KeyboardInterruptRoundPipeThreads from None
         for layer_attr in layer_attrs:
             layer_attr.backward_fence()
+        self.is_idle.acquire()
         self.cur_job = run_backward, run_context, (layer_group_id,)
         self.job_arrived.release()
 
@@ -317,13 +305,9 @@ class DeviceManager:
             loss_fn: Callable that consumes outputs + labels and returns loss.
             return_outputs: Whether to return model outputs from forward pass.
         """
-        try:
-            self.is_idle.acquire()
-        except KeyboardInterrupt:
-            dump_all_active_threads()
-            raise KeyboardInterruptRoundPipeThreads from None
         for layer_attr in layer_attrs:
             layer_attr.forward_backward_fence()
+        self.is_idle.acquire()
         self.cur_job = (
             run_forward_backward,
             run_context,

@@ -2,12 +2,11 @@
 
 from typing_extensions import *
 
-import threading
-
 import torch
 from torch.optim.optimizer import Optimizer
 
 from .optim_stream import on_optim_stream, launch_optim_kernel, synchronize_optim
+from .threads import AnnotatedEvent
 
 
 class GradScaler:
@@ -62,7 +61,7 @@ class GradScaler:
         self.next_scale: torch.Tensor = torch.full(
             (), init_scale, dtype=torch.float32, device="cpu"
         )
-        self.scaler_updated: threading.Event = threading.Event()
+        self.scaler_updated: AnnotatedEvent = AnnotatedEvent(f"Gscal_upd")
         self.scaler_updated.set()
 
         self.main_scaler._lazy_init_scale_growth_tracker(torch.device("cpu"))

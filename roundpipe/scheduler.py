@@ -5,14 +5,13 @@ Attributes:
 """
 
 from typing_extensions import *
-import threading
 import heapq
 import copy
 
 import torch
 
 from .device import get_num_devices
-from .threads import dump_all_active_threads, KeyboardInterruptRoundPipeThreads
+from .threads import AnnotatedSemaphore
 
 if TYPE_CHECKING:
     from .roundpipe import RoundPipe
@@ -265,11 +264,11 @@ class ModelTracker:
         """
         self.fwd_plan: List[range] = copy.deepcopy(execute_plan.fwd_plan)
         self.bwd_plan: List[range] = copy.deepcopy(execute_plan.bwd_plan)
-        self.fwd_sem: List[threading.Semaphore] = [
-            threading.Semaphore(0) for _ in self.fwd_plan
+        self.fwd_sem: List[AnnotatedSemaphore] = [
+            AnnotatedSemaphore(f"Fstage{i}", 0) for i in range(len(self.fwd_plan))
         ]
-        self.bwd_sem: List[threading.Semaphore] = [
-            threading.Semaphore(0) for _ in self.bwd_plan
+        self.bwd_sem: List[AnnotatedSemaphore] = [
+            AnnotatedSemaphore(f"Bstage{i}", 0) for i in range(len(self.bwd_plan))
         ]
 
     def backward_need_input(self, layer_id: int) -> bool:
@@ -298,12 +297,8 @@ class ModelTracker:
         """
         if len(self.fwd_sem) == 0:
             return
-        try:
-            for _ in range(num_microbatch):
-                self.fwd_sem[-1].acquire()
-        except KeyboardInterrupt:
-            dump_all_active_threads()
-            raise KeyboardInterruptRoundPipeThreads from None
+        for _ in range(num_microbatch):
+            self.fwd_sem[-1].acquire()
 
     def backward_wait_for(self, layer_group_id: int) -> None:
         """Block until the given backward group completes."""
@@ -321,12 +316,8 @@ class ModelTracker:
         Args:
             num_microbatch: Number of microbatches that must finish.
         """
-        try:
-            for _ in range(num_microbatch):
-                self.bwd_sem[-1].acquire()
-        except KeyboardInterrupt:
-            dump_all_active_threads()
-            raise KeyboardInterruptRoundPipeThreads from None
+        for _ in range(num_microbatch):
+            self.bwd_sem[-1].acquire()
 
 
 class BackwardScheduleSimulator:

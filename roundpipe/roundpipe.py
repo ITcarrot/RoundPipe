@@ -3,7 +3,6 @@
 from typing_extensions import *
 import copy
 import warnings
-import threading
 
 import tqdm
 import torch
@@ -22,7 +21,7 @@ from .run import (
 )
 from .run_config import RoundPipeRunConfig, FullRoundPipeRunConfig
 from .scheduler import ModelExecutePlan, ModelTracker, backward_schedule_simulator
-from .threads import dump_all_active_threads, KeyboardInterruptRoundPipeThreads
+from .threads import AnnotatedEvent
 from .timer import ModelTimer
 from .utils import get_call_location
 
@@ -65,7 +64,7 @@ class RoundPipeBase(nn.Module):
         self.layer_attrs: List[LayerAttribute] = []
 
         self.optim_dtype: Optional[torch.dtype] = optim_dtype
-        self.optim_updated: threading.Event = threading.Event()
+        self.optim_updated: AnnotatedEvent = AnnotatedEvent(f"{self.name}_opt")
         self.optim_updated.set()
 
     def __getattr__(self, name: str) -> Any:
@@ -195,16 +194,12 @@ class RoundPipeBase(nn.Module):
             *args: Positional arguments forwarded to ``step_fn``.
             **kwargs: Keyword arguments forwarded to ``step_fn``.
         """
-        try:
-            self.optim_updated.wait()  # ensure previous step is done to avoid data race
-            for layer_attr in self.layer_attrs:
-                layer_attr.param_copied.wait()
-                layer_attr.param_copied.clear()
-                layer_attr.grad_copied.wait()
-                layer_attr.grad_copied.clear()
-        except KeyboardInterrupt:
-            dump_all_active_threads()
-            raise KeyboardInterruptRoundPipeThreads from None
+        self.optim_updated.wait()  # ensure previous step is done to avoid data race
+        for layer_attr in self.layer_attrs:
+            layer_attr.param_copied.wait()
+            layer_attr.param_copied.clear()
+            layer_attr.grad_copied.wait()
+            layer_attr.grad_copied.clear()
 
         if is_async:
             launch_optim_kernel(self.sync_optim_param)
@@ -219,14 +214,11 @@ class RoundPipeBase(nn.Module):
         """Synchronize optimizer parameters and backward gradients
         back to model parameters.
         """
-        try:
-            self.optim_updated.wait()
-            for layer_attr in self.layer_attrs:
-                layer_attr.param_copied.wait()
-                layer_attr.param_copied.clear()
-        except KeyboardInterrupt:
-            dump_all_active_threads()
-            raise KeyboardInterruptRoundPipeThreads from None
+        self.optim_updated.wait()
+        for layer_attr in self.layer_attrs:
+            layer_attr.param_copied.wait()
+            layer_attr.param_copied.clear()
+
         self.sync_optim_param()
         for layer_attr in self.layer_attrs:
             layer_attr.forward_fence(False)
@@ -285,7 +277,7 @@ class RoundPipe(RoundPipeBase):
 
         self.num_layers: int = len(self.layers)
         self.layer_attrs: List[LayerAttribute] = [
-            LayerAttribute() for _ in range(self.num_layers)
+            LayerAttribute(f"{self.name}L{i}") for i in range(self.num_layers)
         ]
         self.model_timer: ModelTimer = ModelTimer(self.layers)
 
@@ -643,7 +635,7 @@ class AutoRoundPipe(RoundPipeBase):
         """
         super().__init__(model, name, optim_dtype)
 
-        self.virtual_layer_attr = LayerAttribute()
+        self.virtual_layer_attr = LayerAttribute(f"{self.name}Gbl")
         self.layer_attrs.append(self.virtual_layer_attr)
         for module in self.model.modules():
             if isinstance(module, RoundPipe):

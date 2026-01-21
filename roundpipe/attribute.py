@@ -1,11 +1,10 @@
 """Module defining parameter attributes for RoundPipe."""
 
 from typing_extensions import *
-import threading
 
 import torch
 
-from .threads import dump_all_active_threads, KeyboardInterruptRoundPipeThreads
+from .threads import AnnotatedEvent
 
 
 class ParamAttribute:
@@ -82,24 +81,24 @@ class LayerAttribute:
         grad_downloaded: CUDA event indicating gradient download to CPU is done.
     """
 
-    def __init__(self) -> None:
-        self.param_copied: threading.Event = threading.Event()
+    def __init__(self, name: str) -> None:
+        self.param_copied: AnnotatedEvent = AnnotatedEvent(f"o2p_{name}")
         self.param_copied.set()
-        self.param_upload_started: threading.Event = threading.Event()
+        self.param_upload_started: AnnotatedEvent = AnnotatedEvent(f"p2d_{name}")
         self.param_upload_started.set()
         self.param_uploaded: torch.cuda.Event = cast(
             torch.cuda.Event, torch.cuda.Event()
         )
 
-        self.buffer_download_started: threading.Event = threading.Event()
+        self.buffer_download_started: AnnotatedEvent = AnnotatedEvent(f"b2h_{name}")
         self.buffer_download_started.set()
         self.buffer_downloaded: torch.cuda.Event = cast(
             torch.cuda.Event, torch.cuda.Event()
         )
 
-        self.grad_copied: threading.Event = threading.Event()
+        self.grad_copied: AnnotatedEvent = AnnotatedEvent(f"g2o_{name}")
         self.grad_copied.set()
-        self.grad_download_started: threading.Event = threading.Event()
+        self.grad_download_started: AnnotatedEvent = AnnotatedEvent(f"g2h_{name}")
         self.grad_download_started.set()
         self.grad_downloaded: torch.cuda.Event = cast(
             torch.cuda.Event, torch.cuda.Event()
@@ -111,14 +110,10 @@ class LayerAttribute:
         Args:
             clear: Whether to clear events for doing forward.
         """
-        try:
-            self.param_copied.wait()
-            self.param_upload_started.wait()
-            self.buffer_download_started.wait()
-            self.buffer_downloaded.synchronize()
-        except KeyboardInterrupt:
-            dump_all_active_threads()
-            raise KeyboardInterruptRoundPipeThreads from None
+        self.param_copied.wait()
+        self.param_upload_started.wait()
+        self.buffer_download_started.wait()
+        self.buffer_downloaded.synchronize()
         if clear:
             self.param_upload_started.clear()
             self.buffer_download_started.clear()
@@ -129,15 +124,11 @@ class LayerAttribute:
         Args:
             clear: Whether to clear events for doing backward.
         """
-        try:
-            self.param_copied.wait()
-            self.param_upload_started.wait()
-            self.grad_copied.wait()
-            self.grad_download_started.wait()
-            self.grad_downloaded.synchronize()
-        except KeyboardInterrupt:
-            dump_all_active_threads()
-            raise KeyboardInterruptRoundPipeThreads from None
+        self.param_copied.wait()
+        self.param_upload_started.wait()
+        self.grad_copied.wait()
+        self.grad_download_started.wait()
+        self.grad_downloaded.synchronize()
         if clear:
             self.param_upload_started.clear()
             self.grad_download_started.clear()
@@ -149,17 +140,13 @@ class LayerAttribute:
         Args:
             clear: Whether to clear events for doing backward.
         """
-        try:
-            self.param_copied.wait()
-            self.param_upload_started.wait()
-            self.param_upload_started.clear()
-            self.buffer_download_started.wait()
-            self.buffer_download_started.clear()
-            self.buffer_downloaded.synchronize()
-            self.grad_copied.wait()
-            self.grad_download_started.wait()
-            self.grad_download_started.clear()
-            self.grad_downloaded.synchronize()
-        except KeyboardInterrupt:
-            dump_all_active_threads()
-            raise KeyboardInterruptRoundPipeThreads from None
+        self.param_copied.wait()
+        self.param_upload_started.wait()
+        self.param_upload_started.clear()
+        self.buffer_download_started.wait()
+        self.buffer_download_started.clear()
+        self.buffer_downloaded.synchronize()
+        self.grad_copied.wait()
+        self.grad_download_started.wait()
+        self.grad_download_started.clear()
+        self.grad_downloaded.synchronize()
