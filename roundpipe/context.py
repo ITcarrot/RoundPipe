@@ -79,7 +79,9 @@ def doing_recompute() -> bool:
 
 
 def get_recompute_data() -> Any:
-    """Get data saved for recomputation in current recompute context."""
+    """Get data saved for recomputation in current recompute context.
+    This will always return a tuple even if you saved a single item.
+    """
     recompute_ctx: Optional[RecomputeCtx] = getattr(flags, "recompute", None)
     assert recompute_ctx is not None, "Not in recompute context"
     return recompute_ctx.recompute_data

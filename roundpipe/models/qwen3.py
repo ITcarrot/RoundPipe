@@ -29,9 +29,7 @@ class Qwen3ForCausalLMPrefix(nn.Module):
         attention_mask: Optional[torch.Tensor] = None,
         position_ids: Optional[torch.Tensor] = None,
         past_key_values: Optional[Any] = None,
-        inputs_embeds: Optional[  # pyright: ignore[reportRedeclaration]
-            torch.Tensor
-        ] = None,
+        inputs_embeds: Optional[torch.Tensor] = None,
         labels: Optional[torch.Tensor] = None,
         use_cache: Optional[bool] = None,
         cache_position: Optional[torch.Tensor] = None,
@@ -44,7 +42,7 @@ class Qwen3ForCausalLMPrefix(nn.Module):
             )
 
         if inputs_embeds is None:
-            inputs_embeds: torch.Tensor = self.embed_tokens(input_ids)
+            inputs_embeds = cast(torch.Tensor, self.embed_tokens(input_ids))
 
         # Early return to avoid host-device synchronization in create_causal_mask
         if doing_recompute():

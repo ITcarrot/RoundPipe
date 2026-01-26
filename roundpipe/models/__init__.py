@@ -5,6 +5,7 @@ with RoundPipe's sequential execution presets. Each supported model type
 has a corresponding wrapper module that implements the necessary integration.
 
 Attributes:
+    DISABLE_TORCH_COMPILE (bool): flag indicating whether to disable torch.compile in models.
     SUPPORTED_MODELS (Dict[str, str]): dictionary mapping model type names
         to their corresponding wrapper module paths.
 """
@@ -14,8 +15,11 @@ import importlib
 
 from ..roundpipe import RoundPipe
 
+DISABLE_TORCH_COMPILE = False
+
 SUPPORTED_MODELS = {
     "function": ".function",
+    "Qwen3MoeForCausalLM": ".qwen3_moe",
     "Qwen3ForCausalLM": ".qwen3",
 }
 

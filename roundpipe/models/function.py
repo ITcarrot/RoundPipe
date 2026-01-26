@@ -4,10 +4,11 @@ import types
 import torch
 import torch.nn as nn
 
+from . import DISABLE_TORCH_COMPILE
 from ..roundpipe import RoundPipe
 
 
-@torch.compile
+@torch.compile(disable=DISABLE_TORCH_COMPILE)
 def CompileCrossEntropy(
     logits: torch.Tensor,
     labels: torch.Tensor,
