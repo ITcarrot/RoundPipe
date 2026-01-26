@@ -6873,7 +6873,8 @@ redirect .parameters() and .named_parameters() to
 
     <div class="doc doc-contents ">
 
-        <p>Get data saved for recomputation in current recompute context.</p>
+        <p>Get data saved for recomputation in current recompute context.
+This will always return a tuple even if you saved a single item.</p>
 
 
     </div>
@@ -8536,6 +8537,14 @@ has a corresponding wrapper module that implements the necessary integration.</p
 
 <p><span class="doc-section-title">Attributes:</span></p>
     <ul>
+        <li class="doc-section-item field-body">
+          <b><code><span title="roundpipe.models.DISABLE_TORCH_COMPILE">DISABLE_TORCH_COMPILE</span></code></b>
+              (<code><span title="bool">bool</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>flag indicating whether to disable torch.compile in models.</p>
+          </div>
+        </li>
         <li class="doc-section-item field-body">
           <b><code><span title="roundpipe.models.SUPPORTED_MODELS">SUPPORTED_MODELS</span></code></b>
               (<code><span title="Dict">Dict</span>[<span title="str">str</span>, <span title="str">str</span>]</code>)
