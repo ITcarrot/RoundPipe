@@ -19,6 +19,7 @@ DISABLE_TORCH_COMPILE = False
 
 SUPPORTED_MODELS = {
     "function": ".function",
+    "LlamaForCausalLM": ".llama",
     "Qwen3MoeForCausalLM": ".qwen3_moe",
     "Qwen3ForCausalLM": ".qwen3",
 }
