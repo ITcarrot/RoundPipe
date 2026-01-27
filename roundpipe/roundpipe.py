@@ -23,7 +23,7 @@ from .run_config import RoundPipeRunConfig, FullRoundPipeRunConfig
 from .scheduler import ModelExecutePlan, ModelTracker, backward_schedule_simulator
 from .threads import AnnotatedEvent
 from .timer import ModelTimer, IterTimer
-from .utils import get_call_location
+from .utils import get_call_location, pin_tensor
 
 
 class RoundPipeBase(nn.Module):
@@ -255,6 +255,7 @@ class RoundPipe(RoundPipeBase):
         optim_dtype: Optional[torch.dtype] = None,
         name: Optional[str] = None,
         model_run_config: RoundPipeRunConfig = RoundPipeRunConfig(),
+        pin_with_register: bool = False,
     ) -> None:
         """Convert model storage to pinned tensors and determine pipeline cuts.
 
@@ -267,6 +268,10 @@ class RoundPipe(RoundPipeBase):
                 as param type.
             name: Optional friendly identifier. Defaults to ``file:line``.
             model_run_config: Baseline configuration inherited by invocations.
+            pin_with_register: Use cudaHostRegister to pin memory instead of
+                torch's pin_memory. This reduces CPU memory usage on very large
+                models, but at the cost of ~10% host-device transfer performance.
+                Only available with CUDA.
         """
         super().__init__(model, name, optim_dtype)
         self.model_run_config: RoundPipeRunConfig = copy.deepcopy(model_run_config)
@@ -287,7 +292,9 @@ class RoundPipe(RoundPipeBase):
             leave=False,
         ):
             for param in layer.parameters():
-                if not param.is_pinned():
+                if pin_with_register:
+                    pin_tensor(param)
+                elif not param.is_pinned():
                     pinned_tensor = torch.empty_like(param.data, pin_memory=True)
                     pinned_tensor.copy_(param.data)
                     param.data = pinned_tensor
@@ -299,7 +306,9 @@ class RoundPipe(RoundPipeBase):
             leave=False,
         ):
             assert not buffer.requires_grad, "Buffers should not require grad."
-            if not buffer.is_pinned():
+            if pin_with_register:
+                pin_tensor(buffer)
+            elif not buffer.is_pinned():
                 pinned_tensor = torch.empty_like(buffer.data, pin_memory=True)
                 pinned_tensor.copy_(buffer.data)
                 buffer.data = pinned_tensor

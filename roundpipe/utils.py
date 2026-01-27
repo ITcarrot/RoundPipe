@@ -1,7 +1,10 @@
 """Generic helpers shared across RoundPipe components."""
 
+from typing_extensions import *
 import traceback
+import weakref
 
+import torch
 import torch.nn as nn
 
 
@@ -36,3 +39,21 @@ def get_call_location(depth: int) -> str:
         depth *= 2  # Adjust for beartype frames
     filename, lineno, _, _ = traceback.extract_stack()[-1 - depth]
     return f'{filename.split("/")[-1]}:{lineno}'
+
+
+def pin_tensor(tensor: torch.Tensor) -> None:
+    """Pin a CPU tensor's memory using cudaHostRegister.
+
+    Args:
+        tensor: The CPU tensor to pin.
+    """
+    if tensor.device.type != "cpu":
+        raise ValueError("Only CPU tensors can be pinned.")
+    if tensor.is_pinned() or tensor.numel() == 0:
+        return
+    cudart: Any = torch.cuda.cudart()
+    storage = tensor.data.untyped_storage()
+    assert int(cudart.cudaHostRegister(storage.data_ptr(), storage.nbytes(), 1)) == 0
+    weakref.finalize(
+        storage, lambda ptr: cudart.cudaHostUnregister(ptr), storage.data_ptr()
+    )
