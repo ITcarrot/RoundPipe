@@ -29,14 +29,22 @@ config = AutoConfig.from_pretrained(model_path)
 config._attn_implementation = "flash_attention_2"
 config.use_cache = False
 config.dtype = torch.float16
-hf_model = AutoModelForCausalLM.from_config(config)
-lora_config = LoraConfig(
-    r=32,
-    lora_alpha=16,
-    target_modules="all-linear",
-    task_type=TaskType.CAUSAL_LM,
-)
-lora_model = LoraModel(hf_model, lora_config, "default").model
+with torch.device("meta"):
+    hf_model = AutoModelForCausalLM.from_config(config)
+    lora_config = LoraConfig(
+        r=32,
+        lora_alpha=16,
+        target_modules="all-linear",
+        task_type=TaskType.CAUSAL_LM,
+    )
+    lora_model = LoraModel(hf_model, lora_config, "default").model
+for module in lora_model.modules():
+    module.to_empty(device="cuda", recurse=False)
+    if hasattr(module, "reset_parameters"):
+        module.reset_parameters()
+    module._apply(lambda t: t.to(dtype=torch.float16, device="cpu"), recurse=False)
+torch.cuda.synchronize()
+torch.cuda.empty_cache()
 
 model = wrap_model_to_roundpipe(
     lora_model,

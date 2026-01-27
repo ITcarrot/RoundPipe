@@ -28,7 +28,16 @@ config = AutoConfig.from_pretrained(model_path)
 config._attn_implementation = "flash_attention_2"
 config.use_cache = False
 config.dtype = torch.float16
-hf_model = AutoModelForCausalLM.from_config(config)
+with torch.device("meta"):
+    hf_model = AutoModelForCausalLM.from_config(config)
+for module in hf_model.modules():
+    module.to_empty(device="cuda", recurse=False)
+    if hasattr(module, "reset_parameters"):
+        module.reset_parameters()
+    module._apply(lambda t: t.to(device="cpu", non_blocking=True), recurse=False)
+torch.cuda.synchronize()
+torch.cuda.empty_cache()
+
 model = wrap_model_to_roundpipe(
     hf_model,
     optim_dtype=torch.float32,
