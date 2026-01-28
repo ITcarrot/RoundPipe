@@ -13,9 +13,15 @@ Attributes:
 from typing_extensions import *
 import importlib
 
+import torch
+
+from ..device import get_num_devices
 from ..roundpipe import RoundPipe
 
 DISABLE_TORCH_COMPILE = False
+if not DISABLE_TORCH_COMPILE:
+    torch._dynamo.config.cache_size_limit *= get_num_devices()
+    torch._dynamo.config.accumulated_cache_size_limit *= get_num_devices()
 
 SUPPORTED_MODELS = {
     "function": ".function",

@@ -12,14 +12,10 @@ from ..roundpipe import RoundPipe
 def CompileCrossEntropy(
     logits: torch.Tensor,
     labels: torch.Tensor,
-    num_items_in_batch: torch.Tensor,
     ignore_index: int,
 ) -> torch.Tensor:
-    return (
-        nn.functional.cross_entropy(
-            logits.float(), labels, ignore_index=ignore_index, reduction="sum"
-        )
-        / num_items_in_batch
+    return nn.functional.cross_entropy(
+        logits.float(), labels, ignore_index=ignore_index, reduction="sum"
     )
 
 
@@ -44,10 +40,8 @@ def CompileForCausalLMLoss(
     shift_labels = shift_labels.to(logits.device)
     if num_items_in_batch is None:
         num_items_in_batch = (shift_labels != ignore_index).sum()
-    elif isinstance(num_items_in_batch, int):
-        num_items_in_batch = torch.tensor(num_items_in_batch, device=logits.device)
 
-    return CompileCrossEntropy(logits, shift_labels, num_items_in_batch, ignore_index)
+    return CompileCrossEntropy(logits, shift_labels, ignore_index) / num_items_in_batch
 
 
 LOSS_REPLACE = {}

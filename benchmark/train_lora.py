@@ -9,7 +9,6 @@ import sys
 from roundpipe import wrap_model_to_roundpipe, RoundPipeRunConfig
 from roundpipe.optim import Adam
 
-torch._dynamo.config.recompile_limit = 2
 torch.backends.cuda.matmul.allow_fp16_accumulation = True
 transformers.modeling_utils._init_weights = False
 
@@ -58,6 +57,29 @@ optim = Adam(model.optim_parameters(), lr=1e-5)
 all_input = torch.randint(0, tokenizer.vocab_size, (BS, SEQ_LENGTH))
 input_tensors = all_input.chunk(ACCUM_STEPS)
 masks = [torch.ones_like(input_tensor) for input_tensor in input_tensors]
+
+from roundpipe.device import device_list
+
+for device in device_list:
+    for input_batch in input_tensors:
+        for input_tensor in input_batch.chunk(NUM_MICROBATCH):
+            sample_logits = torch.rand(
+                (input_tensor.size(0), input_tensor.size(1), model.vocab_size),
+                dtype=torch.float16,
+                device=device.device,
+                requires_grad=True,
+            )
+            with torch.autocast(
+                "cpu", enabled=False, dtype=torch.float16, cache_enabled=False
+            ), torch.autocast(
+                "cuda", enabled=False, dtype=torch.float16, cache_enabled=False
+            ):
+                model.loss_function(
+                    logits=sample_logits,
+                    labels=input_tensor.to(device.device),
+                    vocab_size=model.vocab_size,
+                )
+            del sample_logits
 
 
 def train_iter():
