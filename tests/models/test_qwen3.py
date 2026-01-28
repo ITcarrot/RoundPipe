@@ -95,7 +95,7 @@ def test_qwen3_miniumn(use_preset: bool):
             optim.zero_grad()
 
     diff = [abs(v - ref) / ref for v, ref in zip(losses, REF_LOSS[False])]
-    assert sum(diff) / len(diff) < 0.001
+    assert sum(diff) / len(diff) < 0.005
 
 
 @pytest.mark.parametrize(

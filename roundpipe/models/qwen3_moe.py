@@ -1,5 +1,6 @@
 from typing_extensions import *
 import warnings
+from importlib.metadata import version
 
 import torch
 import torch.nn as nn
@@ -16,7 +17,8 @@ from transformers.models.qwen3_moe.modeling_qwen3_moe import (
     load_balancing_loss_func,
 )
 
-from . import DISABLE_TORCH_COMPILE
+transformers_version = tuple(map(int, version("transformers").split(".")[:2]))
+
 from ..context import doing_recompute, save_for_recompute, get_recompute_data
 from ..roundpipe import RoundPipe
 from .function import CompileForCausalLMLoss
@@ -125,16 +127,37 @@ class Qwen3MoeForCausalLMPrefix(nn.Module):
         )
 
 
-class Qwen3MoeOptSparseMoeBlock(nn.Module):
-    def __init__(self, mod: Qwen3MoeSparseMoeBlock) -> None:
+class Qwen3MoeWrappedSparseMoeBlock(nn.Module):
+    def __init__(self, mod: Qwen3MoeSparseMoeBlock):
         super().__init__()
-        self.num_experts = mod.num_experts
-        self.top_k = mod.top_k
-        self.norm_topk_prob = mod.norm_topk_prob
-
-        # gating
         self.gate = mod.gate
         self.experts = mod.experts
+
+    def forward(self, hidden_states: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        batch_size, sequence_length, hidden_dim = hidden_states.shape
+        hidden_states_reshaped = hidden_states.view(-1, hidden_dim)
+        router_logits, routing_weights, selected_experts = self.gate(
+            hidden_states_reshaped
+        )
+        final_hidden_states = self.experts(
+            hidden_states_reshaped, selected_experts, routing_weights
+        )
+        return (
+            final_hidden_states.reshape(batch_size, sequence_length, hidden_dim),
+            router_logits,
+        )
+
+
+class Qwen3MoeOptSparseMoeBlock(nn.Module):
+    def __init__(self, mod: Any) -> None:
+        super().__init__()
+        self.num_experts: int = mod.num_experts
+        self.top_k: int = mod.top_k
+        self.norm_topk_prob: bool = mod.norm_topk_prob
+
+        # gating
+        self.gate: nn.Module = mod.gate
+        self.experts: nn.ModuleList = mod.experts
 
     def forward(self, hidden_states: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         batch_size, sequence_length, hidden_dim = hidden_states.shape
@@ -199,11 +222,13 @@ class Qwen3MoeForCausalLMWrappedLayer(nn.Module):
         super().__init__()
         self.hidden_size = layer.hidden_size
         self.self_attn = layer.self_attn
-        self.mlp = (
-            Qwen3MoeOptSparseMoeBlock(layer.mlp)
-            if isinstance(layer.mlp, Qwen3MoeSparseMoeBlock)
-            else layer.mlp
-        )
+        if isinstance(layer.mlp, Qwen3MoeSparseMoeBlock):
+            if transformers_version >= (5, 0):
+                self.mlp = Qwen3MoeWrappedSparseMoeBlock(layer.mlp)
+            else:
+                self.mlp = Qwen3MoeOptSparseMoeBlock(layer.mlp)
+        else:
+            self.mlp = layer.mlp
         self.input_layernorm = layer.input_layernorm
         self.post_attention_layernorm = layer.post_attention_layernorm
 
