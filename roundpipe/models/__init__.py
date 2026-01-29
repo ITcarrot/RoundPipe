@@ -20,8 +20,12 @@ from ..roundpipe import RoundPipe
 
 DISABLE_TORCH_COMPILE = False
 if not DISABLE_TORCH_COMPILE:
-    torch._dynamo.config.cache_size_limit *= get_num_devices()
-    torch._dynamo.config.accumulated_cache_size_limit *= get_num_devices()
+    torch._dynamo.config.cache_size_limit *= (  # pyright: ignore[reportAttributeAccessIssue]
+        get_num_devices()
+    )
+    torch._dynamo.config.accumulated_cache_size_limit *= (  # pyright: ignore[reportAttributeAccessIssue]
+        get_num_devices()
+    )
 
 SUPPORTED_MODELS = {
     "function": ".function",
