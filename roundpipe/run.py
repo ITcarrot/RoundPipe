@@ -323,12 +323,21 @@ def run_forward(
     layer_ids = context.tracker.fwd_plan[layer_group_id]
     grad_context = torch.enable_grad() if context.enable_grad else torch.no_grad()
     if batch_idx == 0:
-        gpu_layers = upload_layers(
-            [model.layers[layer_id] for layer_id in layer_ids],
-            [model.layer_attrs[layer_id] for layer_id in layer_ids],
-            device,
-            False,
-        )
+        try:
+            gpu_layers = upload_layers(
+                [model.layers[layer_id] for layer_id in layer_ids],
+                [model.layer_attrs[layer_id] for layer_id in layer_ids],
+                device,
+                False,
+            )
+        except Exception:
+            with thread_exception_print_lock:
+                traceback.print_exc()
+                print(
+                    f"The above error occurred in {model.name} during uploading layer {layer_ids} for forward pass.",
+                    file=sys.stderr,
+                )
+            raise SystemExit(1)
         for layer_id, gpu_layer in zip(layer_ids, gpu_layers):
             context.save_buffer(model.layers[layer_id])
             context.gpu_fwd_layers[layer_id] = gpu_layer
@@ -437,13 +446,22 @@ def run_backward(
     batch_idx = context.microbatch_id
     layer_ids = context.tracker.bwd_plan[layer_group_id]
     if batch_idx == 0:
-        gpu_layers = upload_layers(
-            [model.layers[layer_id] for layer_id in layer_ids],
-            [model.layer_attrs[layer_id] for layer_id in layer_ids],
-            device,
-            True,
-            context.saved_buffers,
-        )
+        try:
+            gpu_layers = upload_layers(
+                [model.layers[layer_id] for layer_id in layer_ids],
+                [model.layer_attrs[layer_id] for layer_id in layer_ids],
+                device,
+                True,
+                context.saved_buffers,
+            )
+        except Exception:
+            with thread_exception_print_lock:
+                traceback.print_exc()
+                print(
+                    f"The above error occurred in {model.name} during uploading layer {layer_ids} for backward pass.",
+                    file=sys.stderr,
+                )
+            raise SystemExit(1)
         for layer_id, gpu_layer in zip(layer_ids, gpu_layers):
             context.gpu_bwd_layers[layer_id] = gpu_layer
     context.tracker.backward_wait_for(layer_group_id - 1)
@@ -580,12 +598,21 @@ def run_forward_backward(
     batch_idx = context.microbatch_id
     layer_ids = context.tracker.bwd_plan[0]
     if batch_idx == 0:
-        gpu_layers = upload_layers(
-            [model.layers[layer_id] for layer_id in layer_ids],
-            [model.layer_attrs[layer_id] for layer_id in layer_ids],
-            device,
-            True,
-        )
+        try:
+            gpu_layers = upload_layers(
+                [model.layers[layer_id] for layer_id in layer_ids],
+                [model.layer_attrs[layer_id] for layer_id in layer_ids],
+                device,
+                True,
+            )
+        except Exception:
+            with thread_exception_print_lock:
+                traceback.print_exc()
+                print(
+                    f"The above error occurred in {model.name} during uploading layer {layer_ids} for fused forward/backward pass.",
+                    file=sys.stderr,
+                )
+            raise SystemExit(1)
         for layer_id, gpu_layer in zip(layer_ids, gpu_layers):
             context.gpu_bwd_layers[layer_id] = gpu_layer
     context.tracker.forward_wait_for(len(context.tracker.fwd_plan) - 1)
