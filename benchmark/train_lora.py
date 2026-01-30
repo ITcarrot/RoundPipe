@@ -6,8 +6,10 @@ from peft import LoraConfig, TaskType, LoraModel
 from tqdm import tqdm
 import time
 import sys
+import math
 from roundpipe import wrap_model_to_roundpipe, RoundPipeRunConfig
 from roundpipe.optim import Adam
+from roundpipe.models.function import ChunkedCompileLinearForCausalLMLoss
 
 torch.backends.cuda.matmul.allow_fp16_accumulation = True
 transformers.modeling_utils._init_weights = False
@@ -41,7 +43,10 @@ for module in lora_model.modules():
     module.to_empty(device="cuda", recurse=False)
     if hasattr(module, "reset_parameters"):
         module.reset_parameters()
-    module._apply(lambda t: t.to(dtype=torch.float16, device="cpu"), recurse=False)
+    module._apply(
+        lambda t: t.to(dtype=torch.float16, device="cpu", non_blocking=True),
+        recurse=False,
+    )
 torch.cuda.synchronize()
 torch.cuda.empty_cache()
 
@@ -61,36 +66,57 @@ masks = [torch.ones_like(input_tensor) for input_tensor in input_tensors]
 from roundpipe.device import device_list
 
 for device in device_list:
-    for input_batch in input_tensors:
-        for input_tensor in input_batch.chunk(NUM_MICROBATCH):
-            sample_logits = torch.rand(
-                (input_tensor.size(0), input_tensor.size(1), model.vocab_size),
+    lm_head = torch.nn.Linear(
+        model.lm_head.in_features,
+        model.lm_head.out_features,
+        model.lm_head.bias is not None,
+        device=device.device,
+        dtype=torch.float16,
+    )
+    for p in lm_head.parameters():
+        p.requires_grad = False
+    for microbs in (math.floor(BS / ACCUM_STEPS), math.ceil(BS / ACCUM_STEPS)):
+        for minibs in (
+            math.floor(microbs / NUM_MICROBATCH),
+            math.ceil(microbs / NUM_MICROBATCH),
+        ):
+            sample_hidden = torch.rand(
+                (minibs, SEQ_LENGTH, lm_head.in_features),
                 dtype=torch.float16,
                 device=device.device,
                 requires_grad=True,
+            )
+            sample_labels = torch.randint(
+                0,
+                tokenizer.vocab_size,
+                (minibs, SEQ_LENGTH),
+                dtype=torch.long,
+                device=device.device,
             )
             with torch.autocast(
                 "cpu", enabled=False, dtype=torch.float16, cache_enabled=False
             ), torch.autocast(
                 "cuda", enabled=False, dtype=torch.float16, cache_enabled=False
             ):
-                model.loss_function(
-                    logits=sample_logits,
-                    labels=input_tensor.to(device.device),
-                    vocab_size=model.vocab_size,
+                ChunkedCompileLinearForCausalLMLoss(
+                    sample_hidden,
+                    lm_head,
+                    sample_labels,
                 )
-            del sample_logits
+            del sample_hidden, sample_labels
+    del lm_head
 
 
 def train_iter():
     for input_tensor, mask in zip(input_tensors, masks):
         loss = model.forward_backward(
-            input_kwargs={"input_ids": input_tensor, "attention_mask": mask},
-            label=input_tensor,
-            loss_fn=lambda outputs, labels: model.loss_function(
-                logits=outputs.logits, labels=labels, vocab_size=model.vocab_size
-            )
-            / (torch.cuda.device_count() + 1),
+            input_kwargs={
+                "input_ids": input_tensor,
+                "attention_mask": mask,
+                "labels": input_tensor,
+                "return_logits": False,
+            },
+            loss_fn=lambda outputs, _: outputs.loss / NUM_MICROBATCH / ACCUM_STEPS,
         )
     model.step(lambda: (optim.step(), optim.zero_grad(), None)[-1])
 

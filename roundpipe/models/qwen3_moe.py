@@ -21,7 +21,7 @@ transformers_version = tuple(map(int, version("transformers").split(".")[:2]))
 
 from ..context import doing_recompute, save_for_recompute, get_recompute_data
 from ..roundpipe import RoundPipe
-from .function import CompileForCausalLMLoss
+from .function import CompileForCausalLMLoss, ChunkedCompileLinearForCausalLMLoss
 
 
 class Qwen3MoeForCausalLMPrefix(nn.Module):
@@ -320,14 +320,23 @@ class Qwen3MoeForCausalLMPostfix(nn.Module):
             if isinstance(logits_to_keep, int)
             else logits_to_keep
         )
-        logits = self.lm_head(hidden_states[:, slice_indices, :])
+        logits = None
+        if kwargs.get("return_logits", True):
+            logits = self.lm_head(hidden_states[:, slice_indices, :])
 
         loss = None
         if labels is not None:
-            loss = cast(
-                torch.Tensor,
-                self.loss_function(logits, labels, self.vocab_size, **kwargs),
-            )
+            if logits is None:
+                loss = ChunkedCompileLinearForCausalLMLoss(
+                    hidden_states[:, slice_indices, :],
+                    self.lm_head,
+                    labels,
+                    **kwargs,
+                )
+            else:
+                loss = self.loss_function(
+                    logits=logits, labels=labels, vocab_size=self.vocab_size, **kwargs
+                )
 
         aux_loss = None
         if output_router_logits:

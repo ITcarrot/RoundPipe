@@ -7,10 +7,13 @@ import pickle
 import torch
 import pytest
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from transformers.loss.loss_utils import ForCausalLMLoss
 from datasets import load_dataset
 from roundpipe import wrap_model_to_roundpipe, RoundPipeRunConfig, GradScaler
 from roundpipe.optim import Adam
+from roundpipe.models.function import (
+    CompileForCausalLMLoss,
+    ChunkedCompileLinearForCausalLMLoss,
+)
 
 MODEL_PATH = (
     os.environ["QWEN3_0_6B_PATH"]
@@ -83,7 +86,7 @@ def test_qwen3_miniumn(use_preset: bool):
         for input_dict in dataloader:
             labels = input_dict.pop("labels")
             logits = model(**input_dict).logits
-            loss = ForCausalLMLoss(
+            loss = CompileForCausalLMLoss(
                 logits=logits,
                 labels=labels,
                 vocab_size=model.config.vocab_size,
@@ -123,7 +126,7 @@ def test_qwen3_classic(use_preset: bool, is_async: bool):
         for input_dict in dataloader:
             labels = input_dict.pop("labels")
             logits = model(**input_dict).logits
-            loss = ForCausalLMLoss(
+            loss = CompileForCausalLMLoss(
                 logits=logits,
                 labels=labels,
                 vocab_size=model.config.vocab_size,
@@ -173,7 +176,7 @@ def test_qwen3_classic_accumulate():
                     "attention_mask": mb_attention_mask,
                 }
                 mb_logits = model(**mb_input_dict).logits
-                mb_loss = ForCausalLMLoss(
+                mb_loss = CompileForCausalLMLoss(
                     logits=mb_logits,
                     labels=mb_labels,
                     vocab_size=model.config.vocab_size,
@@ -212,21 +215,18 @@ def test_qwen3_fused(is_async: bool):
     losses = []
     for epoch in range(2):
         for input_dict in dataloader:
-            labels = input_dict.pop("labels")
+            labels = input_dict["labels"]
             num_items_in_batch = (labels[..., 1:] != -100).sum().item()
+            input_dict = {
+                **input_dict,
+                "return_logits": False,
+                "num_items_in_batch": num_items_in_batch,
+            }
             loss = cast(
                 torch.Tensor,
                 model.forward_backward(
-                    input_kwargs=dict(input_dict),
-                    label=labels,
-                    loss_fn=lambda outputs, labels: scaler.scale(
-                        model.loss_function(
-                            logits=outputs.logits,
-                            labels=labels,
-                            vocab_size=model.vocab_size,
-                            num_items_in_batch=num_items_in_batch,
-                        )
-                    ),
+                    input_kwargs=input_dict,
+                    loss_fn=lambda output, _: scaler.scale(output.loss),
                 ),
             )
             losses.append(loss.item() / scaler.get_scale())
@@ -274,16 +274,11 @@ def test_qwen3_fused_accumulate():
                         input_kwargs={
                             "input_ids": mb_input_ids,
                             "attention_mask": mb_attention_mask,
+                            "labels": mb_labels,
+                            "return_logits": False,
+                            "num_items_in_batch": num_items_in_batch,
                         },
-                        label=mb_labels,
-                        loss_fn=lambda outputs, labels: scaler.scale(
-                            model.loss_function(
-                                logits=outputs.logits,
-                                labels=labels,
-                                vocab_size=model.vocab_size,
-                                num_items_in_batch=num_items_in_batch,
-                            )
-                        ),
+                        loss_fn=lambda output, _: scaler.scale(output.loss),
                     ),
                 )
                 loss += mb_loss.item()

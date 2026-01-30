@@ -4,9 +4,12 @@ import os
 import torch
 import pytest
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from transformers.loss.loss_utils import ForCausalLMLoss
 from datasets import load_dataset
 from roundpipe import wrap_model_to_roundpipe, RoundPipeRunConfig
+from roundpipe.models.function import (
+    CompileForCausalLMLoss,
+    ChunkedCompileLinearForCausalLMLoss,
+)
 
 MODEL_PATH = (
     os.environ["QWEN3_30B_PATH"]
@@ -58,8 +61,7 @@ def get_dataloader():
     )
 
 
-@pytest.mark.parametrize("use_preset", [False, True])
-def test_qwen3moe_forward(use_preset: bool):
+def test_qwen3moe_auto_forward():
     raw_model = AutoModelForCausalLM.from_pretrained(
         MODEL_PATH,
         use_cache=False,
@@ -68,7 +70,7 @@ def test_qwen3moe_forward(use_preset: bool):
     model = wrap_model_to_roundpipe(
         raw_model,
         model_run_config=RoundPipeRunConfig(num_microbatch=4),
-        use_sequential_preset=use_preset,
+        use_sequential_preset=False,
     )
     dataloader = get_dataloader()
 
@@ -76,9 +78,9 @@ def test_qwen3moe_forward(use_preset: bool):
     aux_losses = []
     for input_dict in dataloader:
         labels = input_dict.pop("labels")
-        out = model(**input_dict, output_router_logits=use_preset)
+        out = model(**input_dict)
         aux_losses.append(out.aux_loss)
-        loss = ForCausalLMLoss(
+        loss = CompileForCausalLMLoss(
             logits=out.logits,
             labels=labels,
             vocab_size=model.config.vocab_size,
@@ -88,8 +90,37 @@ def test_qwen3moe_forward(use_preset: bool):
     diff = [abs(v - ref) / ref for v, ref in zip(losses, REF_LOSS)]
     assert sum(diff) / len(diff) < 0.005
 
-    if use_preset:
-        aux_diff = [
-            abs(v.item() - ref) / ref for v, ref in zip(aux_losses, REF_AUX_LOSS)
-        ]
-        assert sum(aux_diff) / len(aux_diff) < 0.01
+
+def test_qwen3moe_preset_forward():
+    raw_model = AutoModelForCausalLM.from_pretrained(
+        MODEL_PATH,
+        use_cache=False,
+        dtype=torch.float16,
+    )
+    model = wrap_model_to_roundpipe(
+        raw_model,
+        model_run_config=RoundPipeRunConfig(num_microbatch=4),
+        use_sequential_preset=True,
+    )
+    dataloader = get_dataloader()
+
+    losses = []
+    aux_losses = []
+    for input_dict in dataloader:
+        labels = input_dict["labels"]
+        num_items_in_batch = (labels[..., 1:] != -100).sum().item()
+        out = model(
+            **input_dict,
+            output_router_logits=True,
+            return_logits=False,
+            num_items_in_batch=num_items_in_batch
+        )
+        aux_losses.append(out.aux_loss)
+        losses.append(
+            ((out.loss - model.router_aux_loss_coef * out.aux_loss) * 4).item()
+        )
+
+    diff = [abs(v - ref) / ref for v, ref in zip(losses, REF_LOSS)]
+    assert sum(diff) / len(diff) < 0.005
+    aux_diff = [abs(v.item() - ref) / ref for v, ref in zip(aux_losses, REF_AUX_LOSS)]
+    assert sum(aux_diff) / len(aux_diff) < 0.01

@@ -12,7 +12,7 @@ from transformers.models.qwen3.modeling_qwen3 import Qwen3ForCausalLM
 
 from ..context import doing_recompute, save_for_recompute, get_recompute_data
 from ..roundpipe import RoundPipe
-from .function import CompileForCausalLMLoss
+from .function import CompileForCausalLMLoss, ChunkedCompileLinearForCausalLMLoss
 
 
 class Qwen3ForCausalLMPrefix(nn.Module):
@@ -183,16 +183,26 @@ class Qwen3ForCausalLMPostfix(nn.Module):
             if isinstance(logits_to_keep, int)
             else logits_to_keep
         )
-        logits = self.lm_head(hidden_states[:, slice_indices, :])
+        logits = None
+        if kwargs.get("return_logits", True):
+            logits = self.lm_head(hidden_states[:, slice_indices, :])
 
         loss = None
         if labels is not None:
-            loss = self.loss_function(
-                logits=logits, labels=labels, vocab_size=self.vocab_size, **kwargs
-            )
+            if logits is None:
+                loss = ChunkedCompileLinearForCausalLMLoss(
+                    hidden_states[:, slice_indices, :],
+                    self.lm_head,
+                    labels,
+                    **kwargs,
+                )
+            else:
+                loss = self.loss_function(
+                    logits=logits, labels=labels, vocab_size=self.vocab_size, **kwargs
+                )
 
         return CausalLMOutputWithPast(
-            loss=loss,
+            loss=cast(torch.FloatTensor, loss),
             logits=logits,
         )
 
