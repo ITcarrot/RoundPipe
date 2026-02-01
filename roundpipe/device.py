@@ -333,6 +333,18 @@ def get_num_devices() -> int:
     return len(device_list)
 
 
+def get_min_gpu_memory() -> float:
+    """Return the minimum GPU memory (in GB) across all managed devices.
+
+    Returns:
+        Minimum GPU memory size in GB.
+    """
+    return min(
+        torch.cuda.get_device_properties(device.device).total_memory / (1000**3)
+        for device in device_list
+    )
+
+
 def get_next_device() -> DeviceManager:
     """Round-robin iterator over instantiated ``DeviceManager`` objects.
 

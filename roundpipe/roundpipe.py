@@ -23,7 +23,7 @@ from .run_config import RoundPipeRunConfig, FullRoundPipeRunConfig
 from .scheduler import ModelExecutePlan, ModelTracker, backward_schedule_simulator
 from .threads import AnnotatedEvent
 from .timer import ModelTimer, IterTimer
-from .utils import get_call_location, pin_tensor
+from .utils import get_call_location, pin_tensor, get_model_size
 
 
 class RoundPipeBase(nn.Module):
@@ -246,6 +246,7 @@ class RoundPipe(RoundPipeBase):
         layers: Sequence of model layers.
         num_layers: Total number of layers in the pipeline.
         layer_attrs: List of ``LayerAttribute`` storing per-layer events.
+        layer_size: List of layer sizes in GB.
         model_timer: ``ModelTimer`` measuring per-layer latency.
     """
 
@@ -283,6 +284,9 @@ class RoundPipe(RoundPipeBase):
         self.num_layers: int = len(self.layers)
         self.layer_attrs: List[LayerAttribute] = [
             LayerAttribute(f"{self.name}L{i}") for i in range(self.num_layers)
+        ]
+        self.layer_size: List[float] = [
+            get_model_size(layer) / (10**9) for layer in self.layers
         ]
         self.model_timer: ModelTimer = ModelTimer(self.layers)
 

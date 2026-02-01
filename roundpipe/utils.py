@@ -23,6 +23,23 @@ def get_model_size(model: nn.Module, recurse: bool = True) -> int:
     return param_size + buffer_size
 
 
+def get_model_active_size(model: nn.Module, recurse: bool = True) -> int:
+    """Return the parameter bytes for ``model`` that require grad.
+
+    Args:
+        model: Module whose parameters are measured.
+        recurse: Whether to include children recursively.
+
+    Returns:
+        Total size in bytes.
+    """
+    return sum(
+        p.numel() * p.element_size()
+        for p in model.parameters(recurse)
+        if p.requires_grad
+    )
+
+
 def get_call_location(depth: int) -> str:
     """Get the call location in 'filename:lineno' format.
 

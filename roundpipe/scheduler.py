@@ -7,11 +7,13 @@ Attributes:
 from typing_extensions import *
 import heapq
 import copy
+import warnings
 
 import torch
 
-from .device import get_num_devices
+from .device import get_num_devices, get_min_gpu_memory
 from .threads import AnnotatedSemaphore
+from .utils import get_model_active_size
 
 if TYPE_CHECKING:
     from .roundpipe import RoundPipe
@@ -93,8 +95,9 @@ class ModelExecutePlan:
         model: "RoundPipe",
         /,
         *,
-        min_stages: Optional[int] = None,
-        upper_threshold: float = 1.5,
+        min_stages: int = get_num_devices(),
+        upper_threshold: float = 1.1,
+        model_memory_limit: float = get_min_gpu_memory() * 0.6,
     ) -> "ModelExecutePlan": ...
     @overload
     @classmethod
@@ -105,8 +108,9 @@ class ModelExecutePlan:
         model2: "RoundPipe",
         /,
         *models: "RoundPipe",
-        min_stages: Optional[int] = None,
-        upper_threshold: float = 1.5,
+        min_stages: int = get_num_devices(),
+        upper_threshold: float = 1.1,
+        model_memory_limit: float = get_min_gpu_memory() * 0.6,
     ) -> List["ModelExecutePlan"]: ...
     @classmethod
     def auto(
@@ -114,8 +118,9 @@ class ModelExecutePlan:
         run_type: Literal["infer", "train", "fused"],
         /,
         *models: "RoundPipe",
-        min_stages: Optional[int] = None,
+        min_stages: int = get_num_devices(),
         upper_threshold: float = 1.1,
+        model_memory_limit: float = get_min_gpu_memory() * 0.6,
     ) -> Union["ModelExecutePlan", List["ModelExecutePlan"]]:
         """Generate automatic execution plans based on model timings.
 
@@ -129,6 +134,12 @@ class ModelExecutePlan:
                 the maximum allowed ratio between stages and the slowest layer.
                 Increasing this value provides more flexibility in balancing
                 stages at the cost of consuming more GPU memory.
+            model_memory_limit: Estimated GPU memory (in GB) available for
+                model parameters and grads. Increasing this value allows more
+                flexibility in balancing stages, while decreasing it could allow
+                larger batch sizes to run. Note that RoundPipe will prefetch
+                model parameters to GPU memory, so the limit for each stage is
+                model_memory_limit / 2.
 
         Returns:
             List of ``ModelExecutePlan`` instances, one per model.
@@ -136,13 +147,10 @@ class ModelExecutePlan:
         if len(models) == 0:
             return []
         n_models = len(models)
-        if min_stages is None:
-            min_stages = (
-                get_num_devices() if run_type == "infer" else 2 * get_num_devices()
-            )
 
-        workloads: List[Tuple[List[float], List[float]]] = []
+        workloads: List[Tuple[List[float], ...]] = []
         max_layer_workload = 0.0
+        max_layer_size = 0.0
         for model in models:
             src, fwd_times, bwd_times = model.model_timer.get_estimate(run_type)
             if src == "memory" and len(models) > 1:
@@ -156,11 +164,27 @@ class ModelExecutePlan:
                     for model in models
                 ]
             max_layer_workload = max(max_layer_workload, *fwd_times, *bwd_times)
-            workloads.append((fwd_times, bwd_times))
+            layer_bwd_size = [
+                model.layer_size[idx] + get_model_active_size(layer) / (10**9)
+                for idx, layer in enumerate(model.layers)
+            ]
+            if run_type == "infer":
+                max_layer_size = max(max_layer_size, *model.layer_size)
+            else:
+                max_layer_size = max(max_layer_size, *layer_bwd_size)
+            workloads.append((fwd_times, bwd_times, model.layer_size, layer_bwd_size))
+        if max_layer_size > model_memory_limit / 2:
+            model_memory_limit = max_layer_size * 2
+            warnings.warn(
+                "Maximum layer size exceeds half of the model memory limit. "
+                f"Model memory limit adjusted to {model_memory_limit:.2f} GB. "
+                "You're more likely to run out of memory during training, "
+                "consider splitting the model in finer granularity."
+            )
 
         stage_workload_candidates: List[float] = []
-        for model_times in workloads:
-            for run_times in model_times:
+        for fwd_times, bwd_times, _, _ in workloads:
+            for run_times in (fwd_times, bwd_times):
                 for start in range(len(run_times)):
                     prefix_sum = 0.0
                     for end in range(start, len(run_times)):
@@ -176,17 +200,29 @@ class ModelExecutePlan:
         for max_stage_workload in stage_workload_candidates:
             total_stages = 0
             cur_plans: List[ModelExecutePlan] = []
-            for idx, (fwd_times, bwd_times) in enumerate(workloads):
+            for idx, (
+                fwd_times,
+                bwd_times,
+                layer_fwd_size,
+                layer_bwd_size,
+            ) in enumerate(workloads):
                 plan = ModelExecutePlan()
                 if run_type == "infer":
                     reversed_plan: List[List[int]] = []
                     stage_sum = float("inf")
+                    stage_size = float("inf")
                     for layer_id in range(len(fwd_times) - 1, -1, -1):
-                        if stage_sum + fwd_times[layer_id] > max_stage_workload:
+                        if (
+                            stage_sum + fwd_times[layer_id] > max_stage_workload
+                            or stage_size + layer_fwd_size[layer_id]
+                            > model_memory_limit / 2
+                        ):
                             reversed_plan.append([])
                             stage_sum = 0.0
+                            stage_size = 0.0
                         reversed_plan[-1].append(layer_id)
                         stage_sum += fwd_times[layer_id]
+                        stage_size += layer_fwd_size[layer_id]
                     for reversed_stage in reversed(reversed_plan):
                         plan.fwd_plan.append(
                             range(reversed_stage[-1], reversed_stage[0] + 1)
@@ -195,23 +231,34 @@ class ModelExecutePlan:
                     layer_end = len(fwd_times)
                     if run_type == "fused" and idx == n_models - 1:
                         fused_stage_sum = 0.0
+                        fused_stage_size = 0.0
                         for layer_id in range(len(bwd_times) - 1, -1, -1):
                             if (
                                 fused_stage_sum + bwd_times[layer_id]
                                 > max_stage_workload
+                                or fused_stage_size + layer_bwd_size[layer_id]
+                                > model_memory_limit / 2
                             ):
                                 break
                             fused_stage_sum += bwd_times[layer_id]
+                            fused_stage_size += layer_bwd_size[layer_id]
                             layer_end = layer_id
 
                     reversed_plan: List[List[int]] = []
                     stage_sum = float("inf")
+                    stage_size = float("inf")
                     for layer_id in range(layer_end - 1, -1, -1):
-                        if stage_sum + fwd_times[layer_id] > max_stage_workload:
+                        if (
+                            stage_sum + fwd_times[layer_id] > max_stage_workload
+                            or stage_size + layer_fwd_size[layer_id]
+                            > model_memory_limit / 2
+                        ):
                             reversed_plan.append([])
                             stage_sum = 0.0
+                            stage_size = 0.0
                         reversed_plan[-1].append(layer_id)
                         stage_sum += fwd_times[layer_id]
+                        stage_size += layer_fwd_size[layer_id]
                     for reversed_stage in reversed(reversed_plan):
                         plan.fwd_plan.append(
                             range(reversed_stage[-1], reversed_stage[0] + 1)
@@ -219,12 +266,19 @@ class ModelExecutePlan:
 
                     reversed_plan = []
                     stage_sum = float("inf")
+                    stage_size = float("inf")
                     for layer_id in range(layer_end):
-                        if stage_sum + bwd_times[layer_id] > max_stage_workload:
+                        if (
+                            stage_sum + bwd_times[layer_id] > max_stage_workload
+                            or stage_size + layer_bwd_size[layer_id]
+                            > model_memory_limit / 2
+                        ):
                             reversed_plan.append([])
                             stage_sum = 0.0
+                            stage_size = 0.0
                         reversed_plan[-1].append(layer_id)
                         stage_sum += bwd_times[layer_id]
+                        stage_size += layer_bwd_size[layer_id]
                     if run_type == "fused" and idx == n_models - 1:
                         plan.bwd_plan.append(range(layer_end, len(bwd_times)))
                     for stage in reversed(reversed_plan):
