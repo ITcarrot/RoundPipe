@@ -1267,6 +1267,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#roundpipe.device.get_min_gpu_memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_min_gpu_memory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#roundpipe.device.get_next_device" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3026,6 +3037,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_call_location
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundpipe.utils.get_model_active_size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_model_active_size
       
     </span>
   </a>
@@ -3719,6 +3741,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#roundpipe.device.get_min_gpu_memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_min_gpu_memory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#roundpipe.device.get_next_device" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5478,6 +5511,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_call_location
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundpipe.utils.get_model_active_size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_model_active_size
       
     </span>
   </a>
@@ -7789,6 +7833,36 @@ managers on all devices.</p>
 <div class="doc doc-object doc-function">
 
 
+<h3 id="roundpipe.device.get_min_gpu_memory" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">get_min_gpu_memory</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return the minimum GPU memory (in GB) across all managed devices.</p>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="float">float</span></code>
+          –
+          <div class="doc-md-description">
+            <p>Minimum GPU memory size in GB.</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="roundpipe.device.get_next_device" class="doc doc-heading">
 <code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">get_next_device</span><span class="p">()</span></code>
 
@@ -9761,6 +9835,14 @@ override parameters per invocation.</p>
           –
           <div class="doc-md-description">
             <p>List of <code>LayerAttribute</code> storing per-layer events.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="roundpipe.roundpipe.RoundPipe.layer_size">layer_size</span></code></b>
+              (<code><span title="List">List</span>[<span title="float">float</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>List of layer sizes in GB.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -12585,7 +12667,7 @@ the backward passes across microbatches and layers are scheduled as desired.</p>
 
 
 <h4 id="roundpipe.scheduler.ModelExecutePlan.auto" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">auto</span><span class="p">(</span><span class="n">run_type</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">*</span><span class="n">models</span><span class="p">,</span> <span class="n">min_stages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">upper_threshold</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span></code>
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">auto</span><span class="p">(</span><span class="n">run_type</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">*</span><span class="n">models</span><span class="p">,</span> <span class="n">min_stages</span><span class="o">=</span><span class="n">get_num_devices</span><span class="p">(),</span> <span class="n">upper_threshold</span><span class="o">=</span><span class="mf">1.1</span><span class="p">,</span> <span class="n">model_memory_limit</span><span class="o">=</span><span class="n">get_min_gpu_memory</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.6</span><span class="p">)</span></code>
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
@@ -12621,8 +12703,8 @@ the backward passes across microbatches and layers are scheduled as desired.</p>
         </li>
         <li class="doc-section-item field-body">
             <b><code>min_stages</code></b>
-              (<code><span title="Optional">Optional</span>[<span title="int">int</span>]</code>, default:
-                  <code>None</code>
+              (<code><span title="int">int</span></code>, default:
+                  <code><a class="autorefs autorefs-internal" title="            get_num_devices() (roundpipe.device.get_num_devices)" href="#roundpipe.device.get_num_devices">get_num_devices</a>()</code>
 )
           –
           <div class="doc-md-description">
@@ -12642,6 +12724,21 @@ be lower depending on the model size.</p>
 the maximum allowed ratio between stages and the slowest layer.
 Increasing this value provides more flexibility in balancing
 stages at the cost of consuming more GPU memory.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>model_memory_limit</code></b>
+              (<code><span title="float">float</span></code>, default:
+                  <code><a class="autorefs autorefs-internal" title="            get_min_gpu_memory() (roundpipe.device.get_min_gpu_memory)" href="#roundpipe.device.get_min_gpu_memory">get_min_gpu_memory</a>() * 0.6</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Estimated GPU memory (in GB) available for
+model parameters and grads. Increasing this value allows more
+flexibility in balancing stages, while decreasing it could allow
+larger batch sizes to run. Note that RoundPipe will prefetch
+model parameters to GPU memory, so the limit for each stage is
+model_memory_limit / 2.</p>
           </div>
         </li>
     </ul>
@@ -14945,6 +15042,59 @@ externally.</p>
           –
           <div class="doc-md-description">
             <p>A string representing the call location.</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="roundpipe.utils.get_model_active_size" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">get_model_active_size</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">recurse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return the parameter bytes for <code>model</code> that require grad.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>model</code></b>
+              (<code><span title="torch.nn.Module">Module</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Module whose parameters are measured.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>recurse</code></b>
+              (<code><span title="bool">bool</span></code>, default:
+                  <code>True</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Whether to include children recursively.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="int">int</span></code>
+          –
+          <div class="doc-md-description">
+            <p>Total size in bytes.</p>
           </div>
         </li>
     </ul>
