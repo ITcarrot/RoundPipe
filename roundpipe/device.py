@@ -334,15 +334,17 @@ def get_num_devices() -> int:
 
 
 def get_min_gpu_memory() -> float:
-    """Return the minimum GPU memory (in GB) across all managed devices.
+    """Return the minimum free GPU memory (in GB) across all managed devices.
 
     Returns:
         Minimum GPU memory size in GB.
     """
-    return min(
-        torch.cuda.get_device_properties(device.device).total_memory / (1000**3)
-        for device in device_list
-    )
+    avail_mem: List[float] = []
+    for device in device_list:
+        free_mem, _ = torch.cuda.mem_get_info(device.device)
+        reserved = torch.cuda.memory_reserved(device.device)
+        avail_mem.append((free_mem + reserved) / (1024**3))
+    return min(avail_mem)
 
 
 def get_next_device() -> DeviceManager:
