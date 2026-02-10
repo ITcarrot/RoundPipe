@@ -1482,6 +1482,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#roundpipe.memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;memory
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" memory">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#roundpipe.memory.pin_module_alloc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;pin_module_alloc
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundpipe.memory.pin_module_register" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;pin_module_register
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#roundpipe.models" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3059,17 +3098,6 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_model_size
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#roundpipe.utils.pin_tensor" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;pin_tensor
       
     </span>
   </a>
@@ -3956,6 +3984,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#roundpipe.memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;memory
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" memory">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#roundpipe.memory.pin_module_alloc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;pin_module_alloc
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundpipe.memory.pin_module_register" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;pin_module_register
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#roundpipe.models" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5539,17 +5606,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#roundpipe.utils.pin_tensor" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;pin_tensor
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -5804,18 +5860,6 @@ to CPU has started and CUDA event has been recorded.</p>
 
         <p>Fence for fused forward backward pass to wait for
 parameter and gradient ready.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-            <b><code>clear</code></b>
-          –
-          <div class="doc-md-description">
-            <p>Whether to clear events for doing backward.</p>
-          </div>
-        </li>
-    </ul>
 
 
     </div>
@@ -7841,7 +7885,7 @@ managers on all devices.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Return the minimum GPU memory (in GB) across all managed devices.</p>
+        <p>Return the minimum free GPU memory (in GB) across all managed devices.</p>
 
 
 <p><span class="doc-section-title">Returns:</span></p>
@@ -8606,6 +8650,110 @@ affect the scale GradScaler uses internally.)</p>
 
 </div>
 
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-module">
+
+
+
+<h2 id="roundpipe.memory" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>            <code>memory</code>
+
+
+</h2>
+
+    <div class="doc doc-contents first">
+
+        <p>CPU memory managing utilities for RoundPipe.</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="roundpipe.memory.pin_module_alloc" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">pin_module_alloc</span><span class="p">(</span><span class="n">mod</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Pin module parameters and buffers to CPU memory.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>mod</code></b>
+              (<code><span title="torch.nn.Module">Module</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Module to pin.</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="roundpipe.memory.pin_module_register" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">pin_module_register</span><span class="p">(</span><span class="n">mod</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Pin module parameters and buffers to CPU memory using cudaHostRegister.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>mod</code></b>
+              (<code><span title="torch.nn.Module">Module</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Module to pin.</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
 
 
 
@@ -9880,7 +10028,7 @@ override parameters per invocation.</p>
 
 
 <h4 id="roundpipe.roundpipe.RoundPipe.__init__" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optim_dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_run_config</span><span class="o">=</span><span class="n">RoundPipeRunConfig</span><span class="p">(),</span> <span class="n">pin_with_register</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optim_dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_run_config</span><span class="o">=</span><span class="n">RoundPipeRunConfig</span><span class="p">(),</span> <span class="n">pin_model</span><span class="o">=</span><span class="s1">&#39;alloc&#39;</span><span class="p">)</span></code>
 
 </h4>
 
@@ -9934,16 +10082,23 @@ as param type.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-            <b><code>pin_with_register</code></b>
-              (<code><span title="bool">bool</span></code>, default:
-                  <code>False</code>
+            <b><code>pin_model</code></b>
+              (<code><span title="Literal">Literal</span>[<span title="alloc">alloc</span>, <span title="register">register</span>, <span title="off">off</span>]</code>, default:
+                  <code>&#39;alloc&#39;</code>
 )
           –
           <div class="doc-md-description">
-            <p>Use cudaHostRegister to pin memory instead of
-torch's pin_memory. This reduces CPU memory usage on very large
-models, but at the cost of ~10% host-device transfer performance.
-Only available with CUDA.</p>
+            <p><code>alloc</code>: Use torch's pin_memory to pin memory. This is the default and
+usually has better host-device transfer performance. But it may lead
+to up to 2x CPU memory usage because pytorch pads all allocation to
+the power of 2.
+<code>register</code>: Use cudaHostRegister to pin memory instead of. This reduces
+CPU memory usage on very large models, but at the cost of ~10%
+host-device transfer performance. Only available with CUDA.
+<code>off</code>: Do not pin memory. This is useful when LoRA fine-tuning models
+larger than CPU memory. Combined with mmap during model loading, it
+allows linux load data as needed from disk and auto evict used data
+when OOM happens.</p>
           </div>
         </li>
     </ul>
@@ -14179,7 +14334,7 @@ of recompute and backward should be the same.</p>
 <p><span class="doc-section-title">Returns:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><span title="Literal">Literal</span>[<span title="time">time</span>, <span title="memory">memory</span>]</code>
+              <code><span title="Literal">Literal</span>[<span title="time">time</span>, <a class="autorefs autorefs-internal" title="            memory (roundpipe.memory)" href="#roundpipe.memory">memory</a>]</code>
           –
           <div class="doc-md-description">
             <p>Source of estimates</p>
@@ -14844,10 +14999,19 @@ externally.</p>
 <p><span class="doc-section-title">Parameters:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-            <b><code>layer</code></b>
+            <b><code>cpu_layer</code></b>
+              (<code><span title="torch.nn.Module">Module</span></code>)
           –
           <div class="doc-md-description">
-            <p>Module whose tensors should be copied to host memory.</p>
+            <p>Original layer residing on the host.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>gpu_layer</code></b>
+              (<code><span title="torch.nn.Module">Module</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Layer copy residing on the device.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -15148,37 +15312,6 @@ externally.</p>
           –
           <div class="doc-md-description">
             <p>Total size in bytes.</p>
-          </div>
-        </li>
-    </ul>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="roundpipe.utils.pin_tensor" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">pin_tensor</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span></code>
-
-</h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Pin a CPU tensor's memory using cudaHostRegister.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-            <b><code>tensor</code></b>
-              (<code><span title="torch.Tensor">Tensor</span></code>)
-          –
-          <div class="doc-md-description">
-            <p>The CPU tensor to pin.</p>
           </div>
         </li>
     </ul>
