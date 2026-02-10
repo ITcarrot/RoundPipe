@@ -44,7 +44,7 @@ for module in lora_model.modules():
     if hasattr(module, "reset_parameters"):
         module.reset_parameters()
     module._apply(
-        lambda t: t.to(dtype=torch.float16, device="cpu", non_blocking=True),
+        lambda t: t.to(dtype=torch.float16, device="cpu"),
         recurse=False,
     )
 torch.cuda.synchronize()
@@ -55,7 +55,7 @@ model = wrap_model_to_roundpipe(
     optim_dtype=torch.float32,
     use_sequential_preset=True,
     model_run_config=RoundPipeRunConfig(num_microbatch=NUM_MICROBATCH),
-    pin_with_register=True,
+    pin_model="off",
 )
 optim = Adam(model.optim_parameters(), lr=1e-5)
 

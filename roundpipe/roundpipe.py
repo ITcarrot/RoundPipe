@@ -12,6 +12,7 @@ from .attribute import ParamAttribute, LayerAttribute
 from .batch import Batch
 from .context import doing_optimizer
 from .device import get_next_device
+from .memory import pin_module_alloc, pin_module_register
 from .optim_stream import launch_optim_kernel, on_optim_stream
 from .run import (
     RoundPipeRunContext,
@@ -23,7 +24,7 @@ from .run_config import RoundPipeRunConfig, FullRoundPipeRunConfig
 from .scheduler import ModelExecutePlan, ModelTracker, backward_schedule_simulator
 from .threads import AnnotatedEvent
 from .timer import ModelTimer, IterTimer
-from .utils import get_call_location, pin_tensor, get_model_size
+from .utils import get_call_location, get_model_size
 
 
 class RoundPipeBase(nn.Module):
@@ -256,7 +257,7 @@ class RoundPipe(RoundPipeBase):
         optim_dtype: Optional[torch.dtype] = None,
         name: Optional[str] = None,
         model_run_config: RoundPipeRunConfig = RoundPipeRunConfig(),
-        pin_with_register: bool = False,
+        pin_model: Literal["alloc", "register", "off"] = "alloc",
     ) -> None:
         """Convert model storage to pinned tensors and determine pipeline cuts.
 
@@ -269,10 +270,18 @@ class RoundPipe(RoundPipeBase):
                 as param type.
             name: Optional friendly identifier. Defaults to ``file:line``.
             model_run_config: Baseline configuration inherited by invocations.
-            pin_with_register: Use cudaHostRegister to pin memory instead of
-                torch's pin_memory. This reduces CPU memory usage on very large
-                models, but at the cost of ~10% host-device transfer performance.
-                Only available with CUDA.
+            pin_model:
+                `alloc`: Use torch's pin_memory to pin memory. This is the default and
+                usually has better host-device transfer performance. But it may lead
+                to up to 2x CPU memory usage because pytorch pads all allocation to
+                the power of 2.
+                `register`: Use cudaHostRegister to pin memory instead of. This reduces
+                CPU memory usage on very large models, but at the cost of ~10%
+                host-device transfer performance. Only available with CUDA.
+                `off`: Do not pin memory. This is useful when LoRA fine-tuning models
+                larger than CPU memory. Combined with mmap during model loading, it
+                allows linux load data as needed from disk and auto evict used data
+                when OOM happens.
         """
         super().__init__(model, name, optim_dtype)
         self.model_run_config: RoundPipeRunConfig = copy.deepcopy(model_run_config)
@@ -292,30 +301,17 @@ class RoundPipe(RoundPipeBase):
 
         for layer in tqdm.tqdm(
             self.layers,
-            desc=f"Roundpipe: Process params in {self.name}",
+            desc=f"Roundpipe: Process layer {self.name}",
             leave=False,
         ):
+            if pin_model == "alloc":
+                pin_module_alloc(layer)
+            elif pin_model == "register":
+                pin_module_register(layer)
             for param in layer.parameters():
-                if pin_with_register:
-                    pin_tensor(param)
-                elif not param.is_pinned():
-                    pinned_tensor = torch.empty_like(param.data, pin_memory=True)
-                    pinned_tensor.copy_(param.data)
-                    param.data = pinned_tensor
                 ParamAttribute.set(param, id(layer))
-        for buffer in tqdm.tqdm(
-            self.model.buffers(),
-            total=sum(1 for _ in self.model.buffers()),
-            desc=f"Roundpipe: Process buffers in {self.name}",
-            leave=False,
-        ):
+        for buffer in self.model.buffers():
             assert not buffer.requires_grad, "Buffers should not require grad."
-            if pin_with_register:
-                pin_tensor(buffer)
-            elif not buffer.is_pinned():
-                pinned_tensor = torch.empty_like(buffer.data, pin_memory=True)
-                pinned_tensor.copy_(buffer.data)
-                buffer.data = pinned_tensor
 
         self.RoundPipe_initialized = True
 

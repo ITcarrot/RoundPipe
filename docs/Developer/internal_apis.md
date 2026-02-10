@@ -13,6 +13,8 @@ This section documents the internal APIs of RoundPipe that are intended for deve
 
 ::: roundpipe.grad_scaler
 
+::: roundpipe.memory
+
 ::: roundpipe.models
 
 ::: roundpipe.optim
