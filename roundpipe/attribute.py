@@ -136,9 +136,6 @@ class LayerAttribute:
     def forward_backward_fence(self) -> None:
         """Fence for fused forward backward pass to wait for
         parameter and gradient ready.
-
-        Args:
-            clear: Whether to clear events for doing backward.
         """
         self.param_copied.wait()
         self.param_upload_started.wait()

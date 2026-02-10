@@ -245,7 +245,8 @@ def download_layer(
     externally.
 
     Args:
-        layer: Module whose tensors should be copied to host memory.
+        cpu_layer: Original layer residing on the host.
+        gpu_layer: Layer copy residing on the device.
         layer_attr: Layer attribute tracking the transfer events.
         device: Device manager orchestrating the transfer.
         with_buffer: Whether to copy buffers back to host.
