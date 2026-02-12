@@ -971,7 +971,7 @@
 
 
 <h2 id="roundpipe.run_config.RoundPipeRunConfig.__init__" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">requires_grad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preserve_rng_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_input</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">merge_output</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">execute_plan</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">requires_grad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preserve_rng_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">recompute_grain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_input</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">merge_output</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">execute_plan</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 </h2>
 
@@ -1016,6 +1016,19 @@ If None, defaults to CPU.</p>
           <div class="doc-md-description">
             <p>Whether to preserve the random number generator state.
 If None, defaults to True.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>recompute_grain</code></b>
+              (<code><span title="Optional">Optional</span>[<span title="Literal">Literal</span>[<span title="stage">stage</span>, <span title="layer">layer</span>]]</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Backward recompute granularity.
+'stage': recompute per backward stage.
+'layer': recompute and backward per layer within a stage.
+If None, defaults to 'stage'.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">

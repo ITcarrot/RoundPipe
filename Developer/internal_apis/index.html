@@ -11504,6 +11504,14 @@ thus ensuring correct backward order.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
+          <b><code><span title="roundpipe.run.RoundPipeRunContext.recompute_grain">recompute_grain</span></code></b>
+              (<code><span title="Literal">Literal</span>[<span title="stage">stage</span>, <span title="layer">layer</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Backward recompute granularity.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
           <b><code><span title="roundpipe.run.RoundPipeRunContext.device_autocast_kwargs">device_autocast_kwargs</span></code></b>
               (<code><span title="dict">dict</span></code>)
           –
@@ -11635,7 +11643,7 @@ microbatch 0.</p>
 
 
 <h4 id="roundpipe.run.RoundPipeRunContext.__init__" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">gpu_fwd_layers</span><span class="p">,</span> <span class="n">gpu_bwd_layers</span><span class="p">,</span> <span class="n">timer</span><span class="p">,</span> <span class="n">tracker</span><span class="p">,</span> <span class="n">enable_grad</span><span class="p">,</span> <span class="n">microbatch_id</span><span class="p">,</span> <span class="n">num_microbatches</span><span class="p">,</span> <span class="n">preserve_rng_state</span><span class="p">)</span></code>
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">gpu_fwd_layers</span><span class="p">,</span> <span class="n">gpu_bwd_layers</span><span class="p">,</span> <span class="n">timer</span><span class="p">,</span> <span class="n">tracker</span><span class="p">,</span> <span class="n">enable_grad</span><span class="p">,</span> <span class="n">microbatch_id</span><span class="p">,</span> <span class="n">num_microbatches</span><span class="p">,</span> <span class="n">preserve_rng_state</span><span class="p">,</span> <span class="n">recompute_grain</span><span class="p">)</span></code>
 
 </h4>
 
@@ -11719,6 +11727,14 @@ among backward microbatches.</p>
           –
           <div class="doc-md-description">
             <p>Whether to snapshot RNG for recomputation.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>recompute_grain</code></b>
+              (<code><span title="Literal">Literal</span>[<span title="stage">stage</span>, <span title="layer">layer</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Backward recompute granularity.</p>
           </div>
         </li>
     </ul>
@@ -12397,7 +12413,7 @@ and <code>context.grad_states</code> in-place.</p>
 
 
 <h4 id="roundpipe.run_config.RoundPipeRunConfig.__init__" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">requires_grad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preserve_rng_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_input</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">merge_output</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">execute_plan</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">requires_grad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preserve_rng_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">recompute_grain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_input</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">merge_output</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">execute_plan</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 </h4>
 
@@ -12442,6 +12458,19 @@ If None, defaults to CPU.</p>
           <div class="doc-md-description">
             <p>Whether to preserve the random number generator state.
 If None, defaults to True.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>recompute_grain</code></b>
+              (<code><span title="Optional">Optional</span>[<span title="Literal">Literal</span>[<span title="stage">stage</span>, <span title="layer">layer</span>]]</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Backward recompute granularity.
+'stage': recompute per backward stage.
+'layer': recompute and backward per layer within a stage.
+If None, defaults to 'stage'.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
