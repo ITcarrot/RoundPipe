@@ -194,8 +194,10 @@ def test_qwen3_classic_accumulate():
     assert sum(diff) / len(diff) < 0.01
 
 
-@pytest.mark.parametrize("is_async", [True, False])
-def test_qwen3_fused(is_async: bool):
+@pytest.mark.parametrize(
+    "is_async, recompute_grain", [(True, "stage"), (False, "stage"), (True, "layer")]
+)
+def test_qwen3_fused(is_async: bool, recompute_grain: Literal["stage", "layer"]):
     raw_model = AutoModelForCausalLM.from_pretrained(
         MODEL_PATH,
         use_cache=False,
@@ -203,7 +205,9 @@ def test_qwen3_fused(is_async: bool):
     )
     model = wrap_model_to_roundpipe(
         raw_model,
-        model_run_config=RoundPipeRunConfig(num_microbatch=3),
+        model_run_config=RoundPipeRunConfig(
+            num_microbatch=3, recompute_grain=recompute_grain
+        ),
         use_sequential_preset=True,
         optim_dtype=torch.float32,
     )

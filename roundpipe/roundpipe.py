@@ -437,6 +437,7 @@ class RoundPipe(RoundPipeBase):
                 i,
                 batch.num_microbatch,
                 full_run_config.preserve_rng_state,
+                full_run_config.recompute_grain,
             )
             for i in range(batch.num_microbatch)
         ]
@@ -554,6 +555,7 @@ class RoundPipe(RoundPipeBase):
                 i,
                 batch.num_microbatch,
                 full_run_config.preserve_rng_state,
+                full_run_config.recompute_grain,
             )
             for i in range(batch.num_microbatch)
         ]

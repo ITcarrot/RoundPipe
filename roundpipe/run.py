@@ -42,6 +42,7 @@ class RoundPipeRunContext:
         microbatch_id: Index of the microbatch this context tracks.
         num_microbatches: Total number of microbatches scheduled.
         preserve_rng_state: Whether to snapshot/restore RNG streams.
+        recompute_grain: Backward recompute granularity.
         device_autocast_kwargs: Settings applied to CUDA autocast.
         cpu_autocast_kwargs: Settings applied to CPU autocast.
         flatten_inputs: Cached flattened inputs for recompute.
@@ -67,6 +68,7 @@ class RoundPipeRunContext:
     microbatch_id: int
     num_microbatches: int
     preserve_rng_state: bool
+    recompute_grain: Literal["stage", "layer"]
     device_autocast_kwargs: dict
     cpu_autocast_kwargs: dict
     flatten_inputs: List[List[Any]]
@@ -92,6 +94,7 @@ class RoundPipeRunContext:
         microbatch_id: int,
         num_microbatches: int,
         preserve_rng_state: bool,
+        recompute_grain: Literal["stage", "layer"],
     ) -> None:
         """Initialize per-microbatch caches and RNG bookkeeping.
 
@@ -107,6 +110,7 @@ class RoundPipeRunContext:
             microbatch_id: Microbatch index for this context.
             num_microbatches: Total number of microbatches in the batch.
             preserve_rng_state: Whether to snapshot RNG for recomputation.
+            recompute_grain: Backward recompute granularity.
         """
         self.model = model
         self.gpu_fwd_layers = gpu_fwd_layers
@@ -117,6 +121,7 @@ class RoundPipeRunContext:
         self.microbatch_id = microbatch_id
         self.num_microbatches = num_microbatches
         self.preserve_rng_state = preserve_rng_state
+        self.recompute_grain = recompute_grain
 
         device_autocast_kwargs, self.cpu_autocast_kwargs = _get_autocast_kwargs("cuda")
         assert device_autocast_kwargs is not None, "Failed to get CUDA autocast kwargs."
@@ -153,7 +158,11 @@ class RoundPipeRunContext:
             batch: Batch holding the flattened tensors to snapshot.
             device: Device manager whose streams guard the transfer.
         """
-        if not (self.enable_grad and self.tracker.backward_need_input(layer_id)):
+        if not self.enable_grad:
+            return
+        if self.recompute_grain == "stage" and not self.tracker.backward_need_input(
+            layer_id
+        ):
             return
 
         self.flatten_inputs[layer_id] = copy.copy(
@@ -467,84 +476,173 @@ def run_backward(
     context.tracker.backward_wait_for(layer_group_id - 1)
     for layer_id in layer_ids:
         context.fetch_recompute_data(layer_id, device)
-    flatten_inputs_gpu = async_h2d(
-        device,
-        [context.download_event[layer_ids[0]]],
-        context.flatten_inputs[layer_ids[0]],
-        True,
-    )
-    context.flatten_inputs[layer_ids[0]].clear()  # Free CPU memory
-    flatten_input_spec = cast(TreeSpec, context.flatten_specs[layer_ids[0]])
-    hidden_state = tree_unflatten(flatten_inputs_gpu, flatten_input_spec)
+    if context.recompute_grain == "layer":
+        grad_outputs_gpu = async_h2d(
+            device, context.output_backward_events, context.grad_states
+        )
 
-    with torch.random.fork_rng(
-        devices=[device.device.index],
-        enabled=context.preserve_rng_state,
-        device_type="cuda",
-    ):
-        if context.preserve_rng_state:
-            context.restore_rng_state(layer_ids[0], device)
-        for layer_id in layer_ids:
-            with torch.enable_grad(), torch.cuda.stream(
-                device.compute_stream
-            ), torch.autocast("cuda", **context.device_autocast_kwargs), torch.autocast(
-                "cpu", **context.cpu_autocast_kwargs
-            ), annotate(
-                f"{model.name}L[{layer_id}]B[{batch_idx}]Re"
-            ), RecomputeCtx(
-                context.cut_recompute_data(layer_id)
-            ), context.timer.time_fwd(
-                "re", layer_id, device.compute_stream
+        for layer_id in reversed(layer_ids):
+            flatten_inputs_gpu = async_h2d(
+                device,
+                [context.download_event[layer_id]],
+                context.flatten_inputs[layer_id],
+                True,
+            )
+            context.flatten_inputs[layer_id].clear()  # Free CPU memory
+            flatten_input_spec = cast(TreeSpec, context.flatten_specs[layer_id])
+            hidden_state = tree_unflatten(flatten_inputs_gpu, flatten_input_spec)
+
+            with torch.random.fork_rng(
+                devices=[device.device.index],
+                enabled=context.preserve_rng_state,
+                device_type="cuda",
+            ):
+                if context.preserve_rng_state:
+                    context.restore_rng_state(layer_id, device)
+                with torch.enable_grad(), torch.cuda.stream(
+                    device.compute_stream
+                ), torch.autocast(
+                    "cuda", **context.device_autocast_kwargs
+                ), torch.autocast(
+                    "cpu", **context.cpu_autocast_kwargs
+                ), annotate(
+                    f"{model.name}L[{layer_id}]B[{batch_idx}]Re"
+                ), RecomputeCtx(
+                    context.cut_recompute_data(layer_id)
+                ), context.timer.time_fwd(
+                    "re", layer_id, device.compute_stream
+                ):
+                    try:
+                        if layer_id == 0:
+                            args, kwargs = hidden_state
+                            hidden_state = context.gpu_bwd_layers[layer_id].forward(
+                                *args, **kwargs
+                            )
+                        else:
+                            hidden_state = context.gpu_bwd_layers[layer_id].forward(
+                                hidden_state
+                            )
+                    except Exception:
+                        with thread_exception_print_lock:
+                            traceback.print_exc()
+                            print(
+                                f"The above error occurred in {model.name} layer {layer_id} during recomputation in backward pass.",
+                                file=sys.stderr,
+                            )
+                        raise SystemExit(1)
+
+            flatten_outputs_gpu, _ = tree_flatten(hidden_state)
+            outputs_requires_grad: List[torch.Tensor] = []
+            outputs_grad: List[torch.Tensor] = []
+            for out, grad_out in zip(flatten_outputs_gpu, grad_outputs_gpu):
+                if isinstance(out, torch.Tensor) and out.requires_grad:
+                    outputs_requires_grad.append(out)
+                    outputs_grad.append(grad_out)
+
+            with annotate(
+                f"{model.name}L[{layer_id}]B[{batch_idx}]Bwd"
+            ), context.timer.time_bwd(
+                range(layer_id, layer_id + 1), device.compute_stream
             ):
                 try:
-                    if layer_id == 0:
-                        args, kwargs = hidden_state
-                        hidden_state = context.gpu_bwd_layers[layer_id].forward(
-                            *args, **kwargs
-                        )
-                    else:
-                        hidden_state = context.gpu_bwd_layers[layer_id].forward(
-                            hidden_state
-                        )
+                    torch.autograd.backward(outputs_requires_grad, outputs_grad)
                 except Exception:
                     with thread_exception_print_lock:
                         traceback.print_exc()
                         print(
-                            f"The above error occurred in {model.name} layer {layer_id} during recomputation in backward pass.",
+                            f"The above error occurred in {model.name} layer {layer_id} during backward pass.\n"
+                            f"Outputs requiring grad: {[out.shape for out in outputs_requires_grad]}\n"
+                            f"Provided gradients: {[grad.shape for grad in outputs_grad]}",
                             file=sys.stderr,
                         )
                     raise SystemExit(1)
+            grad_outputs_gpu = [
+                inp.grad if isinstance(inp, torch.Tensor) else None
+                for inp in flatten_inputs_gpu
+            ]
 
-    flatten_outputs_gpu, _ = tree_flatten(hidden_state)
-    flatten_grad_outputs_gpu = async_h2d(
-        device, context.output_backward_events, context.grad_states
-    )
+        flatten_grad_inputs_gpu = grad_outputs_gpu
+    else:
+        flatten_inputs_gpu = async_h2d(
+            device,
+            [context.download_event[layer_ids[0]]],
+            context.flatten_inputs[layer_ids[0]],
+            True,
+        )
+        context.flatten_inputs[layer_ids[0]].clear()  # Free CPU memory
+        flatten_input_spec = cast(TreeSpec, context.flatten_specs[layer_ids[0]])
+        hidden_state = tree_unflatten(flatten_inputs_gpu, flatten_input_spec)
 
-    outputs_requires_grad = []
-    outputs_grad = []
-    for out, grad_out in zip(flatten_outputs_gpu, flatten_grad_outputs_gpu):
-        if isinstance(out, torch.Tensor) and out.requires_grad:
-            outputs_requires_grad.append(out)
-            outputs_grad.append(grad_out)
-    with annotate(
-        f"{model.name}L[{layer_ids[0]}, {layer_ids[-1]}]B[{batch_idx}]Bwd"
-    ), context.timer.time_bwd(layer_ids, device.compute_stream):
-        try:
-            torch.autograd.backward(outputs_requires_grad, outputs_grad)
-        except Exception:
-            with thread_exception_print_lock:
-                traceback.print_exc()
-                print(
-                    f"The above error occurred in {model.name} layers {layer_ids} during backward pass.\n"
-                    f"Outputs requiring grad: {[out.shape for out in outputs_requires_grad]}\n"
-                    f"Provided gradients: {[grad.shape if isinstance(grad, torch.Tensor) else type(grad) for grad in outputs_grad]}",
-                    file=sys.stderr,
-                )
-            raise SystemExit(1)
-    flatten_grad_inputs_gpu = [
-        inp.grad if isinstance(inp, torch.Tensor) else None
-        for inp in flatten_inputs_gpu
-    ]
+        with torch.random.fork_rng(
+            devices=[device.device.index],
+            enabled=context.preserve_rng_state,
+            device_type="cuda",
+        ):
+            if context.preserve_rng_state:
+                context.restore_rng_state(layer_ids[0], device)
+            for layer_id in layer_ids:
+                with torch.enable_grad(), torch.cuda.stream(
+                    device.compute_stream
+                ), torch.autocast(
+                    "cuda", **context.device_autocast_kwargs
+                ), torch.autocast(
+                    "cpu", **context.cpu_autocast_kwargs
+                ), annotate(
+                    f"{model.name}L[{layer_id}]B[{batch_idx}]Re"
+                ), RecomputeCtx(
+                    context.cut_recompute_data(layer_id)
+                ), context.timer.time_fwd(
+                    "re", layer_id, device.compute_stream
+                ):
+                    try:
+                        if layer_id == 0:
+                            args, kwargs = hidden_state
+                            hidden_state = context.gpu_bwd_layers[layer_id].forward(
+                                *args, **kwargs
+                            )
+                        else:
+                            hidden_state = context.gpu_bwd_layers[layer_id].forward(
+                                hidden_state
+                            )
+                    except Exception:
+                        with thread_exception_print_lock:
+                            traceback.print_exc()
+                            print(
+                                f"The above error occurred in {model.name} layer {layer_id} during recomputation in backward pass.",
+                                file=sys.stderr,
+                            )
+                        raise SystemExit(1)
+
+        flatten_outputs_gpu, _ = tree_flatten(hidden_state)
+        flatten_grad_outputs_gpu = async_h2d(
+            device, context.output_backward_events, context.grad_states
+        )
+
+        outputs_requires_grad: List[torch.Tensor] = []
+        outputs_grad: List[torch.Tensor] = []
+        for out, grad_out in zip(flatten_outputs_gpu, flatten_grad_outputs_gpu):
+            if isinstance(out, torch.Tensor) and out.requires_grad:
+                outputs_requires_grad.append(out)
+                outputs_grad.append(grad_out)
+        with annotate(
+            f"{model.name}L[{layer_ids[0]}, {layer_ids[-1]}]B[{batch_idx}]Bwd"
+        ), context.timer.time_bwd(layer_ids, device.compute_stream):
+            try:
+                torch.autograd.backward(outputs_requires_grad, outputs_grad)
+            except Exception:
+                with thread_exception_print_lock:
+                    traceback.print_exc()
+                    print(
+                        f"The above error occurred in {model.name} layers {layer_ids} during backward pass.\n"
+                        f"Outputs requiring grad: {[out.shape for out in outputs_requires_grad]}\n"
+                        f"Provided gradients: {[grad.shape if isinstance(grad, torch.Tensor) else type(grad) for grad in outputs_grad]}",
+                        file=sys.stderr,
+                    )
+                raise SystemExit(1)
+        flatten_grad_inputs_gpu = [
+            inp.grad if isinstance(inp, torch.Tensor) else None
+            for inp in flatten_inputs_gpu
+        ]
 
     context.output_backward_events = (
         context.input_backward_events

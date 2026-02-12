@@ -21,6 +21,7 @@ class RoundPipeRunConfig:
         requires_grad: Optional[bool] = None,
         output_device: Optional[torch.device] = None,
         preserve_rng_state: Optional[bool] = None,
+        recompute_grain: Optional[Literal["stage", "layer"]] = None,
         num_microbatch: Optional[int] = None,
         split_input: Union[
             Tuple[Optional[Tuple], Optional[Dict[str, Any]]],
@@ -45,6 +46,10 @@ class RoundPipeRunConfig:
                 If None, defaults to CPU.
             preserve_rng_state: Whether to preserve the random number generator state.
                 If None, defaults to True.
+            recompute_grain: Backward recompute granularity.
+                'stage': recompute per backward stage.
+                'layer': recompute and backward per layer within a stage.
+                If None, defaults to 'stage'.
             num_microbatch: The number of microbatches to split the input into.
                 If None, defaults to the number of available CUDA devices plus one.
             split_input (-): Specifies how to split input arguments into microbatches.
@@ -60,6 +65,7 @@ class RoundPipeRunConfig:
         self.requires_grad = requires_grad
         self.output_device = output_device
         self.preserve_rng_state = preserve_rng_state
+        self.recompute_grain: Optional[Literal["stage", "layer"]] = recompute_grain
         self.num_microbatch = num_microbatch
         self.split_input = split_input
         self.split_label = split_label
@@ -74,6 +80,8 @@ class RoundPipeRunConfig:
             string += f"output_device={self.output_device}, "
         if self.preserve_rng_state is not None:
             string += f"preserve_rng_state={self.preserve_rng_state}, "
+        if self.recompute_grain is not None:
+            string += f"recompute_grain={self.recompute_grain}, "
         if self.num_microbatch is not None:
             string += f"num_microbatch={self.num_microbatch}, "
         if self.split_input is not None:
@@ -134,6 +142,15 @@ class FullRoundPipeRunConfig:
                 model_run_config.preserve_rng_state
                 if model_run_config.preserve_rng_state is not None
                 else True
+            )
+        )
+        self.recompute_grain: Literal["stage", "layer"] = (
+            function_run_config.recompute_grain
+            if function_run_config.recompute_grain is not None
+            else (
+                model_run_config.recompute_grain
+                if model_run_config.recompute_grain is not None
+                else "stage"
             )
         )
         self.num_microbatch = (

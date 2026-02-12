@@ -15,9 +15,9 @@ from roundpipe.models.function import ChunkedCompileLinearForCausalLMLoss
 torch.backends.cuda.matmul.allow_fp16_accumulation = True
 transformers.modeling_utils._init_weights = False
 
-if len(sys.argv) != 6:
+if len(sys.argv) != 7:
     print(
-        f"Usage: python {sys.argv[0]} <model_path> <batch_size> <seq_length> <num_microbatch> <accum_steps>"
+        f"Usage: python {sys.argv[0]} <model_path> <batch_size> <seq_length> <num_microbatch> <accum_steps> <recompute_grain>"
     )
     sys.exit(1)
 model_path = sys.argv[1]
@@ -25,6 +25,11 @@ BS = int(sys.argv[2])
 SEQ_LENGTH = int(sys.argv[3])
 NUM_MICROBATCH = int(sys.argv[4])
 ACCUM_STEPS = int(sys.argv[5])
+RECOMPUTE_GRAIN = sys.argv[6]
+assert RECOMPUTE_GRAIN in (
+    "stage",
+    "layer",
+), "recompute_grain must be either 'stage' or 'layer'"
 
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 config = AutoConfig.from_pretrained(model_path)
@@ -45,7 +50,9 @@ model = wrap_model_to_roundpipe(
     hf_model,
     optim_dtype=torch.float32,
     use_sequential_preset=True,
-    model_run_config=RoundPipeRunConfig(num_microbatch=NUM_MICROBATCH),
+    model_run_config=RoundPipeRunConfig(
+        num_microbatch=NUM_MICROBATCH, recompute_grain=RECOMPUTE_GRAIN
+    ),
 )
 optim = Adam(model.optim_parameters(), lr=1e-5)
 
