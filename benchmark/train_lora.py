@@ -14,16 +14,17 @@ from roundpipe.models.function import ChunkedCompileLinearForCausalLMLoss
 torch.backends.cuda.matmul.allow_fp16_accumulation = True
 transformers.modeling_utils._init_weights = False
 
-if len(sys.argv) != 6:
+if len(sys.argv) != 7:
     print(
-        f"Usage: python {sys.argv[0]} <model_path> <batch_size> <seq_length> <num_microbatch> <accum_steps>"
+        f"Usage: python {sys.argv[0]} <model_path> <pin_model> <batch_size> <seq_length> <num_microbatch> <accum_steps>"
     )
     sys.exit(1)
 model_path = sys.argv[1]
-BS = int(sys.argv[2])
-SEQ_LENGTH = int(sys.argv[3])
-NUM_MICROBATCH = int(sys.argv[4])
-ACCUM_STEPS = int(sys.argv[5])
+PIN_MODEL = bool(int(sys.argv[2]))
+BS = int(sys.argv[3])
+SEQ_LENGTH = int(sys.argv[4])
+NUM_MICROBATCH = int(sys.argv[5])
+ACCUM_STEPS = int(sys.argv[6])
 
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 config = AutoConfig.from_pretrained(model_path)
@@ -44,7 +45,7 @@ for module in lora_model.modules():
     if hasattr(module, "reset_parameters"):
         module.reset_parameters()
     module._apply(
-        lambda t: t.to(dtype=torch.float16, device="cpu"),
+        lambda t: t.to(dtype=torch.float16, device="cpu", non_blocking=PIN_MODEL),
         recurse=False,
     )
 torch.cuda.synchronize()
