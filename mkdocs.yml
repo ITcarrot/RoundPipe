@@ -1,4 +1,4 @@
-site_name: RoundPipe Documentation
+site_name: RoundPipe
 site_url: https://itcarrot.github.io/RoundPipe/
 repo_url: https://github.com/ITcarrot/RoundPipe/
 nav:
@@ -12,6 +12,8 @@ nav:
       - Internal APIs: Developer/internal_apis.md
 theme: 
   name: material
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
   language: en
   features:
     - navigation.tabs
@@ -51,7 +53,6 @@ plugins:
           default: true
         - locale: zh
           name: 中文
-          site_name: RoundPipe 文档
           nav_translations:
             Home: 主页
             Tutorial: 教程
