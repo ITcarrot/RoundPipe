@@ -5,9 +5,11 @@ nav:
   - Home: index.md
   - Tutorial: Tutorial.md
   - API:
-      - RunConfig: API/run_config.md
       - Model: API/model.md
+      - RunConfig: API/run_config.md
+      - Context: API/context.md
       - Optimizer: API/optimizer.md
+      - GradScaler: API/grad_scaler.md
   - Developer:
       - Internal APIs: Developer/internal_apis.md
 theme: 
@@ -29,6 +31,7 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
 markdown_extensions:
+  - extra
   - admonition
   - pymdownx.details
   - pymdownx.superfences
@@ -56,8 +59,10 @@ plugins:
           nav_translations:
             Home: 主页
             Tutorial: 教程
+            Model: 模型
+            RunConfig: 运行设置
+            Context: 运行时上下文
+            Optimizer: 优化器
+            GradScaler: 梯度缩放器
             Developer: 开发者
             Internal APIs: 内部 API
-            RunConfig: 运行设置
-            Model: 模型
-            Optimizer: 优化器

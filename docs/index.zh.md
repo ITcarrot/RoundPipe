@@ -76,7 +76,7 @@ hide:
   <div class="glass-card home-feature-card">
     <span class="feature-emoji">🔄</span>
     <h3>跨平台兼容</h3>
-    <p>纯Pytorch实现，兼容Nvidia、AMD等多种GPU平台。</p>
+    <p>纯PyTorch实现，兼容Nvidia、AMD等多种GPU平台。</p>
   </div>
 
 </div>
