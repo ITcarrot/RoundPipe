@@ -76,6 +76,38 @@ RoundPipe.forward_backward(
 - 如果 `return_outputs=False`（默认），返回所有微批次损失的总和。
 - 如果 `return_outputs=True`，返回 `(loss_sum, merged_outputs)` 元组。
 
+该函数会对各个微批次分别求损失后分别反向传播并累积梯度，相当于对所有微批次的损失求和作为输入训练样本的损失。调用此函数的语义等价于：
+
+```python
+def forward_backward(
+    input_args: Tuple[Any, ...] = (),
+    input_kwargs: Dict[str, Any] = {},
+    label: Any = None,
+    loss_fn: Callable[[Any, Any], Union[Sequence[torch.Tensor], torch.Tensor]] = lambda outputs, labels: outputs,
+    return_outputs: bool = False,
+    run_config: RoundPipeRunConfig = RoundPipeRunConfig(),
+) -> Union[Tuple[Union[List[torch.Tensor], torch.Tensor], Any], List[torch.Tensor], torch.Tensor]:
+    split_input_args, split_input_kwargs = split_input(
+        input_args, input_kwargs
+    )
+    split_labels = split_label(labels)
+    losses, outputs = [], []
+    for input_args_mb, input_kwargs_mb, label_mb in zip(
+        split_input_args, split_input_kwargs, split_labels
+    ):
+        output_mb = model.forward(input_args_mb, input_kwargs_mb)
+        loss_mb = loss_fn(output_mb, label_mb)
+        torch.autograd.backward(loss_mb)
+        # 当 loss_mb 是一个张量时，上一行代码其实就是
+        # loss_mb.backward()
+        losses.append(loss_mb)
+        outputs.append(output_mb)
+    if return_outputs:
+        return sum(losses), merge_output(outputs)
+    else:
+        return sum(losses)
+```
+
 ### RoundPipe.optim_parameters
 
 ```python
@@ -229,8 +261,8 @@ RoundPipe.set_original_model(original_model: nn.Module) -> None
 
 RoundPipe 重写了 `__getattr__`、`__setattr__` 和 `__delattr__`，实现了对被包装模型的属性透明访问：
 
-- **读取**：当访问 RoundPipe 实例上不存在的属性时，会依次从 `original_model`（如果已设置）和 `model` 上查找。
-- **写入**：初始化完成后，对 RoundPipe 实例的属性写入会同步到 `original_model` 和 `model`。
-- **删除**：属性删除同样会传播到 `original_model` 和 `model`。
+- **读取**：当访问 RoundPipe 实例上不存在的属性时，如果设置了`original_model`会从中查找，否侧从构造 RoundPipe 变量时的传入模型上查找。
+- **写入**：初始化完成后，对 RoundPipe 实例的属性写入会转发到 `original_model`，如果没有则转发到构造 RoundPipe 变量时的传入模型上。
+- **删除**：属性删除同样会传播到 `original_model` 或构造传入模型。
 
 这一机制使得 RoundPipe 包装后的模型可以像原始模型一样使用，无需关心包装层的存在。
