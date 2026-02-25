@@ -8,17 +8,17 @@
       
       
       
-        <link rel="canonical" href="https://itcarrot.github.io/RoundPipe/zh/API/optimizer/">
+        <link rel="canonical" href="https://itcarrot.github.io/RoundPipe/zh/API/context/">
       
       
-        <link rel="prev" href="../context/">
+        <link rel="prev" href="../run_config/">
       
       
-        <link rel="next" href="../grad_scaler/">
+        <link rel="next" href="../optimizer/">
       
       
         
-          <link rel="alternate" href="../../../API/optimizer/" hreflang="en">
+          <link rel="alternate" href="../../../API/context/" hreflang="en">
         
           <link rel="alternate" href="./" hreflang="zh">
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>优化器 - RoundPipe</title>
+        <title>运行时上下文 - RoundPipe</title>
       
     
     
@@ -117,7 +117,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              优化器
+              运行时上下文
             
           </span>
         </div>
@@ -164,7 +164,7 @@
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="../../../API/optimizer/" hreflang="en" class="md-select__link">
+            <a href="../../../API/context/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
@@ -541,34 +541,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../context/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    运行时上下文
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -588,7 +560,7 @@
   <span class="md-ellipsis">
     
   
-    优化器
+    运行时上下文
   
 
     
@@ -606,7 +578,7 @@
   <span class="md-ellipsis">
     
   
-    优化器
+    运行时上下文
   
 
     
@@ -632,10 +604,43 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#roundpipeoptimadam" class="md-nav__link">
+  <a href="#roundpipesave_for_recompute" class="md-nav__link">
     <span class="md-ellipsis">
       
-        roundpipe.optim.Adam
+        roundpipe.save_for_recompute
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipedoing_recompute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.doing_recompute
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipeget_recompute_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.get_recompute_data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipeoptimizerctx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.OptimizerCtx
       
     </span>
   </a>
@@ -646,6 +651,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../optimizer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    优化器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -798,10 +831,43 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#roundpipeoptimadam" class="md-nav__link">
+  <a href="#roundpipesave_for_recompute" class="md-nav__link">
     <span class="md-ellipsis">
       
-        roundpipe.optim.Adam
+        roundpipe.save_for_recompute
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipedoing_recompute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.doing_recompute
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipeget_recompute_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.get_recompute_data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipeoptimizerctx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.OptimizerCtx
       
     </span>
   </a>
@@ -828,49 +894,80 @@
   
 
 
-<h1 id="_1">优化器</h1>
-<p>RoundPipe 支持 PyTorch 中的任何优化器，并且在分布式训练中能够正确地同步优化器状态。对于支持<code>fused</code>实现的 PyTorch 优化器，我们建议您在创建优化器时传入<code>fused=True</code>，可以显著提升性能。不过 PyTorch 中的优化器在 CPU 上的性能较差，因此我们维护了部分优化器的 CPU 实现，通过针对运行设备的 CPU 进行编译优化，加快优化器的更新速度。</p>
-<p>以下是 RoundPipe 中维护的优化器实现，按照字母顺序排列。</p>
-<h2 id="roundpipeoptimadam">roundpipe.optim.Adam</h2>
-<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">roundpipe</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span>
-    <span class="n">params</span><span class="p">:</span> <span class="n">ParamsT</span><span class="p">,</span>
-    <span class="n">lr</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-3</span><span class="p">,</span>
-    <span class="n">betas</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.999</span><span class="p">),</span>
-    <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">,</span>
-    <span class="n">weight_decay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-    <span class="n">amsgrad</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">foreach</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">maximize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">capturable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">differentiable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">fused</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">decoupled_weight_decay</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span>
+<h1 id="_1">运行时上下文</h1>
+<p>RoundPipe 使用基于线程局部变量的上下文管理器来跟踪当前的执行阶段（前向传播、重计算、优化器更新）。用户可以通过这些 API 在模型的前向传播中保存数据以供重计算使用，或者在优化器相关操作时正确获取参数。</p>
+<h2 id="roundpipesave_for_recompute">roundpipe.save_for_recompute</h2>
+<div class="highlight"><pre><span></span><code><span class="n">roundpipe</span><span class="o">.</span><span class="n">save_for_recompute</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
-<p>实现 Adam 优化算法，使用 fp32 精度在 CPU 上执行参数更新。此 Adam 实现针对 CPU 执行进行了编译优化，相比 PyTorch 原生的 CPU Adam 有更好的性能。</p>
-<p>接口设计与 <code>torch.optim.Adam</code> 兼容，可直接替换使用。</p>
+<p>在当前前向传播上下文中保存数据，供后续重计算阶段使用。</p>
+<p>RoundPipe 在反向传播时需要重新执行前向传播来恢复中间激活值。如果模型的某些中间结果会导致 GPU - CPU 同步（例如 <code>torch.nonzero()</code>），可以在前向传播时通过此函数保存，避免重计算时引入同步开销。</p>
 <p><strong>参数：</strong></p>
 <ul>
-<li><code>params</code>：参数迭代器或定义参数组的字典迭代器。</li>
-<li><code>lr</code>：学习率。默认为 <code>1e-3</code>。</li>
-<li><code>betas</code>：用于计算梯度及其平方的运行均值的系数。默认为 <code>(0.9, 0.999)</code>。</li>
-<li><code>eps</code>：添加到分母以提高数值稳定性的项。默认为 <code>1e-8</code>。</li>
-<li><code>weight_decay</code>：权重衰减系数。默认为 <code>0.0</code>。</li>
-<li><code>amsgrad</code>：是否使用论文 <em>On the Convergence of Adam and Beyond</em> 中的 AMSGrad 变体。默认为 <code>False</code>。</li>
-<li><code>maximize</code>：是否最大化目标函数（而非最小化）。默认为 <code>False</code>。</li>
-<li><code>decoupled_weight_decay</code>：如果为 <code>True</code>，等效于 AdamW 算法，权重衰减不会累积在动量和方差中。默认为 <code>False</code>。</li>
-<li><code>foreach</code>：兼容占位参数，传入时会被忽略并产生警告。</li>
-<li><code>capturable</code>：兼容占位参数，不支持设为 <code>True</code>。</li>
-<li><code>differentiable</code>：兼容占位参数，不支持设为 <code>True</code>。</li>
-<li><code>fused</code>：兼容占位参数，传入时会被忽略并产生警告。</li>
+<li><code>*data</code>：需要保存的任意数据。保存的张量不能需要梯度（<code>requires_grad=False</code>）。</li>
 </ul>
-<p><strong>限制：</strong></p>
+<p><strong>注意事项：</strong></p>
 <ul>
-<li>仅支持 CPU 上的 <code>float32</code> 张量。</li>
-<li>不支持稀疏梯度。</li>
-<li>所有张量必须是连续的（contiguous）。</li>
+<li>每个层的前向传播中最多调用一次。</li>
+<li>如果当前未启用梯度计算，则此函数为空操作。</li>
+<li>保存的数据可以在重计算阶段通过 <code>get_recompute_data()</code> 获取。</li>
 </ul>
+<p><strong>示例：</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_for_recompute</span><span class="p">,</span> <span class="n">doing_recompute</span><span class="p">,</span> <span class="n">get_recompute_data</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">doing_recompute</span><span class="p">():</span>
+            <span class="c1"># 重计算阶段：直接使用保存的 mask</span>
+            <span class="n">mask</span><span class="p">,</span> <span class="o">=</span> <span class="n">get_recompute_data</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># 前向传播阶段：生成并保存 mask</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">save_for_recompute</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">mask</span>
+</code></pre></div>
+<h2 id="roundpipedoing_recompute">roundpipe.doing_recompute</h2>
+<div class="highlight"><pre><span></span><code><span class="n">roundpipe</span><span class="o">.</span><span class="n">doing_recompute</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
+</code></pre></div>
+<p>检查当前作用域是否处于重计算阶段。</p>
+<p>RoundPipe 在反向传播时会重新执行前向传播来恢复激活值，此函数可用于在前向传播代码中区分是首次前向计算还是重计算阶段，从而执行不同的逻辑。</p>
+<p><strong>返回值：</strong></p>
+<ul>
+<li><code>bool</code>：如果当前处于重计算上下文中，返回 <code>True</code>；否则返回 <code>False</code>。</li>
+</ul>
+<h2 id="roundpipeget_recompute_data">roundpipe.get_recompute_data</h2>
+<div class="highlight"><pre><span></span><code><span class="n">roundpipe</span><span class="o">.</span><span class="n">get_recompute_data</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span>
+</code></pre></div>
+<p>获取在前向传播中通过 <code>save_for_recompute()</code> 保存的数据。</p>
+<p><strong>返回值：</strong></p>
+<ul>
+<li><code>tuple</code>：保存的数据。即使只保存了一个元素，也会以元组形式返回。</li>
+</ul>
+<p><strong>注意事项：</strong></p>
+<ul>
+<li>此函数只能在重计算上下文中调用。如果在重计算上下文外调用，将抛出 <code>AssertionError</code>。</li>
+</ul>
+<h2 id="roundpipeoptimizerctx">roundpipe.OptimizerCtx</h2>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">roundpipe</span><span class="o">.</span><span class="n">OptimizerCtx</span>
+</code></pre></div>
+<p>上下文管理器，用于标记当前作用域正在执行优化器相关操作。</p>
+<p>在此上下文中，<code>RoundPipe</code> 会将 <code>.parameters()</code> 和 <code>.named_parameters()</code> 重定向到 <code>.optim_parameters()</code> 和 <code>.optim_named_parameters()</code>。这使得用户可以使用标准 PyTorch 优化器创建方式，而无需显式调用优化器专用的参数接口。</p>
+<p><strong>使用场景：</strong></p>
+<p>当创建优化器或执行其他需要访问优化器参数的操作时，应使用此上下文管理器包裹相关代码。</p>
+<p><strong>示例：</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoundPipe</span><span class="p">,</span> <span class="n">OptimizerCtx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe.optim</span><span class="w"> </span><span class="kn">import</span> <span class="n">Adam</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">RoundPipe</span><span class="p">(</span><span class="n">my_model</span><span class="p">)</span>
+
+<span class="c1"># 方式一：使用 OptimizerCtx（推荐，与 PyTorch 习惯一致）</span>
+<span class="k">with</span> <span class="n">OptimizerCtx</span><span class="p">():</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+
+<span class="c1"># 方式二：直接使用 optim_parameters（等效）</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">optim_parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+</code></pre></div>
 
 
 

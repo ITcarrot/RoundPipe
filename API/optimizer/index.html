@@ -11,10 +11,10 @@
         <link rel="canonical" href="https://itcarrot.github.io/RoundPipe/API/optimizer/">
       
       
-        <link rel="prev" href="../model/">
+        <link rel="prev" href="../context/">
       
       
-        <link rel="next" href="../../Developer/internal_apis/">
+        <link rel="next" href="../grad_scaler/">
       
       
         
@@ -24,12 +24,12 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logo.svg">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
-        <title>Optimizer - RoundPipe Documentation</title>
+        <title>Optimizer - RoundPipe</title>
       
     
     
@@ -81,6 +81,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#optimizer" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -91,10 +96,9 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="RoundPipe Documentation" class="md-header__button md-logo" aria-label="RoundPipe Documentation" data-md-component="logo">
+    <a href="../.." title="RoundPipe" class="md-header__button md-logo" aria-label="RoundPipe" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logo.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -105,7 +109,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            RoundPipe Documentation
+            RoundPipe
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -290,7 +294,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../run_config/" class="md-tabs__link">
+        <a href="../model/" class="md-tabs__link">
           
   
   
@@ -344,13 +348,12 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="RoundPipe Documentation" class="md-nav__button md-logo" aria-label="RoundPipe Documentation" data-md-component="logo">
+    <a href="../.." title="RoundPipe" class="md-nav__button md-logo" aria-label="RoundPipe" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logo.svg" alt="logo">
 
     </a>
-    RoundPipe Documentation
+    RoundPipe
   </label>
   
     <div class="md-nav__source">
@@ -483,6 +486,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../run_config/" class="md-nav__link">
         
   
@@ -511,14 +542,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../model/" class="md-nav__link">
+      <a href="../context/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Model
+    Context
   
 
     
@@ -545,6 +576,26 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Optimizer
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -563,6 +614,64 @@
 
       </a>
       
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipeoptimadam" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.optim.Adam
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../grad_scaler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GradScaler
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -677,6 +786,27 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipeoptimadam" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.optim.Adam
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -696,9 +826,49 @@
   
 
 
-  <h1>Optimizer</h1>
-
-
+<h1 id="optimizer">Optimizer</h1>
+<p>RoundPipe supports any optimizer from PyTorch and correctly synchronizes optimizer state in distributed training. For PyTorch optimizers that support a <code>fused</code> implementation, we recommend passing <code>fused=True</code> when creating the optimizer for significantly better performance. However, PyTorch's built-in optimizers have poor CPU performance, so we maintain CPU-optimized implementations of selected optimizers, compiled specifically for the host CPU to accelerate optimizer updates.</p>
+<p>The following are the optimizer implementations maintained in RoundPipe, listed in alphabetical order.</p>
+<h2 id="roundpipeoptimadam">roundpipe.optim.Adam</h2>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">roundpipe</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">ParamsT</span><span class="p">,</span>
+    <span class="n">lr</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-3</span><span class="p">,</span>
+    <span class="n">betas</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.999</span><span class="p">),</span>
+    <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">,</span>
+    <span class="n">weight_decay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">amsgrad</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">foreach</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">maximize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">capturable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">differentiable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">fused</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">decoupled_weight_decay</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Implements the Adam optimization algorithm, performing parameter updates on CPU in fp32 precision. This Adam implementation is compiled and optimized for CPU execution, offering better performance than PyTorch's native CPU Adam.</p>
+<p>The interface is designed to be API-compatible with <code>torch.optim.Adam</code> and can be used as a drop-in replacement.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>params</code>: An iterable of parameters or dicts defining parameter groups.</li>
+<li><code>lr</code>: Learning rate. Defaults to <code>1e-3</code>.</li>
+<li><code>betas</code>: Coefficients used for computing running averages of gradient and its square. Defaults to <code>(0.9, 0.999)</code>.</li>
+<li><code>eps</code>: Term added to the denominator to improve numerical stability. Defaults to <code>1e-8</code>.</li>
+<li><code>weight_decay</code>: Weight decay coefficient. Defaults to <code>0.0</code>.</li>
+<li><code>amsgrad</code>: Whether to use the AMSGrad variant from the paper <em>On the Convergence of Adam and Beyond</em>. Defaults to <code>False</code>.</li>
+<li><code>maximize</code>: Whether to maximize the objective function (instead of minimizing). Defaults to <code>False</code>.</li>
+<li><code>decoupled_weight_decay</code>: If <code>True</code>, equivalent to the AdamW algorithm where weight decay does not accumulate in the momentum and variance terms. Defaults to <code>False</code>.</li>
+<li><code>foreach</code>: Compatibility placeholder parameter; ignored with a warning if provided.</li>
+<li><code>capturable</code>: Compatibility placeholder parameter; setting to <code>True</code> is not supported.</li>
+<li><code>differentiable</code>: Compatibility placeholder parameter; setting to <code>True</code> is not supported.</li>
+<li><code>fused</code>: Compatibility placeholder parameter; ignored with a warning if provided.</li>
+</ul>
+<p><strong>Limitations:</strong></p>
+<ul>
+<li>Only supports <code>float32</code> tensors on CPU.</li>
+<li>Sparse gradients are not supported.</li>
+<li>All tensors must be contiguous.</li>
+</ul>
 
 
 

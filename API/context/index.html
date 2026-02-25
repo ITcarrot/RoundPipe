@@ -8,35 +8,35 @@
       
       
       
-        <link rel="canonical" href="https://itcarrot.github.io/RoundPipe/Tutorial/">
+        <link rel="canonical" href="https://itcarrot.github.io/RoundPipe/API/context/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../run_config/">
       
       
-        <link rel="next" href="../API/model/">
+        <link rel="next" href="../optimizer/">
       
       
         
           <link rel="alternate" href="./" hreflang="en">
         
-          <link rel="alternate" href="../zh/Tutorial/" hreflang="zh">
+          <link rel="alternate" href="../../zh/API/context/" hreflang="zh">
         
       
       
-      <link rel="icon" href="../assets/logo.svg">
+      <link rel="icon" href="../../assets/logo.svg">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
-        <title>Tutorial - RoundPipe</title>
+        <title>Context - RoundPipe</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -55,9 +55,9 @@
       
     
     
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#tutorial" class="md-skip">
+        <a href="#runtime-context" class="md-skip">
           Skip to content
         </a>
       
@@ -96,9 +96,9 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="RoundPipe" class="md-header__button md-logo" aria-label="RoundPipe" data-md-component="logo">
+    <a href="../.." title="RoundPipe" class="md-header__button md-logo" aria-label="RoundPipe" data-md-component="logo">
       
-  <img src="../assets/logo.svg" alt="logo">
+  <img src="../../assets/logo.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -115,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Tutorial
+              Context
             
           </span>
         </div>
@@ -168,7 +168,7 @@
           </li>
         
           <li class="md-select__item">
-            <a href="../zh/Tutorial/" hreflang="zh" class="md-select__link">
+            <a href="../../zh/API/context/" hreflang="zh" class="md-select__link">
               中文
             </a>
           </li>
@@ -252,7 +252,7 @@
   
   
     <li class="md-tabs__item">
-      <a href=".." class="md-tabs__link">
+      <a href="../.." class="md-tabs__link">
         
   
   
@@ -269,11 +269,9 @@
   
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../../Tutorial/" class="md-tabs__link">
         
   
   
@@ -290,11 +288,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../API/model/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../model/" class="md-tabs__link">
           
   
   
@@ -314,7 +314,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../Developer/internal_apis/" class="md-tabs__link">
+        <a href="../../Developer/internal_apis/" class="md-tabs__link">
           
   
   
@@ -348,9 +348,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="RoundPipe" class="md-nav__button md-logo" aria-label="RoundPipe" data-md-component="logo">
+    <a href="../.." title="RoundPipe" class="md-nav__button md-logo" aria-label="RoundPipe" data-md-component="logo">
       
-  <img src="../assets/logo.svg" alt="logo">
+  <img src="../../assets/logo.svg" alt="logo">
 
     </a>
     RoundPipe
@@ -377,7 +377,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -401,37 +401,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Tutorial
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../Tutorial/" class="md-nav__link">
         
   
   
@@ -447,48 +420,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#install" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Install
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#wrapping-a-model" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Wrapping a Model
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -497,24 +428,29 @@
       
   
   
+    
   
   
+  
     
     
     
     
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -532,7 +468,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -550,7 +486,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../API/model/" class="md-nav__link">
+      <a href="../model/" class="md-nav__link">
         
   
   
@@ -578,7 +514,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../API/run_config/" class="md-nav__link">
+      <a href="../run_config/" class="md-nav__link">
         
   
   
@@ -603,10 +539,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../API/context/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Context
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -622,6 +585,70 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipesave_for_recompute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.save_for_recompute
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipedoing_recompute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.doing_recompute
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipeget_recompute_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.get_recompute_data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipeoptimizerctx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.OptimizerCtx
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -634,7 +661,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../API/optimizer/" class="md-nav__link">
+      <a href="../optimizer/" class="md-nav__link">
         
   
   
@@ -662,7 +689,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../API/grad_scaler/" class="md-nav__link">
+      <a href="../grad_scaler/" class="md-nav__link">
         
   
   
@@ -747,7 +774,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Developer/internal_apis/" class="md-nav__link">
+      <a href="../../Developer/internal_apis/" class="md-nav__link">
         
   
   
@@ -802,10 +829,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#install" class="md-nav__link">
+  <a href="#roundpipesave_for_recompute" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Install
+        roundpipe.save_for_recompute
       
     </span>
   </a>
@@ -813,10 +840,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#wrapping-a-model" class="md-nav__link">
+  <a href="#roundpipedoing_recompute" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Wrapping a Model
+        roundpipe.doing_recompute
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipeget_recompute_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.get_recompute_data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipeoptimizerctx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.OptimizerCtx
       
     </span>
   </a>
@@ -843,12 +892,80 @@
   
 
 
-<h1 id="tutorial">Tutorial</h1>
-<h2 id="install">Install</h2>
-<p>RoundPipe can be installed with pip:</p>
-<div class="highlight"><pre><span></span><code>pip install roundpipe
+<h1 id="runtime-context">Runtime Context</h1>
+<p>RoundPipe uses thread-local context managers to track the current execution phase (forward pass, recomputation, optimizer update). Users can use these APIs to save data during a model's forward pass for use during recomputation, or to correctly access parameters during optimizer-related operations.</p>
+<h2 id="roundpipesave_for_recompute">roundpipe.save_for_recompute</h2>
+<div class="highlight"><pre><span></span><code><span class="n">roundpipe</span><span class="o">.</span><span class="n">save_for_recompute</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
-<h2 id="wrapping-a-model">Wrapping a Model</h2>
+<p>Save data in the current forward pass context for use during the subsequent recomputation phase.</p>
+<p>RoundPipe re-executes the forward pass during backward propagation to recover intermediate activations. If certain intermediate results in the model cause GPU-CPU synchronization (e.g., <code>torch.nonzero()</code>), you can save them during the forward pass using this function to avoid synchronization overhead during recomputation.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>*data</code>: Arbitrary data to save. Saved tensors must not require gradients (<code>requires_grad=False</code>).</li>
+</ul>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>Can be called at most once per layer's forward pass.</li>
+<li>If gradient computation is not currently enabled, this function is a no-op.</li>
+<li>Saved data can be retrieved during the recomputation phase via <code>get_recompute_data()</code>.</li>
+</ul>
+<p><strong>Example:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_for_recompute</span><span class="p">,</span> <span class="n">doing_recompute</span><span class="p">,</span> <span class="n">get_recompute_data</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">doing_recompute</span><span class="p">():</span>
+            <span class="c1"># Recomputation phase: use the saved mask directly</span>
+            <span class="n">mask</span><span class="p">,</span> <span class="o">=</span> <span class="n">get_recompute_data</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Forward pass phase: generate and save the mask</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">save_for_recompute</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">mask</span>
+</code></pre></div>
+<h2 id="roundpipedoing_recompute">roundpipe.doing_recompute</h2>
+<div class="highlight"><pre><span></span><code><span class="n">roundpipe</span><span class="o">.</span><span class="n">doing_recompute</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
+</code></pre></div>
+<p>Check whether the current scope is in the recomputation phase.</p>
+<p>RoundPipe re-executes the forward pass during backward propagation to recover activations. This function can be used within forward pass code to distinguish between the initial forward computation and the recomputation phase, allowing different logic to be executed accordingly.</p>
+<p><strong>Returns:</strong></p>
+<ul>
+<li><code>bool</code>: <code>True</code> if currently within a recomputation context; <code>False</code> otherwise.</li>
+</ul>
+<h2 id="roundpipeget_recompute_data">roundpipe.get_recompute_data</h2>
+<div class="highlight"><pre><span></span><code><span class="n">roundpipe</span><span class="o">.</span><span class="n">get_recompute_data</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span>
+</code></pre></div>
+<p>Retrieve data saved during the forward pass via <code>save_for_recompute()</code>.</p>
+<p><strong>Returns:</strong></p>
+<ul>
+<li><code>tuple</code>: The saved data. Even if only a single item was saved, it is returned as a tuple.</li>
+</ul>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>This function can only be called within a recomputation context. Calling it outside a recomputation context will raise an <code>AssertionError</code>.</li>
+</ul>
+<h2 id="roundpipeoptimizerctx">roundpipe.OptimizerCtx</h2>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">roundpipe</span><span class="o">.</span><span class="n">OptimizerCtx</span>
+</code></pre></div>
+<p>A context manager that marks the current scope as performing optimizer-related operations.</p>
+<p>Within this context, <code>RoundPipe</code> redirects <code>.parameters()</code> and <code>.named_parameters()</code> to <code>.optim_parameters()</code> and <code>.optim_named_parameters()</code>. This allows users to create optimizers using the standard PyTorch pattern without explicitly calling the optimizer-specific parameter interfaces.</p>
+<p><strong>Use Cases:</strong></p>
+<p>Use this context manager when creating an optimizer or performing other operations that need access to optimizer parameters.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoundPipe</span><span class="p">,</span> <span class="n">OptimizerCtx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe.optim</span><span class="w"> </span><span class="kn">import</span> <span class="n">Adam</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">RoundPipe</span><span class="p">(</span><span class="n">my_model</span><span class="p">)</span>
+
+<span class="c1"># Method 1: Using OptimizerCtx (recommended, consistent with PyTorch conventions)</span>
+<span class="k">with</span> <span class="n">OptimizerCtx</span><span class="p">():</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+
+<span class="c1"># Method 2: Using optim_parameters directly (equivalent)</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">optim_parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+</code></pre></div>
 
 
 
@@ -898,10 +1015,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

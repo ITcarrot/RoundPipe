@@ -11,10 +11,10 @@
         <link rel="canonical" href="https://itcarrot.github.io/RoundPipe/API/run_config/">
       
       
-        <link rel="prev" href="../../Tutorial/">
+        <link rel="prev" href="../model/">
       
       
-        <link rel="next" href="../model/">
+        <link rel="next" href="../context/">
       
       
         
@@ -24,12 +24,12 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logo.svg">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
-        <title>RunConfig - RoundPipe Documentation</title>
+        <title>RunConfig - RoundPipe</title>
       
     
     
@@ -96,10 +96,9 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="RoundPipe Documentation" class="md-header__button md-logo" aria-label="RoundPipe Documentation" data-md-component="logo">
+    <a href="../.." title="RoundPipe" class="md-header__button md-logo" aria-label="RoundPipe" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logo.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -110,7 +109,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            RoundPipe Documentation
+            RoundPipe
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -295,7 +294,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+        <a href="../model/" class="md-tabs__link">
           
   
   
@@ -349,13 +348,12 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="RoundPipe Documentation" class="md-nav__button md-logo" aria-label="RoundPipe Documentation" data-md-component="logo">
+    <a href="../.." title="RoundPipe" class="md-nav__button md-logo" aria-label="RoundPipe" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logo.svg" alt="logo">
 
     </a>
-    RoundPipe Documentation
+    RoundPipe
   </label>
   
     <div class="md-nav__source">
@@ -485,6 +483,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -548,28 +574,38 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#roundpipe.run_config.RoundPipeRunConfig.__init__" class="md-nav__link">
+  <a href="#roundpiperoundpiperunconfig" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__init__
+        roundpipe.RoundPipeRunConfig
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label=" __init__">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#split-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Split Input
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Split Input">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#split_input" class="md-nav__link">
+  <a href="#automatic-splitting" class="md-nav__link">
     <span class="md-ellipsis">
       
-        split_input
+        Automatic Splitting
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="split_input">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
   <a href="#writing-split-specs" class="md-nav__link">
@@ -597,18 +633,79 @@
     </nav>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#merge_output" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#split-label" class="md-nav__link">
     <span class="md-ellipsis">
       
-        merge_output
+        Split Label
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="merge_output">
+    <nav class="md-nav" aria-label="Split Label">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automatic-splitting_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Splitting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#writing-split-specs_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing Split Specs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#writing-custom-split-functions_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing Custom Split Functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#merge-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Merge Output
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Merge Output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automatic-merging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Merging
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#writing-merge-specs" class="md-nav__link">
@@ -633,10 +730,50 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#no-merging-output" class="md-nav__link">
+  <a href="#no-merging" class="md-nav__link">
     <span class="md-ellipsis">
       
-        No Merging Output
+        No Merging
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#set-execute-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Execution Plan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Execution Plan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#roundpipemodelexecuteplan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.ModelExecutePlan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="roundpipe.ModelExecutePlan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modelexecuteplanauto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ModelExecutePlan.auto
       
     </span>
   </a>
@@ -669,14 +806,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../model/" class="md-nav__link">
+      <a href="../context/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Model
+    Context
   
 
     
@@ -705,6 +842,34 @@
     
   
     Optimizer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../grad_scaler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GradScaler
   
 
     
@@ -837,28 +1002,38 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#roundpipe.run_config.RoundPipeRunConfig.__init__" class="md-nav__link">
+  <a href="#roundpiperoundpiperunconfig" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__init__
+        roundpipe.RoundPipeRunConfig
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label=" __init__">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#split-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Split Input
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Split Input">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#split_input" class="md-nav__link">
+  <a href="#automatic-splitting" class="md-nav__link">
     <span class="md-ellipsis">
       
-        split_input
+        Automatic Splitting
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="split_input">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
   <a href="#writing-split-specs" class="md-nav__link">
@@ -886,18 +1061,79 @@
     </nav>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#merge_output" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#split-label" class="md-nav__link">
     <span class="md-ellipsis">
       
-        merge_output
+        Split Label
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="merge_output">
+    <nav class="md-nav" aria-label="Split Label">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automatic-splitting_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Splitting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#writing-split-specs_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing Split Specs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#writing-custom-split-functions_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing Custom Split Functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#merge-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Merge Output
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Merge Output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automatic-merging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Merging
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#writing-merge-specs" class="md-nav__link">
@@ -922,10 +1158,50 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#no-merging-output" class="md-nav__link">
+  <a href="#no-merging" class="md-nav__link">
     <span class="md-ellipsis">
       
-        No Merging Output
+        No Merging
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#set-execute-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Execution Plan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Execution Plan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#roundpipemodelexecuteplan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.ModelExecutePlan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="roundpipe.ModelExecutePlan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modelexecuteplanauto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ModelExecutePlan.auto
       
     </span>
   </a>
@@ -963,157 +1239,258 @@
 
 
 <h1 id="run-config">Run Config</h1>
-
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="roundpipe.run_config.RoundPipeRunConfig.__init__" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">requires_grad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preserve_rng_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">recompute_grain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_input</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">merge_output</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">execute_plan</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
-
-</h2>
-
-
-    <div class="doc doc-contents first">
-
-        <p>Configuration for running RoundPipe models.
-User may specify model-level configuration when initializing RoundPipe,
-and/or function-level configuration when calling forward().</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-            <b><code>requires_grad</code></b>
-              (<code><span title="Optional">Optional</span>[<span title="bool">bool</span>]</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Whether to enable gradient computation.
-If None, defaults to the global setting.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>output_device</code></b>
-              (<code><span title="Optional">Optional</span>[<span title="torch.device">device</span>]</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>The device where the output tensors will be placed.
-If None, defaults to CPU.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>preserve_rng_state</code></b>
-              (<code><span title="Optional">Optional</span>[<span title="bool">bool</span>]</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Whether to preserve the random number generator state.
-If None, defaults to True.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>recompute_grain</code></b>
-              (<code><span title="Optional">Optional</span>[<span title="Literal">Literal</span>[<span title="stage">stage</span>, <span title="layer">layer</span>]]</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Backward recompute granularity.
-'stage': recompute per backward stage.
-'layer': recompute and backward per layer within a stage.
-If None, defaults to 'stage'.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>num_microbatch</code></b>
-              (<code><span title="Optional">Optional</span>[<span title="int">int</span>]</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>The number of microbatches to split the input into.
-If None, defaults to the number of available CUDA devices plus one.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>split_input</code></b>
-              (<code>-</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Specifies how to split input arguments into microbatches.
-If None, defaults to automatic splitting.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>split_label</code></b>
-              (<code>-</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Specifies how to split labels into microbatches.
-If None, defaults to automatic splitting.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>merge_output</code></b>
-              (<code>-</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Specifies how to merge output microbatches back into a single output.
-If None, defaults to automatic merging.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>execute_plan</code></b>
-              (<code><span title="Optional">Optional</span>[<a class="autorefs autorefs-internal" title="            ModelExecutePlan (roundpipe.scheduler.ModelExecutePlan)" href="../../Developer/internal_apis/#roundpipe.scheduler.ModelExecutePlan">ModelExecutePlan</a>]</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>An optional ModelExecutePlan to dictate execution strategy.
-If None, defaults to auto tuned execution.</p>
-          </div>
-        </li>
-    </ul>
-
-
-    </div>
-
-</div><h3 id="split_input">split_input</h3>
-<p>It can take the following forms:</p>
+<h2 id="roundpiperoundpiperunconfig">roundpipe.RoundPipeRunConfig</h2>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">roundpipe</span><span class="o">.</span><span class="n">RoundPipeRunConfig</span><span class="p">(</span>
+    <span class="n">requires_grad</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">output_device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">preserve_rng_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">recompute_grain</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;stage&quot;</span><span class="p">,</span> <span class="s2">&quot;layer&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">num_microbatch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">split_input</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span>
+        <span class="n">Callable</span><span class="p">[[</span><span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">int</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]],</span>
+        <span class="kc">None</span><span class="p">,</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">split_label</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">merge_output</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">execute_plan</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ModelExecutePlan</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Runtime configuration for RoundPipe models.</p>
+<p>Configuration can be specified at two levels:</p>
 <ul>
-<li><code>Tuple[Optional[Tuple], Optional[Dict[str, Any]]]</code>: A tuple of specs specifying positional and keyword arguments for splitting. The None value indicates automatic splitting (splitting tensor along the first dimension, replicate others).</li>
-<li><code>Callable[[Tuple, Dict[str, Any], int], Tuple[List[Tuple], List[Dict[str, Any]]]]</code>: A custom function that takes the input arguments (positional and keyword), along with the number of microbatches, and returns a tuple containing lists of split positional and keyword arguments.</li>
-<li><code>None</code>: Defaults to automatic splitting.</li>
+<li><strong>Model level</strong>: Passed via the <code>model_run_config</code> parameter when creating a <code>RoundPipe</code> instance, serving as the default configuration for that model.</li>
+<li><strong>Call level</strong>: Passed when calling <code>forward()</code> or <code>forward_backward()</code>, overriding the model-level defaults.</li>
 </ul>
-<h4 id="writing-split-specs">Writing Split Specs</h4>
-<p>[TODO]</p>
-<h4 id="writing-custom-split-functions">Writing Custom Split Functions</h4>
-<p>[TODO]</p>
-<h3 id="merge_output">merge_output</h3>
-<p>It can take the following forms:</p>
+<p>When both levels specify the same parameter, the call-level configuration takes precedence. If neither level specifies a parameter (both are <code>None</code>), the following defaults are used:</p>
+<p><strong>Parameters:</strong></p>
 <ul>
-<li><code>Any</code>: A spec defining how to merge the output.</li>
-<li><code>Callable[[List[Any]], Any]</code>: A custom function that takes a list of output microbatches and merges them into a single output.</li>
-<li><code>bool</code>: If True, uses default merging (concatenation for tensors along the first dimension, summation for numeric types). If False, returns some RoundPipePackedData objects.</li>
-<li><code>None</code>: Defaults to True (default merging).</li>
+<li><code>requires_grad</code>: Whether to enable gradient computation. Defaults to the global <code>torch.is_grad_enabled()</code> setting.</li>
+<li><code>output_device</code>: Device where output tensors are placed. Defaults to CPU. Specify a CUDA device if you need to use outputs directly on GPU.</li>
+<li><code>preserve_rng_state</code>: Whether to save and restore the random number generator state. Defaults to <code>True</code>. When enabled, ensures that the recomputation phase reproduces the same random behavior as the forward pass (e.g., Dropout).</li>
+<li><code>recompute_grain</code>: Granularity of backward recomputation. Defaults to <code>"stage"</code>.<ul>
+<li><code>"stage"</code>: Recompute at the pipeline stage level.</li>
+<li><code>"layer"</code>: Recompute and perform backward pass per layer within a stage. <code>"layer"</code> granularity can reduce peak GPU memory usage, but may increase data transfer overhead.</li>
 </ul>
-<h4 id="writing-merge-specs">Writing Merge Specs</h4>
-<p>[TODO]</p>
-<h4 id="writing-custom-merge-functions">Writing Custom Merge Functions</h4>
-<p>[TODO]</p>
-<h4 id="no-merging-output">No Merging Output</h4>
-<p>[TODO]</p>
+</li>
+<li><code>num_microbatch</code>: Number of microbatches to split the input into. Defaults to <code>number of CUDA devices + 1</code>. Increasing the number of microbatches reduces GPU memory usage, but setting it too high may result in each microbatch being too small for efficient GPU utilization; setting it below the default will cause pipeline bubbles.</li>
+<li><code>split_input</code>: Specifies how to split input arguments into microbatches. Defaults to automatic splitting. See <a href="#split-input">Split Input</a>.</li>
+<li><code>split_label</code>: Specifies how to split labels into microbatches. Defaults to automatic splitting. See <a href="#split-label">Split Label</a>.</li>
+<li><code>merge_output</code>: Specifies how to merge microbatch outputs into a single output. Defaults to automatic merging. See <a href="#merge-output">Merge Output</a>.</li>
+<li><code>execute_plan</code>: An optional <code>ModelExecutePlan</code> specifying the execution strategy. Defaults to auto-tuned by RoundPipe. See <a href="#set-execute-plan">Execution Plan</a>.</li>
+</ul>
+<h2 id="split-input">Split Input</h2>
+<p>RoundPipe needs to split input data into multiple microbatches for pipelined parallel execution. The <code>split_input</code> parameter controls the splitting behavior.</p>
+<h3 id="automatic-splitting">Automatic Splitting</h3>
+<p>When <code>split_input</code> is <code>None</code> (default), RoundPipe automatically infers the splitting strategy. Input arguments can be a single value or a nested Python structure (tuples, lists, dicts). Automatic splitting recursively applies the following rules to each leaf node in the structure:</p>
+<ul>
+<li><strong><code>torch.Tensor</code></strong>: If the tensor has more than 0 dimensions, it is evenly split along dimension 0 (batch dimension).</li>
+<li><strong>Scalar tensors and non-tensor types</strong>: Replicated across all microbatches.</li>
+<li><strong>Custom types</strong>: Unless the user has registered an unflattening method via <code>torch.utils._pytree.register_pytree_node</code>, custom types are treated as unsplittable and replicated across all microbatches, even if they contain tensors.</li>
+</ul>
+<p>Automatic splitting works for most standard use cases. If the model's input structure is more complex (e.g., some tensors should not be split along the batch dimension), you need to specify a manual splitting scheme.</p>
+<h3 id="writing-split-specs">Writing Split Specs</h3>
+<p><code>split_input</code> can be set to <code>Tuple[Optional[Tuple], Optional[Dict[str, Any]]]</code>, specifying the splitting specs for positional and keyword arguments respectively. Either the positional or keyword argument spec can be <code>None</code> (indicating automatic splitting) or a spec structure that corresponds to the input structure. Each position in the spec uses one of the following markers:</p>
+<ul>
+<li><code>torch.distributed.pipelining.microbatch.TensorChunkSpec(dim)</code>: Split the tensor along the specified dimension.</li>
+<li><code>torch.distributed.pipelining.microbatch._Replicate</code>: Replicate across all microbatches.</li>
+</ul>
+<p><strong>Example:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.pipelining.microbatch</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorChunkSpec</span><span class="p">,</span> <span class="n">_Replicate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoundPipeRunConfig</span>
+
+<span class="c1"># First positional arg split along batch dim, second replicated</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span>
+    <span class="n">split_input</span><span class="o">=</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">TensorChunkSpec</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">_Replicate</span><span class="p">),</span>  <span class="c1"># args spec</span>
+        <span class="kc">None</span><span class="p">,</span>                               <span class="c1"># kwargs spec (auto-infer)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div>
+<h3 id="writing-custom-split-functions">Writing Custom Split Functions</h3>
+<p>When built-in split specs cannot meet your needs, you can provide a custom function:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">custom_split</span><span class="p">(</span>
+    <span class="n">args</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">num_microbatch</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+</code></pre></div>
+<p>The function receives three parameters:</p>
+<ol>
+<li><code>args</code>: The original positional arguments tuple.</li>
+<li><code>kwargs</code>: The original keyword arguments dict.</li>
+<li><code>num_microbatch</code>: The number of microbatches.</li>
+</ol>
+<p>The function should return a tuple <code>(args_list, kwargs_list)</code>, where each list has a length equal to the number of microbatches.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">custom_split</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="p">):</span>
+    <span class="n">images</span><span class="p">,</span> <span class="n">masks</span> <span class="o">=</span> <span class="n">args</span>
+    <span class="n">chunks_images</span> <span class="o">=</span> <span class="n">images</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">num_microbatch</span><span class="p">)</span>
+    <span class="n">chunks_masks</span> <span class="o">=</span> <span class="n">masks</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">num_microbatch</span><span class="p">)</span>
+    <span class="n">args_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">img</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span> <span class="k">for</span> <span class="n">img</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chunks_images</span><span class="p">,</span> <span class="n">chunks_masks</span><span class="p">)]</span>
+    <span class="n">kwargs_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">kwargs</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_microbatch</span>  <span class="c1"># replicate kwargs</span>
+    <span class="k">return</span> <span class="n">args_list</span><span class="p">,</span> <span class="n">kwargs_list</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">split_input</span><span class="o">=</span><span class="n">custom_split</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="split-label">Split Label</h2>
+<p>When using <code>forward_backward()</code>, RoundPipe also needs to split labels into multiple microbatches so that each microbatch's label matches its corresponding input. The <code>split_label</code> parameter controls the splitting behavior.</p>
+<h3 id="automatic-splitting_1">Automatic Splitting</h3>
+<p>When <code>split_label</code> is <code>None</code> (default), RoundPipe automatically infers the splitting strategy, following the same behavior as input argument automatic splitting.</p>
+<h3 id="writing-split-specs_1">Writing Split Specs</h3>
+<p><code>split_label</code> can be set to a spec that corresponds to the label structure. The spec writing method is similar to that for input argument split specs.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.pipelining.microbatch</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorChunkSpec</span><span class="p">,</span> <span class="n">_Replicate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoundPipeRunConfig</span>
+
+<span class="c1"># Label is (scalar tensor, tensor of shape (3, 12, 4), integer)</span>
+<span class="c1"># The second tensor needs to be split along dimension 1</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span>
+    <span class="n">split_label</span><span class="o">=</span><span class="p">(</span><span class="n">_Replicate</span><span class="p">,</span> <span class="n">TensorChunkSpec</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">_Replicate</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div>
+<h3 id="writing-custom-split-functions_1">Writing Custom Split Functions</h3>
+<p>When built-in split specs cannot meet your needs, you can provide a custom function:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">custom_split_label</span><span class="p">(</span>
+    <span class="n">label</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+</code></pre></div>
+<p>The function receives two parameters:</p>
+<ol>
+<li><code>label</code>: The original label.</li>
+<li><code>num_microbatch</code>: The number of microbatches.</li>
+</ol>
+<p>The function should return a list of length equal to the number of microbatches, where each element is the label for the corresponding microbatch.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">custom_split_label</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="p">):</span>
+    <span class="n">targets</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="n">label</span>
+    <span class="n">chunks_targets</span> <span class="o">=</span> <span class="n">targets</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">num_microbatch</span><span class="p">)</span>
+    <span class="n">chunks_weights</span> <span class="o">=</span> <span class="n">weights</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">num_microbatch</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[(</span><span class="n">t</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chunks_targets</span><span class="p">,</span> <span class="n">chunks_weights</span><span class="p">)]</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">split_label</span><span class="o">=</span><span class="n">custom_split_label</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="merge-output">Merge Output</h2>
+<p>After pipeline execution, RoundPipe needs to merge the outputs from all microbatches into a single complete output. The <code>merge_output</code> parameter controls the merging behavior.</p>
+<h3 id="automatic-merging">Automatic Merging</h3>
+<p>When <code>merge_output</code> is <code>None</code> or <code>True</code> (default), RoundPipe automatically infers the merging strategy. Output can be a single value or a nested Python structure (tuples, lists, dicts). Automatic merging recursively applies the following rules to each leaf node:</p>
+<ul>
+<li><strong>Tensors</strong>: Concatenated along dimension 0 (batch dimension) via <code>torch.cat</code>.</li>
+<li><strong>Scalar tensors</strong>: Averaged across all microbatches.</li>
+<li><strong>Non-tensor types</strong>: All microbatch values are checked for equality; if equal, that value is returned; otherwise an error is raised.</li>
+<li><strong>Custom types</strong>: Unless the user has registered an unflattening method via <code>torch.utils._pytree.register_pytree_node</code>, custom types are treated as indivisible and handled like non-tensor types, even if they contain tensors.</li>
+</ul>
+<h3 id="writing-merge-specs">Writing Merge Specs</h3>
+<p><code>merge_output</code> can be set to a spec that corresponds to the output structure, with each position using one of the following markers:</p>
+<ul>
+<li><code>torch.distributed.pipelining.microbatch.TensorChunkSpec(dim)</code>: Concatenate tensors along the specified dimension via <code>torch.cat</code>.</li>
+<li><code>torch.distributed.pipelining.microbatch._Replicate</code>: The output should be identical across microbatches.</li>
+<li><code>torch.distributed.pipelining.microbatch._CustomReducer</code>: A custom reducer following the PyTorch-defined reduction interface.</li>
+</ul>
+<p><code>_CustomReducer</code> example:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.pipelining.microbatch</span><span class="w"> </span><span class="kn">import</span> <span class="n">_CustomReducer</span>
+
+<span class="n">sum_reducer</span> <span class="o">=</span> <span class="n">_CustomReducer</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.0</span><span class="p">),</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="writing-custom-merge-functions">Writing Custom Merge Functions</h3>
+<p>You can provide a custom function to fully control the merging logic:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">custom_merge</span><span class="p">(</span><span class="n">outputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+</code></pre></div>
+<p>The function receives a list containing each microbatch's output and returns the merged result.</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">custom_merge</span><span class="p">(</span><span class="n">outputs</span><span class="p">):</span>
+    <span class="c1"># outputs is a list where each element is one microbatch&#39;s model output</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">out</span><span class="o">.</span><span class="n">logits</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">logits</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">merge_output</span><span class="o">=</span><span class="n">custom_merge</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="no-merging">No Merging</h3>
+<p>Setting <code>merge_output</code> to <code>False</code> disables output merging. Instead, each leaf variable in the output is returned as a <code>RoundPipePackedData</code> object. Leaf variables are the nodes obtained after unflattening all built-in Python nested structures (tuples, lists, dicts). Custom types are also treated as leaf variables unless the user has registered an unflattening method via <code>torch.utils._pytree.register_pytree_node</code>.</p>
+<p><code>RoundPipePackedData</code> is a subclass of Python <code>list</code> that stores the outputs from each microbatch along with the corresponding CUDA transfer events. Normally, you do not need to interact with <code>RoundPipePackedData</code> directly. If needed, you can call <code>.synchronize()</code> to wait for all outputs to be transferred to CPU memory, and then treat it as a regular list to access individual microbatch outputs.</p>
+<p>When the output of one <code>RoundPipe</code> model needs to be passed directly to another <code>RoundPipe</code> model, using <code>merge_output=False</code> avoids unnecessary synchronization and data copying, enabling pipelined chaining between models. <code>wrap_model_to_roundpipe</code> automatically sets <code>merge_output=False</code> when recursively wrapping non-final <code>nn.ModuleList</code> modules.</p>
+<h2 id="set-execute-plan">Execution Plan</h2>
+<h3 id="roundpipemodelexecuteplan">roundpipe.ModelExecutePlan</h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">roundpipe</span><span class="o">.</span><span class="n">ModelExecutePlan</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fwd_plan</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">range</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bwd_plan</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">range</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</code></pre></div>
+<p>Execution plan for a RoundPipe model, defining the execution order and grouping of layers during forward and backward passes.</p>
+<p>The execution plan determines which layers are assigned to the same pipeline stage. Layers in the same stage are loaded onto the GPU and executed together. A well-designed execution plan can balance the computational load across stages and control GPU memory usage.</p>
+<p>Unlike traditional pipeline-parallel training frameworks, RoundPipe does not require forward and backward passes to be executed in strict pairs, so forward and backward plans can be designed independently. The number of stages does not need to be a multiple of the number of GPUs. As long as the total number of stages exceeds the number of GPUs and all stages have similar execution times, good parallel efficiency can be achieved.</p>
+<p><strong>Attributes:</strong></p>
+<ul>
+<li><code>fwd_plan</code>: Forward pass execution order, of type <code>List[range]</code>. Each <code>range</code> represents the layer indices included in one stage.</li>
+<li><code>bwd_plan</code>: Backward pass execution order, of type <code>List[range]</code>.</li>
+</ul>
+<p><strong>Example:</strong></p>
+<p>For a model with 4 layers, here is a possible execution plan when using the <code>forward</code> method:</p>
+<div class="highlight"><pre><span></span><code><span class="n">plan</span> <span class="o">=</span> <span class="n">ModelExecutePlan</span><span class="p">()</span>
+<span class="n">plan</span><span class="o">.</span><span class="n">fwd_plan</span> <span class="o">=</span> <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)]</span>
+<span class="n">plan</span><span class="o">.</span><span class="n">bwd_plan</span> <span class="o">=</span> <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+</code></pre></div>
+<p>When using the <code>forward_backward</code> method, the last stage is not recomputed to save time, so the first stage in the backward plan should not overlap with layers in the forward plan:</p>
+<div class="highlight"><pre><span></span><code><span class="n">plan</span> <span class="o">=</span> <span class="n">ModelExecutePlan</span><span class="p">()</span>
+<span class="n">plan</span><span class="o">.</span><span class="n">fwd_plan</span> <span class="o">=</span> <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
+<span class="n">plan</span><span class="o">.</span><span class="n">bwd_plan</span> <span class="o">=</span> <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+</code></pre></div>
+<h4 id="modelexecuteplanauto">ModelExecutePlan.auto</h4>
+<div class="highlight"><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="n">ModelExecutePlan</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span>
+    <span class="n">run_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;infer&quot;</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;fused&quot;</span><span class="p">],</span>
+    <span class="o">*</span><span class="n">models</span><span class="p">:</span> <span class="n">RoundPipe</span><span class="p">,</span>
+    <span class="n">min_stages</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_num_devices</span><span class="p">(),</span>
+    <span class="n">upper_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.1</span><span class="p">,</span>
+    <span class="n">model_memory_limit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">get_min_gpu_memory</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.6</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">ModelExecutePlan</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">ModelExecutePlan</span><span class="p">]]</span>
+</code></pre></div>
+<p>Automatically generate an execution plan based on the model's computation time and memory size.</p>
+<p>When a single model is passed, returns a single <code>ModelExecutePlan</code>; when multiple models are passed, returns a list of plans that are co-optimized for overall load balancing.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>run_type</code>: Run type.<ul>
+<li><code>"infer"</code>: Forward inference only.</li>
+<li><code>"train"</code>: Separate forward and backward passes (for <code>forward</code>-based training).</li>
+<li><code>"fused"</code>: Fused forward and backward pass (for <code>forward_backward</code>-based training).</li>
+</ul>
+</li>
+<li><code>*models</code>: One or more <code>RoundPipe</code> models.</li>
+<li><code>min_stages</code>: Minimum number of pipeline stages. This is a hint value; the actual number of stages may be lower depending on the model size. Defaults to the number of GPU devices.</li>
+<li><code>upper_threshold</code>: Upper ratio for stage load balancing. Limits the maximum allowed ratio between any stage and the slowest layer. Increasing this value provides more flexible stage partitioning but may consume more GPU memory. Defaults to <code>1.1</code>.</li>
+<li><code>model_memory_limit</code>: Estimated GPU memory (in GB) available for model parameters and gradients. RoundPipe prefetches one stage's model parameters to GPU memory, so the memory limit per stage is <code>model_memory_limit / 2</code>. Defaults to 60% of the smallest GPU's memory.</li>
+</ul>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>A single <code>ModelExecutePlan</code> for a single model, or a <code>List[ModelExecutePlan]</code> for multiple models.</li>
+</ul>
+<p>RoundPipe measures each layer's computation time online during model execution and uses a sliding average. Based on these timing results, RoundPipe tries to make each stage's computation time as equal as possible for optimal pipeline efficiency.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoundPipe</span><span class="p">,</span> <span class="n">RoundPipeRunConfig</span><span class="p">,</span> <span class="n">ModelExecutePlan</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">RoundPipe</span><span class="p">(</span><span class="n">my_model</span><span class="p">)</span>
+
+<span class="c1"># Auto-generate a training plan</span>
+<span class="n">plan</span> <span class="o">=</span> <span class="n">ModelExecutePlan</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span><span class="s2">&quot;fused&quot;</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+
+<span class="c1"># Use the generated plan</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward_backward</span><span class="p">(</span>
+    <span class="n">input_args</span><span class="o">=</span><span class="p">(</span><span class="n">data</span><span class="p">,),</span>
+    <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+    <span class="n">loss_fn</span><span class="o">=</span><span class="n">loss_fn</span><span class="p">,</span>
+    <span class="n">run_config</span><span class="o">=</span><span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">execute_plan</span><span class="o">=</span><span class="n">plan</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Multi-model co-optimized planning</span>
+<span class="n">plan1</span><span class="p">,</span> <span class="n">plan2</span> <span class="o">=</span> <span class="n">ModelExecutePlan</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span><span class="s2">&quot;fused&quot;</span><span class="p">,</span> <span class="n">model1</span><span class="p">,</span> <span class="n">model2</span><span class="p">)</span>
+<span class="n">output1</span> <span class="o">=</span> <span class="n">model1</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span>
+    <span class="n">input_args</span><span class="o">=</span><span class="p">(</span><span class="n">data1</span><span class="p">,),</span>
+    <span class="n">run_config</span><span class="o">=</span><span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">execute_plan</span><span class="o">=</span><span class="n">plan1</span><span class="p">,</span> <span class="n">merge_output</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">model2</span><span class="o">.</span><span class="n">forward_backward</span><span class="p">(</span>
+    <span class="n">input_args</span><span class="o">=</span><span class="p">(</span><span class="n">output1</span><span class="p">,),</span>
+    <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+    <span class="n">loss_fn</span><span class="o">=</span><span class="n">loss_fn</span><span class="p">,</span>
+    <span class="n">run_config</span><span class="o">=</span><span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">execute_plan</span><span class="o">=</span><span class="n">plan2</span><span class="p">),</span>
+<span class="p">)</span>
+</code></pre></div>
 
 
 

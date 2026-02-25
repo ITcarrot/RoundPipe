@@ -11,10 +11,10 @@
         <link rel="canonical" href="https://itcarrot.github.io/RoundPipe/zh/API/run_config/">
       
       
-        <link rel="prev" href="../../Tutorial/">
+        <link rel="prev" href="../model/">
       
       
-        <link rel="next" href="../model/">
+        <link rel="next" href="../context/">
       
       
         
@@ -24,12 +24,12 @@
         
       
       
-      <link rel="icon" href="../../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/logo.svg">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
-        <title>运行设置 - RoundPipe 文档</title>
+        <title>运行设置 - RoundPipe</title>
       
     
     
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#run-config" class="md-skip">
+        <a href="#_1" class="md-skip">
           跳转至
         </a>
       
@@ -98,10 +98,9 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="页眉">
-    <a href="../../" title="RoundPipe 文档" class="md-header__button md-logo" aria-label="RoundPipe 文档" data-md-component="logo">
+    <a href="../../" title="RoundPipe" class="md-header__button md-logo" aria-label="RoundPipe" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../../assets/logo.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -112,7 +111,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            RoundPipe 文档
+            RoundPipe
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -297,7 +296,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+        <a href="../model/" class="md-tabs__link">
           
   
   
@@ -351,13 +350,12 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../" title="RoundPipe 文档" class="md-nav__button md-logo" aria-label="RoundPipe 文档" data-md-component="logo">
+    <a href="../../" title="RoundPipe" class="md-nav__button md-logo" aria-label="RoundPipe" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../../assets/logo.svg" alt="logo">
 
     </a>
-    RoundPipe 文档
+    RoundPipe
   </label>
   
     <div class="md-nav__source">
@@ -487,6 +485,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -550,34 +576,33 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#roundpipe.run_config.RoundPipeRunConfig.__init__" class="md-nav__link">
+  <a href="#roundpiperoundpiperunconfig" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__init__
+        roundpipe.RoundPipeRunConfig
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label=" __init__">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#split_input" class="md-nav__link">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#split-input" class="md-nav__link">
     <span class="md-ellipsis">
       
-        split_input
+        切分输入
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="split_input">
+    <nav class="md-nav" aria-label="切分输入">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#writing-split-specs" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Writing Split Specs
+        自动切分机制
       
     </span>
   </a>
@@ -585,10 +610,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#writing-custom-split-functions" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Writing Custom Split Functions
+        编写切分方案
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        编写自定义切分函数
       
     </span>
   </a>
@@ -599,24 +635,24 @@
     </nav>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#merge_output" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#split-label" class="md-nav__link">
     <span class="md-ellipsis">
       
-        merge_output
+        切分标签
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="merge_output">
+    <nav class="md-nav" aria-label="切分标签">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#writing-merge-specs" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Writing Merge Specs
+        自动切分机制
       
     </span>
   </a>
@@ -624,10 +660,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#writing-custom-merge-functions" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Writing Custom Merge Functions
+        编写切分方案
       
     </span>
   </a>
@@ -635,10 +671,111 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#no-merging-output" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
-        No Merging Output
+        编写自定义切分函数
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#merge-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        合并输出
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="合并输出">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自动合并机制
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        编写合并方案
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        编写自定义合并函数
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        不合并输出
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#set-execute-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        设置运行计划
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="设置运行计划">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#roundpipemodelexecuteplan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.ModelExecutePlan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="roundpipe.ModelExecutePlan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modelexecuteplanauto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ModelExecutePlan.auto
       
     </span>
   </a>
@@ -671,14 +808,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../model/" class="md-nav__link">
+      <a href="../context/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    模型
+    运行时上下文
   
 
     
@@ -707,6 +844,34 @@
     
   
     优化器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../grad_scaler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    梯度缩放器
   
 
     
@@ -839,34 +1004,33 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#roundpipe.run_config.RoundPipeRunConfig.__init__" class="md-nav__link">
+  <a href="#roundpiperoundpiperunconfig" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__init__
+        roundpipe.RoundPipeRunConfig
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label=" __init__">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#split_input" class="md-nav__link">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#split-input" class="md-nav__link">
     <span class="md-ellipsis">
       
-        split_input
+        切分输入
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="split_input">
+    <nav class="md-nav" aria-label="切分输入">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#writing-split-specs" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Writing Split Specs
+        自动切分机制
       
     </span>
   </a>
@@ -874,10 +1038,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#writing-custom-split-functions" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Writing Custom Split Functions
+        编写切分方案
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        编写自定义切分函数
       
     </span>
   </a>
@@ -888,24 +1063,24 @@
     </nav>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#merge_output" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#split-label" class="md-nav__link">
     <span class="md-ellipsis">
       
-        merge_output
+        切分标签
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="merge_output">
+    <nav class="md-nav" aria-label="切分标签">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#writing-merge-specs" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Writing Merge Specs
+        自动切分机制
       
     </span>
   </a>
@@ -913,10 +1088,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#writing-custom-merge-functions" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Writing Custom Merge Functions
+        编写切分方案
       
     </span>
   </a>
@@ -924,10 +1099,111 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#no-merging-output" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
-        No Merging Output
+        编写自定义切分函数
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#merge-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        合并输出
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="合并输出">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自动合并机制
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        编写合并方案
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        编写自定义合并函数
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        不合并输出
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#set-execute-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        设置运行计划
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="设置运行计划">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#roundpipemodelexecuteplan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.ModelExecutePlan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="roundpipe.ModelExecutePlan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modelexecuteplanauto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ModelExecutePlan.auto
       
     </span>
   </a>
@@ -964,158 +1240,257 @@
   
 
 
-<h1 id="run-config">Run Config</h1>
-
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="roundpipe.run_config.RoundPipeRunConfig.__init__" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">requires_grad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preserve_rng_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">recompute_grain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_input</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">merge_output</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">execute_plan</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
-
-</h2>
-
-
-    <div class="doc doc-contents first">
-
-        <p>Configuration for running RoundPipe models.
-User may specify model-level configuration when initializing RoundPipe,
-and/or function-level configuration when calling forward().</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-            <b><code>requires_grad</code></b>
-              (<code><span title="Optional">Optional</span>[<span title="bool">bool</span>]</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Whether to enable gradient computation.
-If None, defaults to the global setting.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>output_device</code></b>
-              (<code><span title="Optional">Optional</span>[<span title="torch.device">device</span>]</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>The device where the output tensors will be placed.
-If None, defaults to CPU.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>preserve_rng_state</code></b>
-              (<code><span title="Optional">Optional</span>[<span title="bool">bool</span>]</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Whether to preserve the random number generator state.
-If None, defaults to True.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>recompute_grain</code></b>
-              (<code><span title="Optional">Optional</span>[<span title="Literal">Literal</span>[<span title="stage">stage</span>, <span title="layer">layer</span>]]</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Backward recompute granularity.
-'stage': recompute per backward stage.
-'layer': recompute and backward per layer within a stage.
-If None, defaults to 'stage'.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>num_microbatch</code></b>
-              (<code><span title="Optional">Optional</span>[<span title="int">int</span>]</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>The number of microbatches to split the input into.
-If None, defaults to the number of available CUDA devices plus one.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>split_input</code></b>
-              (<code>-</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Specifies how to split input arguments into microbatches.
-If None, defaults to automatic splitting.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>split_label</code></b>
-              (<code>-</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Specifies how to split labels into microbatches.
-If None, defaults to automatic splitting.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>merge_output</code></b>
-              (<code>-</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Specifies how to merge output microbatches back into a single output.
-If None, defaults to automatic merging.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>execute_plan</code></b>
-              (<code><span title="Optional">Optional</span>[<a class="autorefs autorefs-internal" title="            ModelExecutePlan (roundpipe.scheduler.ModelExecutePlan)" href="../../Developer/internal_apis/#roundpipe.scheduler.ModelExecutePlan">ModelExecutePlan</a>]</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>An optional ModelExecutePlan to dictate execution strategy.
-If None, defaults to auto tuned execution.</p>
-          </div>
-        </li>
-    </ul>
-
-
-    </div>
-
-</div><h3 id="split_input">split_input</h3>
-<p>It can take the following forms:</p>
+<h1 id="_1">运行设置</h1>
+<h2 id="roundpiperoundpiperunconfig">roundpipe.RoundPipeRunConfig</h2>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">roundpipe</span><span class="o">.</span><span class="n">RoundPipeRunConfig</span><span class="p">(</span>
+    <span class="n">requires_grad</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">output_device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">preserve_rng_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">recompute_grain</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;stage&quot;</span><span class="p">,</span> <span class="s2">&quot;layer&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">num_microbatch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">split_input</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span>
+        <span class="n">Callable</span><span class="p">[[</span><span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">int</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]],</span>
+        <span class="kc">None</span><span class="p">,</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">split_label</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">merge_output</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">execute_plan</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ModelExecutePlan</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>RoundPipe 模型的运行时配置。</p>
+<p>用户可以在两个层级指定配置：</p>
 <ul>
-<li><code>Tuple[Optional[Tuple], Optional[Dict[str, Any]]]</code>: A tuple of specs specifying positional and keyword arguments for splitting. The None value indicates automatic splitting (splitting tensor along the first dimension, replicate others).</li>
-<li><code>Callable[[Tuple, Dict[str, Any], int], Tuple[List[Tuple], List[Dict[str, Any]]]]</code>: A custom function that takes the input arguments (positional and keyword), along with the number of microbatches, and returns a tuple containing lists of split positional and keyword arguments.</li>
-<li><code>None</code>: Defaults to automatic splitting.</li>
+<li><strong>模型级别</strong>：在创建 <code>RoundPipe</code> 时通过 <code>model_run_config</code> 参数传入，作为该模型的默认配置。</li>
+<li><strong>调用级别</strong>：在调用 <code>forward()</code> 或 <code>forward_backward()</code> 时传入，覆盖模型级别的默认值。</li>
 </ul>
-<h4 id="writing-split-specs">Writing Split Specs</h4>
-<p>[TODO]</p>
-<h4 id="writing-custom-split-functions">Writing Custom Split Functions</h4>
-<p>[TODO]</p>
-<h3 id="merge_output">merge_output</h3>
-<p>It can take the following forms:</p>
+<p>当两个层级都指定了某个参数时，调用级别的配置优先。如果两个层级都未指定（均为 <code>None</code>），则使用以下默认值：</p>
+<p><strong>参数：</strong></p>
 <ul>
-<li><code>Any</code>: A spec defining how to merge the output.</li>
-<li><code>Callable[[List[Any]], Any]</code>: A custom function that takes a list of output microbatches and merges them into a single output.</li>
-<li><code>bool</code>: If True, uses default merging (concatenation for tensors along the first dimension, summation for numeric types). If False, returns some RoundPipePackedData objects.</li>
-<li><code>None</code>: Defaults to True (default merging).</li>
+<li><code>requires_grad</code>：是否启用梯度计算。默认跟随全局的 <code>torch.is_grad_enabled()</code> 设置。</li>
+<li><code>output_device</code>：输出张量放置的设备。默认为 CPU。如果需要在 GPU 上直接使用输出，可以指定为 CUDA 设备。</li>
+<li><code>preserve_rng_state</code>：是否保存和恢复随机数生成器状态。默认为 <code>True</code>。开启后可以保证重计算阶段与前向传播的随机行为一致（例如 Dropout）。</li>
+<li><code>recompute_grain</code>：反向传播重计算的粒度。默认为 <code>"stage"</code>。<ul>
+<li><code>"stage"</code>：以流水线阶段为单位进行重计算。</li>
+<li><code>"layer"</code>：在每个阶段内按层进行重计算和反向传播。<code>"layer"</code> 粒度可以减少峰值显存占用，但可能增加一些数据传输开销。</li>
 </ul>
-<h4 id="writing-merge-specs">Writing Merge Specs</h4>
-<p>[TODO]</p>
-<h4 id="writing-custom-merge-functions">Writing Custom Merge Functions</h4>
-<p>[TODO]</p>
-<h4 id="no-merging-output">No Merging Output</h4>
-<p>[TODO]</p>
+</li>
+<li><code>num_microbatch</code>：将输入切分为多少个微批次。默认为 <code>CUDA 设备数量 + 1</code>。增加微批次数量可以减小显存占用，但过高可能导致每一微批次的计算量过小，降低 GPU 利用率；低于默认值将导致流水线气泡。</li>
+<li><code>split_input</code>：指定如何将输入参数切分为微批次。默认为自动切分。详见<a href="#split-input">切分输入</a>。</li>
+<li><code>split_label</code>：指定如何将标签切分为微批次。默认为自动切分。详见<a href="#split-label">切分标签</a>。</li>
+<li><code>merge_output</code>：指定如何将微批次的输出合并为单个输出。默认为自动合并。详见<a href="#merge-output">合并输出</a>。</li>
+<li><code>execute_plan</code>：可选的 <code>ModelExecutePlan</code>，用于指定执行策略。默认由 RoundPipe 自动调优。详见<a href="#set-execute-plan">设置运行计划</a>。</li>
+</ul>
+<h2 id="split-input">切分输入</h2>
+<p>RoundPipe 需要将输入数据切分为多个微批次以实现流水线并行。<code>split_input</code> 参数控制切分方式。</p>
+<h3 id="_2">自动切分机制</h3>
+<p>当 <code>split_input</code> 为 <code>None</code> 时（默认），RoundPipe 会自动推断切分方式。输入参数可以是单个值，也可以是 Python 自带的嵌套结构（元组、列表、字典），自动切分会递归地对结构中的每个叶子节点应用以下规则：
+- 对于 <code>torch.Tensor</code>：如果张量维度大于 0，沿第 0 维（batch 维度）均匀切分。
+- 对于标量张量、非张量类型：在所有微批次之间复制。
+- 对于自定义变量类型，除非用户使用<code>torch.utils._pytree.register_pytree_node</code>定义了展开方法，否则会被视为不可切分，在所有微批次之间复制，即便其中包含张量。</p>
+<p>自动切分适用于大多数标准场景。但如果模型的输入结构较为复杂（例如某些张量不应按 batch 维度切分），则需要手动指定切分方案。</p>
+<h3 id="_3">编写切分方案</h3>
+<p><code>split_input</code> 可以设为 <code>Tuple[Optional[Tuple], Optional[Dict[str, Any]]]</code>，分别指定位置参数和关键字参数的切分方案（spec）。位置参数或关键字参数的 spec 可以为 <code>None</code>（表示自动切分）或一个与输入结构对应的 spec 结构。切分方案的结构应与输入参数一一对应，每个位置使用以下标记之一：</p>
+<ul>
+<li><code>torch.distributed.pipelining.microbatch.TensorChunkSpec(dim)</code>：沿指定维度切分张量。</li>
+<li><code>torch.distributed.pipelining.microbatch._Replicate</code>：在所有微批次间复制。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.pipelining.microbatch</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorChunkSpec</span><span class="p">,</span> <span class="n">_Replicate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoundPipeRunConfig</span>
+
+<span class="c1"># 位置参数中第一个按 batch 切分，第二个复制</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span>
+    <span class="n">split_input</span><span class="o">=</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">TensorChunkSpec</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">_Replicate</span><span class="p">),</span>  <span class="c1"># args spec</span>
+        <span class="kc">None</span><span class="p">,</span>                               <span class="c1"># kwargs spec（自动推断）</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div>
+<h3 id="_4">编写自定义切分函数</h3>
+<p>当内置的切分方案无法满足需求时，可以传入一个自定义函数：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">custom_split</span><span class="p">(</span>
+    <span class="n">args</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">num_microbatch</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+</code></pre></div>
+<p>函数接收三个参数：</p>
+<ol>
+<li><code>args</code>：原始位置参数元组。</li>
+<li><code>kwargs</code>：原始关键字参数字典。</li>
+<li><code>num_microbatch</code>：微批次数量。</li>
+</ol>
+<p>函数应返回一个元组 <code>(args_list, kwargs_list)</code>，其中每个列表的长度等于微批次数量。</p>
+<p><strong>示例：</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">custom_split</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="p">):</span>
+    <span class="n">images</span><span class="p">,</span> <span class="n">masks</span> <span class="o">=</span> <span class="n">args</span>
+    <span class="n">chunks_images</span> <span class="o">=</span> <span class="n">images</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">num_microbatch</span><span class="p">)</span>
+    <span class="n">chunks_masks</span> <span class="o">=</span> <span class="n">masks</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">num_microbatch</span><span class="p">)</span>
+    <span class="n">args_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">img</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span> <span class="k">for</span> <span class="n">img</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chunks_images</span><span class="p">,</span> <span class="n">chunks_masks</span><span class="p">)]</span>
+    <span class="n">kwargs_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">kwargs</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_microbatch</span>  <span class="c1"># 关键字参数复制</span>
+    <span class="k">return</span> <span class="n">args_list</span><span class="p">,</span> <span class="n">kwargs_list</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">split_input</span><span class="o">=</span><span class="n">custom_split</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="split-label">切分标签</h2>
+<p>在使用 <code>forward_backward()</code> 时，RoundPipe 同样需要将标签（label）切分为多个微批次，使每个微批次的标签与对应的输入匹配。<code>split_label</code> 参数控制切分方式。</p>
+<h3 id="_5">自动切分机制</h3>
+<p>当 <code>split_label</code> 为 <code>None</code> 时（默认），RoundPipe 会自动推断切分方式，行为与输入参数的自动切分类似。</p>
+<h3 id="_6">编写切分方案</h3>
+<p><code>split_label</code> 可以设为一个与标签结构对应的 spec，spec编写方法和输入参数的切分spec类似。</p>
+<p><strong>示例：</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.pipelining.microbatch</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorChunkSpec</span><span class="p">,</span> <span class="n">_Replicate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoundPipeRunConfig</span>
+
+<span class="c1"># 标签为 (标量张量, 形状为 (3, 12, 4) 的张量, 整数)</span>
+<span class="c1"># 第二个张量需要沿第 1 维切分</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span>
+    <span class="n">split_label</span><span class="o">=</span><span class="p">(</span><span class="n">_Replicate</span><span class="p">,</span> <span class="n">TensorChunkSpec</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">_Replicate</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div>
+<h3 id="_7">编写自定义切分函数</h3>
+<p>当内置的切分方案无法满足需求时，可以传入一个自定义函数：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">custom_split_label</span><span class="p">(</span>
+    <span class="n">label</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+</code></pre></div>
+<p>函数接收两个参数：</p>
+<ol>
+<li><code>label</code>：原始标签。</li>
+<li><code>num_microbatch</code>：微批次数量。</li>
+</ol>
+<p>函数应返回一个列表，长度等于微批次数量，每个元素为对应微批次的标签。</p>
+<p><strong>示例：</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">custom_split_label</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="p">):</span>
+    <span class="n">targets</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="n">label</span>
+    <span class="n">chunks_targets</span> <span class="o">=</span> <span class="n">targets</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">num_microbatch</span><span class="p">)</span>
+    <span class="n">chunks_weights</span> <span class="o">=</span> <span class="n">weights</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">num_microbatch</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[(</span><span class="n">t</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chunks_targets</span><span class="p">,</span> <span class="n">chunks_weights</span><span class="p">)]</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">split_label</span><span class="o">=</span><span class="n">custom_split_label</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="merge-output">合并输出</h2>
+<p>RoundPipe 在流水线执行完成后，需要将各微批次的输出合并为一个完整的输出。<code>merge_output</code> 参数控制合并方式。</p>
+<h3 id="_8">自动合并机制</h3>
+<p>当 <code>merge_output</code> 为 <code>None</code> 或 <code>True</code> 时（默认），RoundPipe 会自动推断合并方式。输出可以是单个值，也可以是 Python 自带的嵌套结构（元组、列表、字典），自动合并会递归地对结构中的每个叶子节点应用以下规则：</p>
+<ul>
+<li><strong>张量</strong>：沿第 0 维（batch 维度）拼接（<code>torch.cat</code>）。</li>
+<li><strong>标量张量</strong>：取所有微批次的平均值。</li>
+<li><strong>非张量类型</strong>：会检查所有微批次的值是否相同，如果相同则返回该值，否则抛出错误。</li>
+<li>对于自定义变量类型，除非用户使用<code>torch.utils._pytree.register_pytree_node</code>定义了展开方法，否则会被视为不可分割，按非张量类型处理，即便其中包含张量。</li>
+</ul>
+<h3 id="_9">编写合并方案</h3>
+<p><code>merge_output</code> 可以设为一个与输出结构对应的 spec，每个位置使用以下的标记之一：</p>
+<ul>
+<li><code>torch.distributed.pipelining.microbatch.TensorChunkSpec(dim)</code>：沿指定维度拼接张量（<code>torch.cat</code>）。</li>
+<li><code>torch.distributed.pipelining.microbatch._Replicate</code>：输出应当保证这个变量在各输出间相同。</li>
+<li><code>torch.distributed.pipelining.microbatch._CustomReducer</code>：符合 PyTorch 定义的规约方法。</li>
+</ul>
+<p><code>_CustomReducer</code>示例：</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.pipelining.microbatch</span><span class="w"> </span><span class="kn">import</span> <span class="n">_CustomReducer</span>
+
+<span class="n">sum_reducer</span> <span class="o">=</span> <span class="n">_CustomReducer</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.0</span><span class="p">),</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="_10">编写自定义合并函数</h3>
+<p>可以传入一个自定义函数来完全控制合并逻辑：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">custom_merge</span><span class="p">(</span><span class="n">outputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+</code></pre></div>
+<p>函数接收一个列表，包含各微批次的输出，返回合并后的结果。</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">custom_merge</span><span class="p">(</span><span class="n">outputs</span><span class="p">):</span>
+    <span class="c1"># outputs 是一个列表，每个元素是一个微批次的模型输出</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">out</span><span class="o">.</span><span class="n">logits</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">logits</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">merge_output</span><span class="o">=</span><span class="n">custom_merge</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="_11">不合并输出</h3>
+<p>将 <code>merge_output</code> 设为 <code>False</code> 时，输出不会被合并，而是将输出的每一基本变量以 <code>RoundPipePackedData</code> 的形式返回。基本变量是指展开所有 Python 自带的嵌套结构（元组、列表、字典）后的叶子节点。对于自定义变量类型，除非用户使用<code>torch.utils._pytree.register_pytree_node</code>定义了展开方法，否则同样视为基本变量。</p>
+<p><code>RoundPipePackedData</code> 是 Python <code>list</code> 的子类，保存了各微批次的输出以及对应的 CUDA 传输事件。通常情况下，用户不需要直接操作 <code>RoundPipePackedData</code>，如有需要，可以使用<code>.synchronize()</code>方法等待所有输出传输至 CPU 内存，之后直接将其视为一个普通的列表来访问各微批次的输出。</p>
+<p><code>RoundPipe</code> 模型的输出需要直接传递给下一个 <code>RoundPipe</code> 模型时，使用 <code>merge_output=False</code> 可以避免不必要的同步和数据拷贝，从而实现模型间的流水线衔接。<code>wrap_model_to_roundpipe</code> 在递归包装非最后一层的 <code>nn.ModuleList</code> 模块时，会自动设置 <code>merge_output=False</code>。</p>
+<h2 id="set-execute-plan">设置运行计划</h2>
+<h3 id="roundpipemodelexecuteplan">roundpipe.ModelExecutePlan</h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">roundpipe</span><span class="o">.</span><span class="n">ModelExecutePlan</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fwd_plan</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">range</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bwd_plan</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">range</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</code></pre></div>
+<p>RoundPipe 模型的执行计划，定义了前向和反向传播中各层的执行顺序和分组方式。</p>
+<p>执行计划决定了哪些层被分配到同一个流水线阶段（stage），每个阶段的层会被一起加载到 GPU 上执行。合理的执行计划可以平衡各阶段的计算负载、控制 GPU 显存占用。</p>
+<p>不同于传统的流水线并行训练框架，RoundPipe 不需要前向传播和反向传播严格成对地执行，因此前向计划和反向计划可以独立设计；不需要阶段数是 GPU 数量的倍数。只要总阶段数大于 GPU 数量，所有阶段用时相近，即可达成较好的并行效率。</p>
+<p><strong>属性：</strong></p>
+<ul>
+<li><code>fwd_plan</code>：前向传播的执行顺序，<code>List[range]</code> 类型。每个 <code>range</code> 表示一个阶段中包含的层编号。</li>
+<li><code>bwd_plan</code>：反向传播的执行顺序，<code>List[range]</code> 类型。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<p>对于一个包含 4 层的模型，以下是使用<code>forward</code>方法的一个可能的执行计划：</p>
+<div class="highlight"><pre><span></span><code><span class="n">plan</span> <span class="o">=</span> <span class="n">ModelExecutePlan</span><span class="p">()</span>
+<span class="n">plan</span><span class="o">.</span><span class="n">fwd_plan</span> <span class="o">=</span> <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)]</span>  
+<span class="n">plan</span><span class="o">.</span><span class="n">bwd_plan</span> <span class="o">=</span> <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+</code></pre></div>
+<p>使用<code>forward_backward</code>方法时，最后一个阶段将不会进行重计算以节约时间，因此反向传播计划中的第一个阶段的模型层不应出现在前向传播计划中：</p>
+<div class="highlight"><pre><span></span><code><span class="n">plan</span> <span class="o">=</span> <span class="n">ModelExecutePlan</span><span class="p">()</span>
+<span class="n">plan</span><span class="o">.</span><span class="n">fwd_plan</span> <span class="o">=</span> <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>  
+<span class="n">plan</span><span class="o">.</span><span class="n">bwd_plan</span> <span class="o">=</span> <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+</code></pre></div>
+<h4 id="modelexecuteplanauto">ModelExecutePlan.auto</h4>
+<div class="highlight"><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="n">ModelExecutePlan</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span>
+    <span class="n">run_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;infer&quot;</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;fused&quot;</span><span class="p">],</span>
+    <span class="o">*</span><span class="n">models</span><span class="p">:</span> <span class="n">RoundPipe</span><span class="p">,</span>
+    <span class="n">min_stages</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_num_devices</span><span class="p">(),</span>
+    <span class="n">upper_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.1</span><span class="p">,</span>
+    <span class="n">model_memory_limit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">get_min_gpu_memory</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.6</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">ModelExecutePlan</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">ModelExecutePlan</span><span class="p">]]</span>
+</code></pre></div>
+<p>根据模型的计算时间和内存大小自动生成执行计划。</p>
+<p>当传入单个模型时，返回单个 <code>ModelExecutePlan</code>；传入多个模型时，返回计划列表，各模型的计划会协同优化以达到整体负载均衡。</p>
+<p><strong>参数：</strong></p>
+<ul>
+<li><code>run_type</code>：运行类型。<ul>
+<li><code>"infer"</code>：仅前向推理。</li>
+<li><code>"train"</code>：独立的前向传播和反向传播（用于<code>forward</code>训练）。</li>
+<li><code>"fused"</code>：融合的前向和反向传播（用于<code>forward_backward</code>训练）。</li>
+</ul>
+</li>
+<li><code>*models</code>：一个或多个 <code>RoundPipe</code> 模型。</li>
+<li><code>min_stages</code>：最少的流水线阶段数。这是一个提示值，实际阶段数可能因模型大小而低于此值。默认为 GPU 设备数。</li>
+<li><code>upper_threshold</code>：阶段负载均衡的上限比率。限制任一阶段与最慢层之间的最大允许比值。增大此值提供更灵活的阶段划分，但可能消耗更多 GPU 显存。默认为 <code>1.1</code>。</li>
+<li><code>model_memory_limit</code>：模型参数和梯度可用的 GPU 显存估算值（GB）。RoundPipe 会预取一个阶段的模型参数到 GPU 显存，因此每个阶段的显存限制为 <code>model_memory_limit / 2</code>。默认为最小 GPU 显存的 60%。</li>
+</ul>
+<p><strong>返回值：</strong></p>
+<ul>
+<li>单个模型时返回 <code>ModelExecutePlan</code>，多个模型时返回 <code>List[ModelExecutePlan]</code>。</li>
+</ul>
+<p>RounPipe 在模型运行时会对每一层的计算时间进行在线测量并取滑动平均值。根据计时结果，RoundPipe 会尽量使得每个阶段的计算时间尽可能接近，以实现最佳的流水线效率。</p>
+<p><strong>示例：</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoundPipe</span><span class="p">,</span> <span class="n">RoundPipeRunConfig</span><span class="p">,</span> <span class="n">ModelExecutePlan</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">RoundPipe</span><span class="p">(</span><span class="n">my_model</span><span class="p">)</span>
+
+<span class="c1"># 自动生成训练计划</span>
+<span class="n">plan</span> <span class="o">=</span> <span class="n">ModelExecutePlan</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span><span class="s2">&quot;fused&quot;</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+
+<span class="c1"># 使用生成的计划</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward_backward</span><span class="p">(</span>
+    <span class="n">input_args</span><span class="o">=</span><span class="p">(</span><span class="n">data</span><span class="p">,),</span>
+    <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+    <span class="n">loss_fn</span><span class="o">=</span><span class="n">loss_fn</span><span class="p">,</span>
+    <span class="n">run_config</span><span class="o">=</span><span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">execute_plan</span><span class="o">=</span><span class="n">plan</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># 多模型协同优化</span>
+<span class="n">plan1</span><span class="p">,</span> <span class="n">plan2</span> <span class="o">=</span> <span class="n">ModelExecutePlan</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span><span class="s2">&quot;fused&quot;</span><span class="p">,</span> <span class="n">model1</span><span class="p">,</span> <span class="n">model2</span><span class="p">)</span>
+<span class="n">output1</span> <span class="o">=</span> <span class="n">model1</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span>
+    <span class="n">input_args</span><span class="o">=</span><span class="p">(</span><span class="n">data1</span><span class="p">,),</span>
+    <span class="n">run_config</span><span class="o">=</span><span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">execute_plan</span><span class="o">=</span><span class="n">plan1</span><span class="p">,</span> <span class="n">merge_output</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">model2</span><span class="o">.</span><span class="n">forward_backward</span><span class="p">(</span>
+    <span class="n">input_args</span><span class="o">=</span><span class="p">(</span><span class="n">output1</span><span class="p">,),</span>
+    <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+    <span class="n">loss_fn</span><span class="o">=</span><span class="n">loss_fn</span><span class="p">,</span>
+    <span class="n">run_config</span><span class="o">=</span><span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">execute_plan</span><span class="o">=</span><span class="n">plan2</span><span class="p">),</span>
+<span class="p">)</span>
+</code></pre></div>
 
 
 

@@ -11,10 +11,10 @@
         <link rel="canonical" href="https://itcarrot.github.io/RoundPipe/zh/API/model/">
       
       
-        <link rel="prev" href="../run_config/">
+        <link rel="prev" href="../../Tutorial/">
       
       
-        <link rel="next" href="../optimizer/">
+        <link rel="next" href="../run_config/">
       
       
         
@@ -24,12 +24,12 @@
         
       
       
-      <link rel="icon" href="../../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/logo.svg">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
-        <title>模型 - RoundPipe 文档</title>
+        <title>模型 - RoundPipe</title>
       
     
     
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#model-apis" class="md-skip">
+        <a href="#api" class="md-skip">
           跳转至
         </a>
       
@@ -98,10 +98,9 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="页眉">
-    <a href="../../" title="RoundPipe 文档" class="md-header__button md-logo" aria-label="RoundPipe 文档" data-md-component="logo">
+    <a href="../../" title="RoundPipe" class="md-header__button md-logo" aria-label="RoundPipe" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../../assets/logo.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -112,7 +111,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            RoundPipe 文档
+            RoundPipe
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -297,7 +296,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../run_config/" class="md-tabs__link">
+        <a href="./" class="md-tabs__link">
           
   
   
@@ -351,13 +350,12 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../" title="RoundPipe 文档" class="md-nav__button md-logo" aria-label="RoundPipe 文档" data-md-component="logo">
+    <a href="../../" title="RoundPipe" class="md-nav__button md-logo" aria-label="RoundPipe" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../../assets/logo.svg" alt="logo">
 
     </a>
-    RoundPipe 文档
+    RoundPipe
   </label>
   
     <div class="md-nav__source">
@@ -487,34 +485,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../run_config/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    运行设置
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -578,24 +548,124 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#constructor" class="md-nav__link">
+  <a href="#roundpiperoundpipe" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Constructor
+        roundpipe.RoundPipe
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="roundpipe.RoundPipe">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#roundpipeforward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe.forward
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#forward" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#roundpipeforward_backward" class="md-nav__link">
     <span class="md-ellipsis">
       
-        forward
+        RoundPipe.forward_backward
       
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundpipeoptim_parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe.optim_parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundpipeoptim_named_parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe.optim_named_parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundpipestep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe.step
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundpipesynchronize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe.synchronize
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipewrap_model_to_roundpipe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.wrap_model_to_roundpipe
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="roundpipe.wrap_model_to_roundpipe">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#roundpipeset_original_model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe.set_original_model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        类成员转发
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -603,6 +673,62 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../run_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    运行设置
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    运行时上下文
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -623,6 +749,34 @@
     
   
     优化器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../grad_scaler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    梯度缩放器
   
 
     
@@ -755,24 +909,124 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#constructor" class="md-nav__link">
+  <a href="#roundpiperoundpipe" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Constructor
+        roundpipe.RoundPipe
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="roundpipe.RoundPipe">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#roundpipeforward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe.forward
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#forward" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#roundpipeforward_backward" class="md-nav__link">
     <span class="md-ellipsis">
       
-        forward
+        RoundPipe.forward_backward
       
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundpipeoptim_parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe.optim_parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundpipeoptim_named_parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe.optim_named_parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundpipestep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe.step
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundpipesynchronize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe.synchronize
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipewrap_model_to_roundpipe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        roundpipe.wrap_model_to_roundpipe
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="roundpipe.wrap_model_to_roundpipe">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#roundpipeset_original_model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe.set_original_model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        类成员转发
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -796,9 +1050,238 @@
   
 
 
-<h1 id="model-apis">Model APIs</h1>
-<h2 id="constructor">Constructor</h2>
-<h2 id="forward">forward</h2>
+<h1 id="api">模型相关 API</h1>
+<h2 id="roundpiperoundpipe">roundpipe.RoundPipe</h2>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">roundpipe</span><span class="o">.</span><span class="n">RoundPipe</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+    <span class="n">optim_dtype</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">model_run_config</span><span class="p">:</span> <span class="n">RoundPipeRunConfig</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(),</span>
+    <span class="n">pin_model</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;alloc&quot;</span><span class="p">,</span> <span class="s2">&quot;register&quot;</span><span class="p">,</span> <span class="s2">&quot;off&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;alloc&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>将 <code>nn.Module</code> 包装为 RoundPipe 的流水线执行运行时。这是 RoundPipe 的核心类，负责将模型拆分为层、管理参数在 CPU 和 GPU 之间的传输、以及协调前向和反向传播的流水线执行。</p>
+<p><strong>参数：</strong></p>
+<ul>
+<li><code>model</code>：要包装的模型。可以是 <code>nn.Sequential</code> 或任意模型。<code>nn.Sequential</code> 模型会被直接拆分为各个层级；非 Sequential 模型则会被当作单个层处理。</li>
+<li><code>optim_dtype</code>：优化器参数的数据类型。默认与模型参数的数据类型相同。常用的设置是将模型参数保持为 <code>torch.float16</code>，优化器参数使用 <code>torch.float32</code> 以保证数值稳定性。</li>
+<li><code>name</code>：可选的标识符，用于日志和跟踪信息中的显示。默认根据调用位置自动生成（格式为 <code>文件名:行号</code>）。</li>
+<li><code>model_run_config</code>：模型级别的默认运行设置，在每次调用 <code>forward()</code> 或 <code>forward_backward()</code> 时作为基线配置。详见 <a href="../run_config/">运行设置</a>。</li>
+<li><code>pin_model</code>：模型参数的内存锁页策略：<ul>
+<li><code>"alloc"</code>：使用 PyTorch 的 <code>pin_memory</code> 锁页内存。这是默认选项，通常有最好的主机-设备传输性能，但由于 PyTorch 会将所有分配对齐到 2 的幂次，可能导致最多 2 倍的 CPU 内存占用。</li>
+<li><code>"register"</code>：使用 <code>cudaHostRegister</code> 锁页内存。减少超大模型的 CPU 内存占用，但主机-设备传输性能约降低 10%。仅在 CUDA 环境下可用。</li>
+<li><code>"off"</code>：不锁页内存。适用于 LoRA 微调超出 CPU 内存的模型。结合模型加载时的 <code>mmap</code>，Linux 可以按需从磁盘加载数据，并在内存不足时自动驱逐已用数据。</li>
+</ul>
+</li>
+</ul>
+<h3 id="roundpipeforward">RoundPipe.forward</h3>
+<div class="highlight"><pre><span></span><code><span class="n">RoundPipe</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">roundpipe_run_config</span><span class="p">:</span> <span class="n">RoundPipeRunConfig</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(),</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span>
+</code></pre></div>
+<p>执行前向传播。输入数据会被自动切分为微批次，在流水线中并行执行，完成后将各微批次的输出合并返回。</p>
+<p><strong>参数：</strong></p>
+<ul>
+<li><code>*args</code>：传递给底层模型的位置参数。</li>
+<li><code>roundpipe_run_config</code>：本次调用的运行设置，会覆盖模型级别的默认配置。</li>
+<li><code>**kwargs</code>：传递给底层模型的关键字参数。</li>
+</ul>
+<p><strong>返回值：</strong></p>
+<ul>
+<li>合并后的输出结果。具体合并方式由 <code>merge_output</code> 配置决定。</li>
+</ul>
+<h3 id="roundpipeforward_backward">RoundPipe.forward_backward</h3>
+<div class="highlight"><pre><span></span><code><span class="n">RoundPipe</span><span class="o">.</span><span class="n">forward_backward</span><span class="p">(</span>
+    <span class="n">input_args</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+    <span class="n">input_kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
+    <span class="n">label</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">loss_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Union</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">outputs</span><span class="p">,</span>
+    <span class="n">return_outputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">run_config</span><span class="p">:</span> <span class="n">RoundPipeRunConfig</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span>
+</code></pre></div>
+<p>执行融合的前向和反向传播。相比先调用 <code>forward()</code> 再手动执行 <code>backward()</code>，此方法使用优化的调度策略，允许前向传播和反向传播在流水线中同时执行，从而消灭流水线气泡。</p>
+<p><strong>参数：</strong></p>
+<ul>
+<li><code>input_args</code>：前向传播的位置参数。</li>
+<li><code>input_kwargs</code>：前向传播的关键字参数。</li>
+<li><code>label</code>：标签数据，按照 <code>loss_fn</code> 的期望格式提供。</li>
+<li><code>loss_fn</code>：损失函数。接收 <code>(outputs, labels)</code> 两个参数，返回一个损失张量或损失张量序列。</li>
+<li><code>return_outputs</code>：是否同时返回模型输出。</li>
+<li><code>run_config</code>：本次调用的运行设置。</li>
+</ul>
+<p><strong>返回值：</strong></p>
+<ul>
+<li>如果 <code>return_outputs=False</code>（默认），返回所有微批次损失的总和。</li>
+<li>如果 <code>return_outputs=True</code>，返回 <code>(loss_sum, merged_outputs)</code> 元组。</li>
+</ul>
+<p>该函数会对各个微批次分别求损失后分别反向传播并累积梯度，相当于对所有微批次的损失求和作为输入训练样本的损失。调用此函数的语义等价于：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">forward_backward</span><span class="p">(</span>
+    <span class="n">input_args</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+    <span class="n">input_kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
+    <span class="n">label</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">loss_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Union</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">outputs</span><span class="p">,</span>
+    <span class="n">return_outputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">run_config</span><span class="p">:</span> <span class="n">RoundPipeRunConfig</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+    <span class="n">split_input_args</span><span class="p">,</span> <span class="n">split_input_kwargs</span> <span class="o">=</span> <span class="n">split_input</span><span class="p">(</span>
+        <span class="n">input_args</span><span class="p">,</span> <span class="n">input_kwargs</span>
+    <span class="p">)</span>
+    <span class="n">split_labels</span> <span class="o">=</span> <span class="n">split_label</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+    <span class="n">losses</span><span class="p">,</span> <span class="n">outputs</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">input_args_mb</span><span class="p">,</span> <span class="n">input_kwargs_mb</span><span class="p">,</span> <span class="n">label_mb</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+        <span class="n">split_input_args</span><span class="p">,</span> <span class="n">split_input_kwargs</span><span class="p">,</span> <span class="n">split_labels</span>
+    <span class="p">):</span>
+        <span class="n">output_mb</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">input_args_mb</span><span class="p">,</span> <span class="n">input_kwargs_mb</span><span class="p">)</span>
+        <span class="n">loss_mb</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">output_mb</span><span class="p">,</span> <span class="n">label_mb</span><span class="p">)</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">backward</span><span class="p">(</span><span class="n">loss_mb</span><span class="p">)</span>
+        <span class="c1"># 当 loss_mb 是一个张量时，上一行代码其实就是</span>
+        <span class="c1"># loss_mb.backward()</span>
+        <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_mb</span><span class="p">)</span>
+        <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_mb</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">return_outputs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">losses</span><span class="p">),</span> <span class="n">merge_output</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="roundpipeoptim_parameters">RoundPipe.optim_parameters</h3>
+<div class="highlight"><pre><span></span><code><span class="n">RoundPipe</span><span class="o">.</span><span class="n">optim_parameters</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">]</span>
+</code></pre></div>
+<p>返回适用于优化器的参数迭代器。</p>
+<p>RoundPipe 内部管理模型参数的存储位置和数据类型。通过此方法获取的参数以优化器所需的格式（由 <code>optim_dtype</code> 指定）存储，适合直接传递给优化器。</p>
+<p><strong>返回值：</strong></p>
+<ul>
+<li>参数迭代器，每个参数均为优化器专用的参数副本。</li>
+</ul>
+<h3 id="roundpipeoptim_named_parameters">RoundPipe.optim_named_parameters</h3>
+<div class="highlight"><pre><span></span><code><span class="n">RoundPipe</span><span class="o">.</span><span class="n">optim_named_parameters</span><span class="p">(</span>
+    <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">remove_duplicate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">]]</span>
+</code></pre></div>
+<p>返回带名称的优化器参数迭代器。</p>
+<p><strong>参数：</strong></p>
+<ul>
+<li><code>prefix</code>：参数名称的前缀。</li>
+<li><code>remove_duplicate</code>：是否跳过重复的参数。</li>
+</ul>
+<p><strong>返回值：</strong></p>
+<ul>
+<li>生成 <code>(name, parameter)</code> 元组的迭代器。</li>
+</ul>
+<h3 id="roundpipestep">RoundPipe.step</h3>
+<div class="highlight"><pre><span></span><code><span class="n">RoundPipe</span><span class="o">.</span><span class="n">step</span><span class="p">(</span>
+    <span class="n">step_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+    <span class="n">is_async</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+<p>使用提供的步骤函数执行优化器更新。</p>
+<p>默认的异步模式下，<code>step</code> 会立即返回，优化器更新在后台线程中执行。训练迭代将使用延迟一步的参数，这在实际训练中通常不影响收敛。同步模式会等待优化器更新完成后才返回，确保每次迭代使用最新参数，但会显著降低性能，一般不推荐使用。</p>
+<div class="admonition warning">
+<p class="admonition-title">数据竞争</p>
+<p><code>step_fn</code> 中的数据访问应仅限于优化器参数。访问其他数据需要注意潜在的数据竞争问题。</p>
+</div>
+<p><strong>参数：</strong></p>
+<ul>
+<li><code>step_fn</code>：执行一步优化更新的可调用对象。</li>
+<li><code>is_async</code>：是否异步执行。默认为 <code>True</code>。</li>
+<li><code>*args</code>：转发给 <code>step_fn</code> 的位置参数。</li>
+<li><code>**kwargs</code>：转发给 <code>step_fn</code> 的关键字参数。</li>
+</ul>
+<h3 id="roundpipesynchronize">RoundPipe.synchronize</h3>
+<div class="highlight"><pre><span></span><code><span class="n">RoundPipe</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+<p>同步优化器参数和反向传播的梯度到模型参数。</p>
+<p>调用此方法后，模型参数将反映最新的优化器更新结果，参数的 <code>.grad</code> 属性将包含累积的梯度。这在需要检查参数值或梯度时非常有用（例如在评估前或保存检查点前）。</p>
+<h2 id="roundpipewrap_model_to_roundpipe">roundpipe.wrap_model_to_roundpipe</h2>
+<div class="highlight"><pre><span></span><code><span class="n">roundpipe</span><span class="o">.</span><span class="n">wrap_model_to_roundpipe</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+    <span class="n">use_sequential_preset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">lower_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">,</span>
+    <span class="n">upper_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">skip_modules</span><span class="p">:</span> <span class="n">Container</span><span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="n">override_config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">RoundPipeRunConfig</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
+    <span class="n">model_run_config</span><span class="p">:</span> <span class="n">RoundPipeRunConfig</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(),</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">roundpipe_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">RoundPipe</span><span class="p">,</span> <span class="n">AutoRoundPipe</span><span class="p">]</span>
+</code></pre></div>
+<p>使用递归启发式方法或预设方案，将模型自动包装为 RoundPipe 实例。</p>
+<p>此函数会尝试以下策略：</p>
+<ol>
+<li>如果 <code>use_sequential_preset</code> 不为 <code>False</code>，首先尝试使用 RoundPipe 内置的模型预设将模型转换为等效的 Sequential 结构。</li>
+<li>如果没有可用的预设，则递归遍历模型的子模块，根据大小阈值和模块类型决定如何包装。</li>
+<li>对于最终无法拆分为 Sequential 的模型，返回 <code>AutoRoundPipe</code> 实例。</li>
+</ol>
+<p><strong>参数：</strong></p>
+<ul>
+<li><code>model</code>：要包装的根模块。</li>
+<li><code>use_sequential_preset</code>：是否使用内置的 Sequential 预设。<code>None</code> 或 <code>True</code> 会尝试使用预设，<code>False</code> 跳过预设查找。当设为 <code>None</code> 时，如果找到匹配的预设会打印提示信息。</li>
+<li><code>lower_threshold</code>：直接包装为 <code>RoundPipe</code> 的最小模块大小（字节）。小于此阈值的模块会以 <code>num_microbatch=1</code> 的方式包装。</li>
+<li><code>upper_threshold</code>：拆分子模块的最大大小阈值。默认为模型总大小除以 <code>(GPU 数量 + 1)</code>。</li>
+<li><code>skip_modules</code>：不需要包装的模块列表。</li>
+<li><code>override_config</code>：为特定模块指定的运行设置覆盖。</li>
+<li><code>model_run_config</code>：<code>RoundPipe</code> 实例的默认运行设置。</li>
+<li><code>name</code>：模块名称。如果为 <code>None</code>，根据调用位置自动生成。</li>
+<li><code>**roundpipe_kwargs</code>：转发给 <code>RoundPipe</code> 构造函数的额外参数。</li>
+</ul>
+<p><strong>拆分策略解析：</strong></p>
+<p>当没有匹配的预设时，函数递归遍历模型的子模块树。对于每个遇到的模块，按照以下优先级决定处理方式：</p>
+<ol>
+<li>
+<p><strong>跳过</strong>：如果模块在 <code>skip_modules</code> 列表中，直接返回原模块，不做任何包装。<strong>这个模块将会在 CPU 上执行。</strong></p>
+</li>
+<li>
+<p><strong>直接包装为多层 <code>RoundPipe</code></strong>：如果模块是 <code>nn.Sequential</code>，将其直接包装为 <code>RoundPipe</code>，其中每个子模块作为一个独立的流水线层。</p>
+</li>
+<li>
+<p><strong>直接包装为单层 <code>RoundPipe</code></strong>：如果满足以下任一条件：</p>
+<ul>
+<li>模块<strong>自身参数</strong>（非递归）的大小 ≥ <code>lower_threshold</code>（默认 16 KB）</li>
+<li>模块<strong>总大小</strong>（递归）≤ <code>upper_threshold</code></li>
+</ul>
+<p>并且模块实现了自己的 <code>forward</code> 方法，则将整个模块包装为一个单层的 <code>RoundPipe</code>。</p>
+<p>特殊情况：如果模块总大小 &lt; <code>lower_threshold</code>，包装时会将 <code>num_microbatch</code> 设置为 1，因为对极小的模块进行微批次拆分没有性能收益。</p>
+</li>
+<li>
+<p><strong>逐元素包装 <code>nn.ModuleList</code></strong>：如果模块是 <code>nn.ModuleList</code>，将列表中的每个元素分别包装为独立的 <code>RoundPipe</code> 实例。默认情况下，我们认为 ModuleList 的模块是连续调用的，非末尾元素的 <code>merge_output</code> 设为 <code>False</code>，以实现流水线并行计算。如果需要访问 ModuleList 中间层的输出，可以在 <code>override_config</code> 中为对应模块设置 <code>merge_output=True</code>，但这会引入额外的同步并阻止框架并行计算。</p>
+</li>
+<li>
+<p><strong>递归进入子模块</strong>：如果以上条件都不满足（即模块太大、不是 Sequential/ModuleList、且自身没有足够多的参数），则递归遍历其 <code>named_children()</code>，对每个子模块重复上述判断。<strong>模块本身的<code>forward</code>将会在 CPU 上执行。</strong></p>
+</li>
+<li>
+<p><strong>其它特殊处理</strong>：对于 HuggingFace 的 <code>PreTrainedModel</code>，还会额外包装其 <code>loss_function</code>。</p>
+</li>
+</ol>
+<p><strong>返回值：</strong></p>
+<ul>
+<li>如果成功使用预设或递归方法将模型转换为 <code>RoundPipe</code>，返回 <code>RoundPipe</code> 实例；否则返回 <code>AutoRoundPipe</code> 实例。<code>AutoRoundPipe</code> 是一个占位类，表示模型已被包装但无法拆分为 Sequential 结构，用户仍然可以使用 RoundPipe 的前向传播和优化器功能，但无法享受层级拆分带来的性能提升，也不能调用<code>forward_backward()</code> 方法。</li>
+</ul>
+<p><strong>异常：</strong></p>
+<ul>
+<li><code>NotImplementedError</code>：如果 <code>use_sequential_preset=True</code> 但该模型类型没有对应的预设。</li>
+</ul>
+<h3 id="roundpipeset_original_model">RoundPipe.set_original_model</h3>
+<div class="highlight"><pre><span></span><code><span class="n">RoundPipe</span><span class="o">.</span><span class="n">set_original_model</span><span class="p">(</span><span class="n">original_model</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+<p>设置原始模型的引用，用于属性访问的代理转发。</p>
+<p>当模型通过 <code>wrap_model_to_roundpipe</code> 被转换为 Sequential 结构后，原始模型上的属性（如 HuggingFace 模型的 <code>vocab_size</code>、<code>config</code> 等）仍然可以通过此机制访问。<code>wrap_model_to_roundpipe</code> 会自动调用此方法，通常不需要手动调用。</p>
+<p><strong>参数：</strong></p>
+<ul>
+<li><code>original_model</code>：原始未包装的模型。</li>
+</ul>
+<h3 id="_1">类成员转发</h3>
+<p>RoundPipe 重写了 <code>__getattr__</code>、<code>__setattr__</code> 和 <code>__delattr__</code>，实现了对被包装模型的属性透明访问：</p>
+<ul>
+<li><strong>读取</strong>：当访问 RoundPipe 实例上不存在的属性时，如果设置了<code>original_model</code>会从中查找，否侧从构造 RoundPipe 变量时的传入模型上查找。</li>
+<li><strong>写入</strong>：初始化完成后，对 RoundPipe 实例的属性写入会转发到 <code>original_model</code>，如果没有则转发到构造 RoundPipe 变量时的传入模型上。</li>
+<li><strong>删除</strong>：属性删除同样会传播到 <code>original_model</code> 或构造传入模型。</li>
+</ul>
+<p>这一机制使得 RoundPipe 包装后的模型可以像原始模型一样使用，无需关心包装层的存在。</p>
 
 
 
