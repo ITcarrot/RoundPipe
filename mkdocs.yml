@@ -3,13 +3,21 @@ site_url: https://itcarrot.github.io/RoundPipe/
 repo_url: https://github.com/ITcarrot/RoundPipe/
 nav:
   - Home: index.md
-  - Tutorial: Tutorial.md
+  - User Guide:
+      - RoundPipe Overview: UserGuide/overview.md
+      - Quick Start:
+        - Installation: UserGuide/QuickStart/installation.md
+      - Basic Usage:
+        - Input Model Guideline: UserGuide/BasicUsage/input_model_guideline.md
+      - Advanced Usage:
+        - Use Custom I/O Type: UserGuide/AdvancedUsage/use_custom_io_type.md
   - API:
       - Model: API/model.md
       - RunConfig: API/run_config.md
       - Context: API/context.md
       - Optimizer: API/optimizer.md
       - GradScaler: API/grad_scaler.md
+      - Logging: API/logging.md
   - Developer:
       - Internal APIs: Developer/internal_apis.md
 theme: 
@@ -19,6 +27,7 @@ theme:
   language: en
   features:
     - navigation.tabs
+    - navigation.expand
   palette:
     - media: '(prefers-color-scheme: light)'
       scheme: default
@@ -58,11 +67,19 @@ plugins:
           name: 中文
           nav_translations:
             Home: 主页
-            Tutorial: 教程
+            User Guide: 用户指南
+            RoundPipe Overview: RoundPipe概览
+            Quick Start: 快速开始
+            Installation: 安装
+            Basic Usage: 基本用法
+            Input Model Guideline: 输入模型指南
+            Advanced Usage: 高级用法
+            Use Custom I/O Type: 使用自定义输入/输出类型
             Model: 模型
             RunConfig: 运行设置
             Context: 运行时上下文
             Optimizer: 优化器
             GradScaler: 梯度缩放器
+            Logging: 运行日志
             Developer: 开发者
             Internal APIs: 内部 API
