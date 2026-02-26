@@ -12,13 +12,24 @@ Attributes:
 
 from typing_extensions import *
 import importlib
+import os
+import sys
 
 import torch
 
 from ..device import get_num_devices
 from ..roundpipe import RoundPipe
 
-DISABLE_TORCH_COMPILE = False
+if "RPP_DISABLE_TORCH_COMPILE" in os.environ:
+    DISABLE_TORCH_COMPILE = bool(int(os.environ["RPP_DISABLE_TORCH_COMPILE"]))
+elif "ASCEND_HOME_PATH" in os.environ:
+    DISABLE_TORCH_COMPILE = True
+    print(
+        "[info] Running on Ascend device, torch.compile will be disabled in RoundPipe models.",
+        file=sys.stderr,
+    )
+else:
+    DISABLE_TORCH_COMPILE = False
 if not DISABLE_TORCH_COMPILE:
     torch._dynamo.config.cache_size_limit *= (  # pyright: ignore[reportAttributeAccessIssue]
         get_num_devices()

@@ -320,7 +320,9 @@ device_list: List[DeviceManager] = []
 cur_device: int = 0
 
 for i in range(torch.cuda.device_count()):
-    device = DeviceManager(i, torch.device(f"cuda:{i}"))
+    # Ascend's PyTorch converts device during tensor creation
+    # so we create a tensor to get the correct device handle.
+    device = DeviceManager(i, torch.empty(0, device=f"cuda:{i}").device)
     device_list.append(device)
 
 

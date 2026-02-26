@@ -8,6 +8,7 @@ Attributes:
 from typing_extensions import *
 import copy
 import math
+import os
 
 import torch
 
@@ -80,7 +81,11 @@ def async_h2d(
     device_tensors = []
     with torch.cuda.stream(device.upstream):
         for event in host_ready_event:
-            event.wait()
+            if "ASCEND_HOME_PATH" in os.environ:
+                # Ascend does not support cross-device event wait.
+                event.synchronize()
+            else:
+                event.wait()
         for host_tensor in host_tensors:
             if isinstance(host_tensor, torch.Tensor):
                 host_tensor_requires_grad = host_tensor.requires_grad

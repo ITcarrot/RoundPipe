@@ -5,13 +5,21 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
 from peft import LoraConfig, TaskType, LoraModel
 from tqdm import tqdm
 import time
+import os
 import sys
 import math
+
+if "ASCEND_HOME_PATH" in os.environ:
+    import torch_npu
+    from torch_npu.npu import amp
+    from torch_npu.contrib import transfer_to_npu
+
 from roundpipe import wrap_model_to_roundpipe, RoundPipeRunConfig
 from roundpipe.optim import Adam
 from roundpipe.models.function import ChunkedCompileLinearForCausalLMLoss
 
-torch.backends.cuda.matmul.allow_fp16_accumulation = True
+if "ASCEND_HOME_PATH" not in os.environ:
+    torch.backends.cuda.matmul.allow_fp16_accumulation = True
 transformers.modeling_utils._init_weights = False
 
 if len(sys.argv) != 7:
@@ -28,7 +36,8 @@ ACCUM_STEPS = int(sys.argv[6])
 
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 config = AutoConfig.from_pretrained(model_path)
-config._attn_implementation = "flash_attention_2"
+if "ASCEND_HOME_PATH" not in os.environ:
+    config._attn_implementation = "flash_attention_2"
 config.use_cache = False
 config.dtype = torch.float16
 with torch.device("meta"):
