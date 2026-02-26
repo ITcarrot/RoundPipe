@@ -83,3 +83,5 @@ plugins:
             Logging: 运行日志
             Developer: 开发者
             Internal APIs: 内部 API
+hooks:
+  - docs/draw/gen_figures.py
