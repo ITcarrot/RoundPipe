@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
     <url>
-        <loc>https://itcarrot.github.io/RoundPipe/Tutorial/</loc>
-        <lastmod>2026-02-26</lastmod>
-        <changefreq>daily</changefreq>
-        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/Tutorial/"/>
-        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/Tutorial/"/>
-    </url>
-    <url>
         <loc>https://itcarrot.github.io/RoundPipe/</loc>
         <lastmod>2026-02-26</lastmod>
         <changefreq>daily</changefreq>
@@ -64,11 +57,32 @@
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/Developer/internal_apis/"/>
     </url>
     <url>
-        <loc>https://itcarrot.github.io/RoundPipe/zh/Tutorial/</loc>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/overview/</loc>
         <lastmod>2026-02-26</lastmod>
         <changefreq>daily</changefreq>
-        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/Tutorial/"/>
-        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/Tutorial/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/overview/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/overview/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/use_custom_io_type/</loc>
+        <lastmod>2026-02-26</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/use_custom_io_type/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/use_custom_io_type/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/input_model_guideline/</loc>
+        <lastmod>2026-02-26</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/input_model_guideline/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/input_model_guideline/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/QuickStart/installation/</loc>
+        <lastmod>2026-02-26</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/QuickStart/installation/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/QuickStart/installation/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/zh/</loc>
@@ -125,5 +139,33 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/Developer/internal_apis/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/Developer/internal_apis/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/overview/</loc>
+        <lastmod>2026-02-26</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/overview/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/overview/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/use_custom_io_type/</loc>
+        <lastmod>2026-02-26</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/use_custom_io_type/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/use_custom_io_type/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/input_model_guideline/</loc>
+        <lastmod>2026-02-26</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/input_model_guideline/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/input_model_guideline/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/QuickStart/installation/</loc>
+        <lastmod>2026-02-26</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/QuickStart/installation/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/QuickStart/installation/"/>
     </url>
 </urlset>
