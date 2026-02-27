@@ -81,12 +81,16 @@ hide:
 
 </div>
 
+<hr class="home-divider">
+
 <!-- Section 1 – 超大模型支持 -->
 <div class="home-section">
   <div class="glass-card home-section-card">
     <div class="home-section-text">
       <h2>超大模型支持</h2>
-      <p>仅需 24GB 显存，支持 64K+ 超长上下文训练。单卡即可全量微调 32B 大模型、LoRA 微调 235B 大模型。相比 PyTorch FSDP，最大输入序列长度提升 7 倍以上。</p>
+      <p>仅需 24GB 显存，支持 64K+ 超长上下文训练。</p>
+      <p class="highlight"><strong>单卡即可全量微调 32B 大模型、LoRA 微调 235B 大模型。</strong></p>
+      <p>相比 PyTorch FSDP，最大输入序列长度提升 7 倍以上。</p>
     </div>
     <div class="home-section-visual">
       <img src="../assets/index.fig1.zh.light.svg#only-light" alt="超大模型支持">
