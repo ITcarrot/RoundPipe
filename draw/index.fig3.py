@@ -6,7 +6,15 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 import numpy as np
 import matplotlib.pyplot as plt
-from common import MODEL_COLORS, THEMES, save_fig, style_ax, add_legend, generate_all
+from common import (
+    MODEL_COLORS,
+    FONT_SIZES,
+    THEMES,
+    save_fig,
+    style_ax,
+    add_legend,
+    generate_all,
+)
 
 # ── Data ─────────────────────────────────────────────────────────
 GPUS = np.arange(1, 9)
@@ -76,7 +84,10 @@ def draw(lang, theme):
     # Style left axis
     style_ax(ax1, theme, ylabel=lab["ylabel_left"])
     ax1.set_xlabel(
-        "GPUs" if lang == "en" else "GPU 数量", fontsize=10, color=t["text"], labelpad=8
+        "GPUs" if lang == "en" else "GPU 数量",
+        fontsize=FONT_SIZES["axis_label"],
+        color=t["text_axis"],
+        labelpad=8,
     )
     ax1.set_xticks(GPUS)
     ax1.yaxis.set_major_formatter(
@@ -84,8 +95,13 @@ def draw(lang, theme):
     )
 
     # Style right axis
-    ax2.set_ylabel(lab["ylabel_right"], fontsize=10, color=t["text"], labelpad=8)
-    ax2.tick_params(colors=t["text"], labelsize=9)
+    ax2.set_ylabel(
+        lab["ylabel_right"],
+        fontsize=FONT_SIZES["axis_label"],
+        color=t["text_axis"],
+        labelpad=8,
+    )
+    ax2.tick_params(colors=t["text"], labelsize=FONT_SIZES["tick"])
     ax2.set_ylim(0, 90)
     ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:.0f}k"))
     for spine in ax2.spines.values():
@@ -97,7 +113,7 @@ def draw(lang, theme):
     legend = ax1.legend(
         h1 + h2,
         l1 + l2,
-        fontsize=7,
+        fontsize=FONT_SIZES["legend_dense"],
         ncol=2,
         loc="upper left",
         frameon=True,

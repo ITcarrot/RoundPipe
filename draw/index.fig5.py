@@ -10,6 +10,7 @@ from common import (
     COLOR_4090,
     COLOR_910B,
     COLOR_W7800,
+    FONT_SIZES,
     THEMES,
     save_fig,
     style_ax,
@@ -62,7 +63,7 @@ def draw(lang, theme):
         )
 
     ax.set_xticks(x)
-    ax.set_xticklabels(MODELS, fontsize=9, color=t["text"])
+    ax.set_xticklabels(MODELS, fontsize=FONT_SIZES["xtick_model"], color=t["text"])
     style_ax(ax, theme, ylabel=lab["ylabel"])
     ax.yaxis.set_major_formatter(
         plt.FuncFormatter(lambda v, _: f"{v/1000:.0f}k" if v >= 1000 else f"{v:.0f}")

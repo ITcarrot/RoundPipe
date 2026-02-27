@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from common import (
     ROUNDPIPE_COLOR,
     FSDP_COLOR,
+    FONT_SIZES,
     THEMES,
     save_fig,
     style_ax,
@@ -74,14 +75,14 @@ def draw(lang, theme):
                     "OOM",
                     ha="center",
                     va="bottom",
-                    fontsize=6.5,
+                    fontsize=FONT_SIZES["oom_label"],
                     color=t["oom_color"],
                     fontweight="bold",
                     rotation=90,
                 )
 
     ax.set_xticks(x)
-    ax.set_xticklabels(MODELS, fontsize=9, color=t["text"])
+    ax.set_xticklabels(MODELS, fontsize=FONT_SIZES["xtick_model"], color=t["text"])
     style_ax(ax, theme, ylabel=LABELS[lang]["ylabel"])
     # Format y-axis with K suffix
     ax.yaxis.set_major_formatter(

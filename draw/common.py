@@ -21,10 +21,22 @@ COLOR_W7800 = "#5BAD5E"
 
 MODEL_COLORS = ["#4A90D9", "#E8834A", "#5BAD5E", "#C466DB"]
 
+# ── Font sizes (single source of truth) ─────────────────────────
+FONT_SIZES = {
+    "axis_label": 16,  # ylabel / xlabel
+    "tick": 12,  # axis tick labels
+    "xtick_model": 16,  # x-axis model name labels
+    "legend": 12,  # legend text
+    "legend_dense": 10,  # legend with many items (fig3)
+    "bar_label": 11,  # data labels on top of bars (e.g. "226k")
+    "oom_label": 12,  # OOM text on bars
+}
+
 # ── Themes ──────────────────────────────────────────────────────
 THEMES = {
     "light": dict(
         text="#333333",
+        text_axis="#000000",
         text_secondary="#777777",
         grid="#E0E0E0",
         hatch_edge=(1, 1, 1, 0.7),
@@ -33,6 +45,7 @@ THEMES = {
     ),
     "dark": dict(
         text="#D4D4D4",
+        text_axis="#FFFFFF",
         text_secondary="#888888",
         grid="#333333",
         hatch_edge=(0, 0, 0, 0.5),
@@ -56,20 +69,29 @@ def save_fig(fig, fig_num, lang, theme):
 def style_ax(ax, theme, ylabel="", xlabel=""):
     t = THEMES[theme]
     if ylabel:
-        ax.set_ylabel(ylabel, fontsize=10, color=t["text"], labelpad=8)
+        ax.set_ylabel(
+            ylabel, fontsize=FONT_SIZES["axis_label"], color=t["text_axis"], labelpad=8
+        )
     if xlabel:
-        ax.set_xlabel(xlabel, fontsize=10, color=t["text"], labelpad=8)
-    ax.tick_params(colors=t["text"], labelsize=9)
+        ax.set_xlabel(
+            xlabel, fontsize=FONT_SIZES["axis_label"], color=t["text_axis"], labelpad=8
+        )
+    ax.tick_params(colors=t["text_axis"], labelsize=FONT_SIZES["tick"])
     ax.grid(axis="y", color=t["grid"], linestyle="--", linewidth=0.5, zorder=0)
     ax.set_axisbelow(True)
-    for spine in ax.spines.values():
-        spine.set_visible(False)
+    # Half-frame: only left and bottom spines
+    for spine in ("top", "right"):
+        ax.spines[spine].set_visible(False)
+    for spine in ("left", "bottom"):
+        ax.spines[spine].set_visible(True)
+        ax.spines[spine].set_color(t["text_axis"])
+        ax.spines[spine].set_linewidth(0.8)
 
 
 def add_legend(ax, theme, **kwargs):
     t = THEMES[theme]
     defaults = dict(
-        fontsize=8.5,
+        fontsize=FONT_SIZES["legend"],
         frameon=True,
         facecolor=t["legend_frame"],
         edgecolor="none",
