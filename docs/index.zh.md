@@ -139,7 +139,7 @@ hide:
       <p>串行编程接口，无需并行编程经验</p>
       <p>支持 Jupyter Notebook，所见即所得</p>
     </div>
-      <div class="home-section-code" markdown="1">
+    <div class="home-section-code" markdown="1">
 ```python
 import torch
 from roundpipe import RoundPipe, OptimizerCtx
@@ -157,7 +157,7 @@ for data in dataloader:
         optimizer.zero_grad()
     model.step(step_fn)
 ```
-      </div>
+    </div>
   </div>
 </div>
 
