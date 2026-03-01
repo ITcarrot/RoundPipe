@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - run: pip install mkdocs mkdocs-material mkdocstrings[python] mkdocs-static-i18n[material] matplotlib mplfonts
+      - run: pip install mkdocs mkdocs-material mkdocstrings[python] mkdocs-static-i18n[material] matplotlib
       - run: mkdocs build
       - uses: peaceiris/actions-gh-pages@v4
         with:

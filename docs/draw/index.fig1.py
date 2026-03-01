@@ -7,8 +7,6 @@ sys.path.insert(0, os.path.dirname(__file__))
 import numpy as np
 import matplotlib.pyplot as plt
 from common import (
-    ROUNDPIPE_COLOR,
-    FSDP_COLOR,
     FONT_SIZES,
     THEMES,
     save_fig,
@@ -32,19 +30,16 @@ DATA = [
     [288, 226, 126, 118],  # A800 RoundPipe
 ]
 FW_STYLE = [
-    dict(color=FSDP_COLOR, hatch=""),  # 4090 FSDP Offload
-    dict(color=ROUNDPIPE_COLOR, hatch=""),  # 4090 RoundPipe
-    dict(color=FSDP_COLOR, hatch="///"),  # A800 FSDP
-    dict(color=ROUNDPIPE_COLOR, hatch="///"),  # A800 RoundPipe
+    dict(color_key="fsdp", hatch=""),  # 4090 FSDP Offload
+    dict(color_key="roundpipe", hatch=""),  # 4090 RoundPipe
+    dict(color_key="fsdp", hatch="///"),  # A800 FSDP
+    dict(color_key="roundpipe", hatch="///"),  # A800 RoundPipe
 ]
 
-LABELS = {
-    "zh": dict(ylabel="最大输入序列长度 (k tokens)"),
-    "en": dict(ylabel="Max Input Sequence Length (k tokens)"),
-}
+YLABEL = "Max Sequence Length (tokens)"
 
 
-def draw(lang, theme):
+def draw(theme):
     t = THEMES[theme]
     fig, ax = plt.subplots(figsize=(8, 5))
 
@@ -69,7 +64,7 @@ def draw(lang, theme):
             x + offsets[i],
             vals,
             bar_w,
-            color=style["color"],
+            color=t["colors"][style["color_key"]],
             hatch=style["hatch"],
             edgecolor=t["hatch_edge"] if style["hatch"] else "none",
             label=fw,
@@ -85,7 +80,7 @@ def draw(lang, theme):
                     ha="center",
                     va="bottom",
                     fontsize=FONT_SIZES["oom_label"],
-                    color=FSDP_COLOR,
+                    color=t["oom_color"],
                     fontweight="bold",
                     rotation=90,
                 )
@@ -103,10 +98,10 @@ def draw(lang, theme):
 
     ax.set_xticks(x)
     ax.set_xticklabels(MODELS, fontsize=FONT_SIZES["xtick_model"], color=t["text_axis"])
-    style_ax(ax, theme, ylabel=LABELS[lang]["ylabel"])
+    style_ax(ax, theme, ylabel=YLABEL)
     add_legend(ax, theme, loc="upper right", ncol=2)
     fig.tight_layout()
-    save_fig(fig, 1, lang, theme)
+    save_fig(fig, 1, theme)
 
 
 if __name__ == "__main__":

@@ -6,8 +6,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 from common import (
-    MODEL_COLORS,
     FONT_SIZES,
     THEMES,
     save_fig,
@@ -19,8 +19,7 @@ from common import (
 # ── Data ─────────────────────────────────────────────────────────
 GPUS = np.arange(1, 9)
 
-MODELS_ZH = ["Qwen3-1.7B", "Llama3-8B", "Qwen3-32B", "Qwen3-235B (LoRA)"]
-MODELS_EN = ["Qwen3-1.7B", "Llama3-8B", "Qwen3-32B", "Qwen3-235B (LoRA)"]
+MODELS = ["Qwen3-1.7B", "Llama3-8B", "Qwen3-32B", "Qwen3-235B (LoRA)"]
 
 # Throughput (tokens/s) per GPU count
 THROUGHPUT = [
@@ -33,77 +32,67 @@ THROUGHPUT = [
 # Max input sequence length (k) – constant across GPU counts
 MAX_SEQ_LEN = [73, 49, 28, 31]
 
-LABELS = {
-    "zh": dict(
-        ylabel_left="吞吐量 (tokens/s)",
-        ylabel_right="最大输入序列长度 (k tokens)",
-        throughput_suffix=" 吞吐量",
-        seqlen_suffix=" 序列长度",
-    ),
-    "en": dict(
-        ylabel_left="Throughput (tokens/s)",
-        ylabel_right="Max Sequence Length (k tokens)",
-        throughput_suffix=" throughput",
-        seqlen_suffix=" seq length",
-    ),
-}
+YLABEL_LEFT = "Throughput (tokens/s)"
+YLABEL_RIGHT = "Max Sequence Length (k tokens)"
+THROUGHPUT_SUFFIX = " throughput"
+SEQLEN_SUFFIX = " seq length"
 
 
-def draw(lang, theme):
+def draw(theme):
     t = THEMES[theme]
-    lab = LABELS[lang]
-    models = MODELS_ZH if lang == "zh" else MODELS_EN
     fig, ax1 = plt.subplots(figsize=(8, 5))
     ax2 = ax1.twinx()
 
+    palette = t["colors"]["model_colors"]
+
     # Throughput – solid lines
-    for i, (model, tp) in enumerate(zip(models, THROUGHPUT)):
+    for i, (model, tp) in enumerate(zip(MODELS, THROUGHPUT)):
         ax1.plot(
             GPUS,
             tp,
             "-o",
-            color=MODEL_COLORS[i],
+            color=palette[i],
             linewidth=2,
             markersize=4,
-            label=model + lab["throughput_suffix"],
+            label=model + THROUGHPUT_SUFFIX,
             zorder=3,
         )
 
     # Max sequence length – dashed horizontal lines
-    for i, (model, sl) in enumerate(zip(models, MAX_SEQ_LEN)):
+    for i, (model, sl) in enumerate(zip(MODELS, MAX_SEQ_LEN)):
         ax2.axhline(
             y=sl,
-            color=MODEL_COLORS[i],
+            color=palette[i],
             linestyle="--",
             linewidth=1.2,
             alpha=0.55,
-            label=model + lab["seqlen_suffix"],
+            label=model + SEQLEN_SUFFIX,
             zorder=2,
         )
 
     # Style left axis
-    style_ax(ax1, theme, ylabel=lab["ylabel_left"])
+    style_ax(ax1, theme, ylabel=YLABEL_LEFT)
     ax1.set_xlabel(
-        "GPUs" if lang == "en" else "GPU 数量",
+        "4090 GPUs",
         fontsize=FONT_SIZES["axis_label"],
         color=t["text_axis"],
         labelpad=8,
     )
     ax1.set_xticks(GPUS)
     ax1.yaxis.set_major_formatter(
-        plt.FuncFormatter(lambda v, _: f"{v/1000:.0f}k" if v >= 1000 else f"{v:.0f}")
+        FuncFormatter(lambda v, _: f"{v/1000:.0f}k" if v >= 1000 else f"{v:.0f}")
     )
 
     # Style right axis
     ax2.set_ylabel(
-        lab["ylabel_right"],
+        YLABEL_RIGHT,
         fontsize=FONT_SIZES["axis_label"],
         color=t["text_axis"],
         labelpad=8,
     )
     ax2.tick_params(colors=t["text"], labelsize=FONT_SIZES["tick"])
     ax2.set_ylim(0, 90)
-    ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:.0f}k"))
+    ax2.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:.0f}k"))
     for spine in ax2.spines.values():
         spine.set_visible(False)
 
@@ -122,8 +111,11 @@ def draw(lang, theme):
         labelcolor=t["text"],
     )
 
+    # Put legend behind plotted lines (so lines can cover the legend).
+    legend.set_zorder(1.5)
+
     fig.tight_layout()
-    save_fig(fig, 3, lang, theme)
+    save_fig(fig, 3, theme)
 
 
 if __name__ == "__main__":
