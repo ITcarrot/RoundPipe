@@ -6,10 +6,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 from common import (
-    COLOR_4090,
-    COLOR_910B,
-    COLOR_W7800,
     FONT_SIZES,
     THEMES,
     save_fig,
@@ -26,22 +24,14 @@ DATA = [
     [50598.56, 23253.48, 5028.43, 459.01],  # 910B
     [65416.83, 24274.54, 5516.22, 1819.61],  # 4090
 ]
-DEVICE_COLORS = [COLOR_W7800, COLOR_910B, COLOR_4090]
+DEVICE_COLOR_KEYS = ["w7800", "910b", "4090"]
 
-LABELS = {
-    "zh": dict(
-        ylabel="训练吞吐量 (tokens/s)", devices=["AMD W7800", "昇腾 910B", "RTX 4090"]
-    ),
-    "en": dict(
-        ylabel="Training Throughput (tokens/s)",
-        devices=["AMD W7800", "Ascend 910B", "RTX 4090"],
-    ),
-}
+YLABEL = "Training Throughput (tokens/s)"
+DEVICE_LABELS = ["AMD W7800", "Ascend 910B", "RTX 4090"]
 
 
-def draw(lang, theme):
+def draw(theme):
     t = THEMES[theme]
-    lab = LABELS[lang]
     fig, ax = plt.subplots(figsize=(8, 5))
 
     n_models = len(MODELS)
@@ -49,13 +39,15 @@ def draw(lang, theme):
     bar_w = 0.22
     x = np.arange(n_models)
 
-    for i, (dev, color, row) in enumerate(zip(lab["devices"], DEVICE_COLORS, DATA)):
+    for i, (dev, color_key, row) in enumerate(
+        zip(DEVICE_LABELS, DEVICE_COLOR_KEYS, DATA)
+    ):
         offset = (i - n_dev / 2 + 0.5) * bar_w
         ax.bar(
             x + offset,
             row,
             bar_w,
-            color=color,
+            color=t["colors"][color_key],
             edgecolor="none",
             label=dev,
             linewidth=0.5,
@@ -64,13 +56,13 @@ def draw(lang, theme):
 
     ax.set_xticks(x)
     ax.set_xticklabels(MODELS, fontsize=FONT_SIZES["xtick_model"], color=t["text"])
-    style_ax(ax, theme, ylabel=lab["ylabel"])
+    style_ax(ax, theme, ylabel=YLABEL)
     ax.yaxis.set_major_formatter(
-        plt.FuncFormatter(lambda v, _: f"{v/1000:.0f}k" if v >= 1000 else f"{v:.0f}")
+        FuncFormatter(lambda v, _: f"{v/1000:.0f}k" if v >= 1000 else f"{v:.0f}")
     )
     add_legend(ax, theme, loc="upper right")
     fig.tight_layout()
-    save_fig(fig, 5, lang, theme)
+    save_fig(fig, 5, theme)
 
 
 if __name__ == "__main__":

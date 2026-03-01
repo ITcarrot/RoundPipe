@@ -4,29 +4,14 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from mplfonts import use_font
-import numpy as np
 import os
-
-use_font("Noto Sans CJK SC")
-plt.rcParams["axes.unicode_minus"] = False
-
-# ── Colors ──────────────────────────────────────────────────────
-ROUNDPIPE_COLOR = "#4A90D9"
-FSDP_COLOR = "#E8834A"
-
-COLOR_4090 = "#4A90D9"
-COLOR_910B = "#E8834A"
-COLOR_W7800 = "#5BAD5E"
-
-MODEL_COLORS = ["#4A90D9", "#E8834A", "#5BAD5E", "#C466DB"]
 
 # ── Font sizes (single source of truth) ─────────────────────────
 FONT_SIZES = {
     "axis_label": 16,  # ylabel / xlabel
     "tick": 12,  # axis tick labels
     "xtick_model": 16,  # x-axis model name labels
-    "legend": 12,  # legend text
+    "legend": 13,  # legend text
     "legend_dense": 10,  # legend with many items (fig3)
     "bar_label": 11,  # data labels on top of bars (e.g. "226k")
     "oom_label": 12,  # OOM text on bars
@@ -35,6 +20,14 @@ FONT_SIZES = {
 # ── Themes ──────────────────────────────────────────────────────
 THEMES = {
     "light": dict(
+        colors={
+            "roundpipe": "#4A90D9",
+            "fsdp": "#E8834A",
+            "4090": "#4A90D9",
+            "910b": "#E8834A",
+            "w7800": "#5BAD5E",
+            "model_colors": ["#4A90D9", "#E8834A", "#5BAD5E", "#C466DB"],
+        },
         text="#333333",
         text_axis="#000000",
         text_secondary="#777777",
@@ -44,22 +37,32 @@ THEMES = {
         oom_color="#AAAAAA",
     ),
     "dark": dict(
-        text="#D4D4D4",
-        text_axis="#FFFFFF",
-        text_secondary="#888888",
-        grid="#333333",
+        colors={
+            "roundpipe": "#2F5F8F",
+            "fsdp": "#A85F33",
+            "4090": "#2F5F8F",
+            "910b": "#A85F33",
+            "w7800": "#3B723D",
+            "model_colors": ["#2F5F8F", "#A85F33", "#3B723D", "#82458F"],
+        },
+        # Avoid pure white in dark mode (too glaring on slate backgrounds).
+        text="#B7BEC8",
+        text_axis="#D2D8E0",
+        text_secondary="#8C96A3",
+        grid="#222A35",
         hatch_edge=(0, 0, 0, 0.5),
         legend_frame=(0.12, 0.12, 0.18, 0.85),
-        oom_color="#666666",
+        oom_color="#59616D",
     ),
 }
 
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "..", "assets")
 
 
-def save_fig(fig, fig_num, lang, theme):
+def save_fig(fig, fig_num, theme):
     os.makedirs(ASSETS_DIR, exist_ok=True)
-    fname = f"index.fig{fig_num}.{lang}.{theme}.svg"
+    # Keep filenames stable across themes.
+    fname = f"index.fig{fig_num}.{theme}.svg"
     fpath = os.path.join(ASSETS_DIR, fname)
     fig.savefig(fpath, format="svg", transparent=True, bbox_inches="tight")
     plt.close(fig)
@@ -102,8 +105,7 @@ def add_legend(ax, theme, **kwargs):
 
 
 def generate_all(draw_fn, fig_num):
-    """Run draw_fn(lang, theme) for all 4 combinations."""
-    for lang in ("zh", "en"):
-        for theme in ("light", "dark"):
-            draw_fn(lang, theme)
-    print(f"Fig{fig_num}: all variants generated.")
+    """Run draw_fn(theme) for all supported themes."""
+    for theme in ("light", "dark"):
+        draw_fn(theme)
+    print(f"Fig{fig_num}: light/dark variants generated.")

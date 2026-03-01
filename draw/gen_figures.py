@@ -10,7 +10,6 @@ import os
 import re
 
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "..", "assets")
-LANGS = ("zh", "en")
 THEMES = ("light", "dark")
 
 
@@ -21,9 +20,7 @@ def _output_svgs(script_name):
         return []
     fig_num = m.group(1)
     return [
-        os.path.join(ASSETS_DIR, f"index.fig{fig_num}.{lang}.{theme}.svg")
-        for lang in LANGS
-        for theme in THEMES
+        os.path.join(ASSETS_DIR, f"index.fig{fig_num}.{theme}.svg") for theme in THEMES
     ]
 
 
