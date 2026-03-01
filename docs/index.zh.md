@@ -43,48 +43,48 @@ hide:
 
 <div class="home-features">
 
-  <div class="glass-card home-feature-card">
+  <a class="glass-card home-feature-card" href="#huge-model">
     <span class="feature-emoji">🧠</span>
     <h3>超大模型支持</h3>
     <p>仅需24GB显存，支持64K+超长上下文训练，支持32B大模型全量微调，支持235B大模型LoRA微调。</p>
-  </div>
+  </a>
 
-  <div class="glass-card home-feature-card">
+  <a class="glass-card home-feature-card" href="#performance">
     <span class="feature-emoji">⚡</span>
     <h3>释放显卡算力</h3>
     <p>完全释放4090算力，训练速度提升多达6倍，性能比肩A800 NVLINK。</p>
-  </div>
+  </a>
 
-  <div class="glass-card home-feature-card">
+  <a class="glass-card home-feature-card" href="#scaling">
     <span class="feature-emoji">📈</span>
     <h3>线性并行扩展</h3>
     <p>无需修改代码，节点内全自动多GPU线性扩展，且语义不变。</p>
-  </div>
+  </a>
 
-  <div class="glass-card home-feature-card">
+  <a class="glass-card home-feature-card" href="#simple-api">
     <span class="feature-emoji">✨</span>
     <h3>简单易用</h3>
     <p>串行编程接口，无需并行编程经验。支持Jupyter Notebook，轻松上手。</p>
-  </div>
+  </a>
 
-  <div class="glass-card home-feature-card">
+  <a class="glass-card home-feature-card" href="#simple-api">
     <span class="feature-emoji">🔧</span>
     <h3>灵活通用</h3>
-    <p>支持任意深度神经网络，不限模型层内结构，不限训练流程，不限参数更新策略。</p>
-  </div>
+    <p>支持任意深度神经网络，任意训练流程，任意参数更新策略。</p>
+  </a>
 
-  <div class="glass-card home-feature-card">
+  <a class="glass-card home-feature-card" href="#portable">
     <span class="feature-emoji">🔄</span>
     <h3>跨平台兼容</h3>
     <p>纯PyTorch实现，兼容Nvidia、AMD、昇腾等多种GPU平台。</p>
-  </div>
+  </a>
 
 </div>
 
 <hr class="home-divider">
 
 <!-- Section 1 – 超大模型支持 -->
-<div class="home-section">
+<div class="home-section" id="huge-model">
   <div class="glass-card home-section-card">
     <div class="home-section-text">
       <h2>超大模型支持</h2>
@@ -100,7 +100,7 @@ hide:
 </div>
 
 <!-- Section 2 – 释放显卡算力 -->
-<div class="home-section home-section-reverse">
+<div class="home-section home-section-reverse" id="performance">
   <div class="glass-card home-section-card">
     <div class="home-section-text">
       <h2>释放显卡算力</h2>
@@ -116,7 +116,7 @@ hide:
 </div>
 
 <!-- Section 3 – 线性并行扩展 -->
-<div class="home-section">
+<div class="home-section" id="scaling">
   <div class="glass-card home-section-card">
     <div class="home-section-text">
       <h2>线性并行扩展</h2>
@@ -132,7 +132,7 @@ hide:
 </div>
 
 <!-- Section 4 – 简单易用 & 灵活通用 -->
-<div class="home-section home-section-reverse">
+<div class="home-section home-section-reverse" id="simple-api">
   <div class="glass-card home-section-card">
     <div class="home-section-text">
       <h2>简单易用 & 灵活通用</h2>
@@ -162,7 +162,7 @@ for data in dataloader:
 </div>
 
 <!-- Section 5 – 跨平台兼容 -->
-<div class="home-section">
+<div class="home-section" id="portable">
   <div class="glass-card home-section-card">
     <div class="home-section-text">
       <h2>跨平台兼容</h2>

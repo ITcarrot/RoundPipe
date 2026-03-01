@@ -43,48 +43,48 @@ hide:
 
 <div class="home-features">
 
-  <div class="glass-card home-feature-card">
+  <a class="glass-card home-feature-card" href="#huge-model">
     <span class="feature-emoji">🧠</span>
     <h3>Built for huge models</h3>
     <p>On a single 24GB GPU, train with 64K+ long context, full fine-tune 32B models or LoRA fine-tune models up to 235B.</p>
-  </div>
+  </a>
 
-  <div class="glass-card home-feature-card">
+  <a class="glass-card home-feature-card" href="#performance">
     <span class="feature-emoji">⚡</span>
     <h3>High Performance</h3>
     <p>Push a 4090 close to A800 NVLINK-class throughput. Up to 6× faster than FSDP Offload in typical training workloads.</p>
-  </div>
+  </a>
 
-  <div class="glass-card home-feature-card">
+  <a class="glass-card home-feature-card" href="#scaling">
     <span class="feature-emoji">📈</span>
     <h3>Linear scaling</h3>
     <p>Scale to multiple GPUs in-node without rewriting your training loop. Throughput grows linearly while your code stays the same.</p>
-  </div>
+  </a>
 
-  <div class="glass-card home-feature-card">
+  <a class="glass-card home-feature-card" href="#simple-api">
     <span class="feature-emoji">✨</span>
     <h3>Feels like PyTorch</h3>
     <p>A sequential programming interface with a low learning curve. Works well in Jupyter Notebook for rapid iteration.</p>
-  </div>
+  </a>
 
-  <div class="glass-card home-feature-card">
+  <a class="glass-card home-feature-card" href="#simple-api">
     <span class="feature-emoji">🔧</span>
     <h3>General by design</h3>
     <p>No constraints on layer structure, training flow, or parameter update strategy.</p>
-  </div>
+  </a>
 
-  <div class="glass-card home-feature-card">
+  <a class="glass-card home-feature-card" href="#portable">
     <span class="feature-emoji">🔄</span>
     <h3>Portable across accelerators</h3>
     <p>Pure PyTorch implementation. Runs across Nvidia, AMD, and Ascend GPU platforms.</p>
-  </div>
+  </a>
 
 </div>
 
 <hr class="home-divider">
 
 <!-- Section 1 – Huge model support -->
-<div class="home-section">
+<div class="home-section" id="huge-model">
   <div class="glass-card home-section-card">
     <div class="home-section-text">
       <h2>Train bigger than ever</h2>
@@ -100,7 +100,7 @@ hide:
 </div>
 
 <!-- Section 2 – GPU throughput -->
-<div class="home-section home-section-reverse">
+<div class="home-section home-section-reverse" id="performance">
   <div class="glass-card home-section-card">
     <div class="home-section-text">
       <h2>Extracts maximum performance</h2>
@@ -116,7 +116,7 @@ hide:
 </div>
 
 <!-- Section 3 – Linear scaling -->
-<div class="home-section">
+<div class="home-section" id="scaling">
   <div class="glass-card home-section-card">
     <div class="home-section-text">
       <h2>Scale out without rewrites</h2>
@@ -132,7 +132,7 @@ hide:
 </div>
 
 <!-- Section 4 – Simple API -->
-<div class="home-section home-section-reverse">
+<div class="home-section home-section-reverse" id="simple-api">
   <div class="glass-card home-section-card">
     <div class="home-section-text">
       <h2>Simple API, flexible training</h2>
@@ -163,7 +163,7 @@ for data in dataloader:
 </div>
 
 <!-- Section 5 – Cross-platform -->
-<div class="home-section">
+<div class="home-section" id="portable">
   <div class="glass-card home-section-card">
     <div class="home-section-text">
       <h2>Portable by default</h2>

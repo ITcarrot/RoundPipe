@@ -101,10 +101,10 @@
     }
 }
 
-.home-feature-card {
+a.home-feature-card{
     padding: 1.5rem 1.75rem;
     transition: transform 0.2s ease;
-    cursor: default;
+    color: var(--md-typeset-color);
 }
 
 .home-feature-card:hover {
