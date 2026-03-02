@@ -1,8 +1,8 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/banner.dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/banner.light.svg">
-    <img src="docs/assets/banner.light.svg" alt="RoundPipe Banner" width="400">
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/ITcarrot/RoundPipe/raw/main/docs/assets/banner.dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://github.com/ITcarrot/RoundPipe/raw/main/docs/assets/banner.light.svg">
+    <img src="https://github.com/ITcarrot/RoundPipe/raw/main/docs/assets/banner.light.svg" alt="RoundPipe Banner" width="400">
   </picture>
 </p>
 
@@ -89,7 +89,7 @@ pip install roundpipe
 
 ### Examples
 
-See the [`example/`](example/) directory. More examples and tutorials will be added soon.
+See the [`example/`](https://github.com/ITcarrot/RoundPipe/tree/main/example) directory. More examples and tutorials will be added soon.
 
 ## Documentation
 
