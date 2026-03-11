@@ -40,6 +40,7 @@ if not DISABLE_TORCH_COMPILE:
 
 SUPPORTED_MODELS = {
     "function": ".function",
+    "GptOssForCausalLM": ".gpt_oss",
     "LlamaForCausalLM": ".llama",
     "Qwen3MoeForCausalLM": ".qwen3_moe",
     "Qwen3ForCausalLM": ".qwen3",
