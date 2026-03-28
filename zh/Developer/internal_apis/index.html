@@ -8984,7 +8984,7 @@ launched and synchronized on the optimizer stream.</p>
 
 
 <h4 id="roundpipe.grad_scaler.GradScaler.update" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">update</span><span class="p">(</span><span class="n">new_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">update</span><span class="p">(</span><span class="n">new_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">is_async</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
 
 </h4>
 
@@ -9011,6 +9011,20 @@ affect the scale GradScaler uses internally.)</p>
           –
           <div class="doc-md-description">
             <p>New scale factor.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>is_async</code></b>
+              (<code><span title="bool">bool</span></code>, default:
+                  <code>True</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>If True, the update will be performed asynchronously on the optimizer stream.
+If False, this function will block until the update is complete. Note that if
+<code>is_async=False</code>, the main thread will wait for the optimizer stream to finish
+processing all previously launched kernels, including the optimizer step, which may
+cause significant slowdown.</p>
           </div>
         </li>
     </ul>
