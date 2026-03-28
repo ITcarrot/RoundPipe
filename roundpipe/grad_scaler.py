@@ -178,7 +178,7 @@ class GradScaler:
         self.main_scaler._scale.copy_(tmp)
         self.scaler_updated.set()
 
-    def update(self, new_scale: Optional[Union[float, torch.Tensor]] = None) -> None:
+    def update(self, new_scale: Optional[Union[float, torch.Tensor]] = None, is_async: bool = True) -> None:
         """Update the scale factor. This function must be called from the main thread.
 
         If any optimizer steps were skipped the scale is multiplied by ``backoff_factor``
@@ -192,6 +192,11 @@ class GradScaler:
 
         Args:
             new_scale:  New scale factor.
+            is_async: If True, the update will be performed asynchronously on the optimizer stream.
+                If False, this function will block until the update is complete. Note that if
+                ``is_async=False``, the main thread will wait for the optimizer stream to finish
+                processing all previously launched kernels, including the optimizer step, which may
+                cause significant slowdown.
         """
         if not self.enabled:
             return
@@ -205,6 +210,11 @@ class GradScaler:
         self.scale_scaler._scale.copy_(self.next_scale)
         self.scaler_updated.clear()
         launch_optim_kernel(self.update_kernel, new_scale)
+        if not is_async:
+            self.scaler_updated.wait()
+            self.scale_scaler._scale.copy_(self.next_scale)
+            assert self.main_scaler._scale is not None
+            self.main_scaler._scale.copy_(self.next_scale)
 
     def get_scale(self) -> float:
         """Return the current scale factor. Result will adapt to which stream this is called from.
