@@ -116,7 +116,10 @@ GradScaler.step(
 ### GradScaler.update
 
 ```python
-GradScaler.update(new_scale: Optional[Union[float, torch.Tensor]] = None) -> None
+GradScaler.update(
+    new_scale: Optional[Union[float, torch.Tensor]] = None,
+    is_async: bool = True,
+) -> None
 ```
 
 更新缩放因子。此方法必须从主线程调用。
@@ -126,6 +129,7 @@ GradScaler.update(new_scale: Optional[Union[float, torch.Tensor]] = None) -> Non
 **参数：**
 
 - `new_scale`：手动设置的新缩放因子。如果不为 `None`，使用此值替代自动计算的缩放因子。该值会被复制到内部张量，后续对传入张量的修改不会影响缩放器。
+- `is_async`：这个选项应当与调用`RoundPipe.step()`的`is_async`选项保持一致。如果为 `True`（默认），更新将在优化器线程上异步执行，更新的 scale 将在下一次调用`update()`时生效。如果为 `False`，此方法将阻塞直到更新完成，使用最新的 scale。注意同步模式会导致主线程等待所有先前启动的优化器任务（`RoundPipe.step()`提交的任务）完成，一般只会与同步优化器更新`RoundPipe.step(is_async=False)`配合使用。
 
 ### GradScaler.get_scale
 

@@ -178,7 +178,11 @@ class GradScaler:
         self.main_scaler._scale.copy_(tmp)
         self.scaler_updated.set()
 
-    def update(self, new_scale: Optional[Union[float, torch.Tensor]] = None, is_async: bool = True) -> None:
+    def update(
+        self,
+        new_scale: Optional[Union[float, torch.Tensor]] = None,
+        is_async: bool = True,
+    ) -> None:
         """Update the scale factor. This function must be called from the main thread.
 
         If any optimizer steps were skipped the scale is multiplied by ``backoff_factor``

@@ -116,7 +116,10 @@ This method performs two operations in sequence:
 ### GradScaler.update
 
 ```python
-GradScaler.update(new_scale: Optional[Union[float, torch.Tensor]] = None) -> None
+GradScaler.update(
+    new_scale: Optional[Union[float, torch.Tensor]] = None,
+    is_async: bool = True,
+) -> None
 ```
 
 Update the scale factor. This method must be called from the main thread.
@@ -126,6 +129,7 @@ If the previous optimizer step was skipped (because gradients contained inf/NaN)
 **Parameters:**
 
 - `new_scale`: Manually set a new scale value. If not `None`, this value is used instead of the automatically computed scale. The value is copied to an internal tensor, so subsequent modifications to the passed tensor will not affect the scaler.
+- `is_async`: This option should be consistent with the `is_async` option of `RoundPipe.step()`. If `True` (default), the update is performed asynchronously on the optimizer thread, and the updated scale will take effect on the next call to `update()`. If `False`, this method blocks until the update is complete, using the latest scale. Note that synchronous mode causes the main thread to wait for all previously launched optimizer tasks (tasks submitted by `RoundPipe.step()`) to finish, and is generally only used together with synchronous optimizer updates `RoundPipe.step(is_async=False)`.
 
 ### GradScaler.get_scale
 
