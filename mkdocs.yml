@@ -8,9 +8,19 @@ nav:
       - Quick Start:
         - Installation: UserGuide/QuickStart/installation.md
       - Basic Usage:
-        - Input Model Guideline: UserGuide/BasicUsage/input_model_guideline.md
+        - Wrap Model: UserGuide/BasicUsage/wrap_model.md
+        - Optimizer: UserGuide/BasicUsage/optimizer.md
+        - Training Loop: UserGuide/BasicUsage/training_loop.md
+        - Multi-GPU Training: UserGuide/BasicUsage/multi_gpu.md
+        - GradScaler: UserGuide/BasicUsage/grad_scaler.md
       - Advanced Usage:
-        - Use Custom I/O Type: UserGuide/AdvancedUsage/use_custom_io_type.md
+        - RoundPipeRunConfig: UserGuide/AdvancedUsage/run_config.md
+        - Resolve OOM: UserGuide/AdvancedUsage/resolve_oom.md
+        - Custom Microbatch Split: UserGuide/AdvancedUsage/custom_microbatch_split.md
+        - Custom Data Type: UserGuide/AdvancedUsage/custom_data_type.md
+        - Custom Execute Plan: UserGuide/AdvancedUsage/execute_plan.md
+        - Recompute Data: UserGuide/AdvancedUsage/recompute_data.md
+        - Logging: UserGuide/AdvancedUsage/logging.md
   - API:
       - Model: API/model.md
       - RunConfig: API/run_config.md
@@ -18,7 +28,12 @@ nav:
       - Optimizer: API/optimizer.md
       - GradScaler: API/grad_scaler.md
       - Logging: API/logging.md
+  - Model Zoo: model_zoo.md
   - Developer:
+      - Contact: Developer/contact.md
+      - Contribute Model Zoo: Developer/contribute_model.md
+      - Contribute CPU Optimizer: Developer/contribute_optimizer.md
+      - Contribute RoundPipe: Developer/contribute_roundpipe.md
       - Internal APIs: Developer/internal_apis.md
 theme: 
   name: material
@@ -72,16 +87,30 @@ plugins:
             Quick Start: 快速开始
             Installation: 安装
             Basic Usage: 基本用法
-            Input Model Guideline: 输入模型指南
+            Wrap Model: 包装模型
+            Optimizer: 创建优化器
+            GradScaler: 混合精度训练
+            Training Loop: 训练循环
+            Multi-GPU Training: 多GPU训练
             Advanced Usage: 高级用法
-            Use Custom I/O Type: 使用自定义输入/输出类型
+            RoundPipeRunConfig: 运行配置调参
+            Resolve OOM: 解决OOM
+            Custom Microbatch Split: 自定义Microbatch切分
+            Custom Data Type: 注册自定义数据类型
+            Custom Execute Plan: 自定义执行计划
+            Recompute Data: 重计算数据保存
+            Logging: 日志与性能分析
             Model: 模型
             RunConfig: 运行设置
             Context: 运行时上下文
             Optimizer: 优化器
             GradScaler: 梯度缩放器
-            Logging: 运行日志
+            Model Zoo: 模型库
             Developer: 开发者
+            Contact: 联系我们
+            Contribute Model Zoo: 贡献模型库
+            Contribute CPU Optimizer: 贡献CPU优化器
+            Contribute RoundPipe: 贡献RoundPipe
             Internal APIs: 内部 API
 hooks:
   - docs/draw/gen_figures.py
