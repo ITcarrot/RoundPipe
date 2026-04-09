@@ -83,6 +83,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#_1" class="md-skip">
+          跳转至
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -309,10 +314,29 @@
   
   
   
+    <li class="md-tabs__item">
+      <a href="../../model_zoo/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  模型库
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
     
     
       <li class="md-tabs__item">
-        <a href="../../Developer/internal_apis/" class="md-tabs__link">
+        <a href="../../Developer/contact/" class="md-tabs__link">
           
   
   
@@ -463,6 +487,26 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RoundPipe概览
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -480,6 +524,153 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe 解决什么问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dispatch-pp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        分发式流水线并行
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="分发式流水线并行">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        什么是流水线并行
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundpipe_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe 的分发式流水线并行
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RoundPipe 的分发式流水线并行">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#roundpipe-stage-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe 中 stage 的概念和与 layer 的关系
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        核心概念
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="核心概念">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        串行编程，自动并行
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        以 CPU 为中心的参数存储
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#microbatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        输入分割与 microbatch 执行
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        激活重计算
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -633,14 +824,126 @@
   
   
     <li class="md-nav__item">
-      <a href="../BasicUsage/input_model_guideline/" class="md-nav__link">
+      <a href="../BasicUsage/wrap_model/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    输入模型指南
+    包装模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BasicUsage/optimizer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    优化器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BasicUsage/training_loop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练循环
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BasicUsage/multi_gpu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    多GPU训练
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BasicUsage/grad_scaler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    梯度缩放器
   
 
     
@@ -721,14 +1024,182 @@
   
   
     <li class="md-nav__item">
-      <a href="../AdvancedUsage/use_custom_io_type/" class="md-nav__link">
+      <a href="../AdvancedUsage/run_config/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    使用自定义输入/输出类型
+    运行配置调参
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AdvancedUsage/resolve_oom/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    解决OOM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AdvancedUsage/custom_microbatch_split/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    自定义Microbatch切分
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AdvancedUsage/custom_data_type/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    注册自定义数据类型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AdvancedUsage/execute_plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    自定义执行计划
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AdvancedUsage/recompute_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    重计算数据保存
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AdvancedUsage/logging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    日志与性能分析
   
 
     
@@ -963,7 +1434,7 @@
   <span class="md-ellipsis">
     
   
-    运行日志
+    日志与性能分析
   
 
     
@@ -990,6 +1461,33 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../model_zoo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型库
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
     
@@ -1004,10 +1502,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -1025,8 +1523,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1035,6 +1533,118 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Developer/contact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    联系我们
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Developer/contribute_model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    贡献模型库
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Developer/contribute_optimizer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    贡献CPU优化器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Developer/contribute_roundpipe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    贡献RoundPipe
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1088,6 +1698,144 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe 解决什么问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dispatch-pp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        分发式流水线并行
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="分发式流水线并行">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        什么是流水线并行
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundpipe_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe 的分发式流水线并行
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RoundPipe 的分发式流水线并行">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#roundpipe-stage-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe 中 stage 的概念和与 layer 的关系
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        核心概念
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="核心概念">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        串行编程，自动并行
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        以 CPU 为中心的参数存储
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#microbatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        输入分割与 microbatch 执行
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        激活重计算
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1107,9 +1855,94 @@
   
 
 
-  <h1>RoundPipe概览</h1>
+<h1 id="_1">概览</h1>
+<p>RoundPipe 是一个高性能的深度神经网络训练框架，专为在消费级 GPU 上训练大规模模型而设计。它基于纯 PyTorch 实现，原生支持 NVIDIA、AMD、华为昇腾等 PyTorch 兼容的 GPU 平台。</p>
+<h2 id="roundpipe">RoundPipe 解决什么问题</h2>
+<ul>
+<li><strong>GPU 显存不足以训练大模型</strong>：消费级 GPU（如 RTX 4090）仅有 24GB 显存，而一个 8B 参数模型在混合精度训练下需要约 128GB 存储模型状态（参数、梯度、优化器状态），远超单卡容量。RoundPipe 将模型状态存储在 CPU 内存中，按需将计算任务分发到 GPU 执行，突破显存限制。</li>
+<li><strong>没有 NVLink 的 GPU 间通信瓶颈</strong>：消费级服务器使用 PCIe 互联，带宽不到 NVLink 的 20%。数据并行方案需要在每次迭代中通过集合通信同步全部参数，导致大量时间花在通信上。RoundPipe 采用<a href="#dispatch-pp">分发式流水线并行</a>，每个阶段只需将参数从 CPU 上传到单个 GPU，大幅减少GPU间通信开销。</li>
+<li><strong>但 RoundPipe 不适用于小模型（&lt; 0.5B）的分布式训练</strong>：对于单卡显存足以开展训练的小模型，数据并行方案更简单高效。RoundPipe 的优势在于模型状态超出<strong>单一 GPU 显存</strong>时的场景。</li>
+</ul>
+<h2 id="dispatch-pp">分发式流水线并行</h2>
+<h3 id="_2">什么是流水线并行</h3>
+<p>流水线并行（Pipeline Parallelism）是一种模型并行策略。它将模型按层划分为多个<strong>阶段</strong>（stage），训练数据被拆分为多个<strong>微批次</strong>（microbatch），各阶段以流水线方式依次处理这些微批次。</p>
+<p>以一个简单的例子说明：假设模型有 4 层，被划分为 2 个 stage（每个 stage 2 层），使用 GPipe 调度处理 2 个微批次：</p>
+<div class="highlight"><pre><span></span><code>时间 →
 
+GPU 0 (stage 0): [mb0 F][mb1 F]              [mb1 B][mb0 B]
+GPU 1 (stage 1):        [mb0 F][mb1 F][mb1 B][mb0 B]
 
+F = 前向传播, B = 反向传播
+</code></pre></div>
+<p>GPU 0 完成 mb0 的 stage 0 前向后，GPU 1 开始处理 mb0 的 stage 1 前向，同时 GPU 0 可以处理 mb1 的 stage 0 前向，实现两个 GPU 并行工作。但在所有前向完成、反向开始之间，存在 GPU 空闲等待的<strong>气泡</strong>。</p>
+<h3 id="roundpipe_1">RoundPipe 的分发式流水线并行</h3>
+<p>传统流水线并行中，每个 stage 绑定到固定的 GPU（stage 0 始终在 GPU 0 上执行，stage 1 始终在 GPU 1 上执行），这给阶段划分带来了限制。</p>
+<p>RoundPipe 打破了 stage 与 GPU 的绑定。在 RoundPipe 中，模型参数存储在 CPU 内存中，每次执行一个 stage 时，将该 stage 的参数从 CPU 上传到 GPU，计算完成后释放。因此，任何 stage 都可以在任何 GPU 上执行。</p>
+<p>RoundPipe 将 GPU 视为<strong>无状态的计算资源池</strong>，以轮询（round-robin）方式将 stage 动态分发到各 GPU：</p>
+<div class="highlight"><pre><span></span><code>时间 →
+GPU 0: [F stage0] [F stage3] [B stage2] ...
+GPU 1:   [F stage1] [B stage4] [B stage1] ...
+GPU 2:     [F stage2] [B stage3] [B stage0] ...
+</code></pre></div>
+<p>这带来了几个关键优势：</p>
+<ol>
+<li><strong>更灵活的阶段划分</strong>：stage 数量可以是任意整数，不受 GPU 数量约束。而且前向和反向可以采用不同的划分方案（非对称划分），进一步优化负载均衡。</li>
+<li><strong>更少流水线气泡</strong>：RoundPipe 的轮询分发使得前向和反向 stage 可以互相紧密衔接，GPU 之间不需要等待同步。</li>
+<li><strong>更低的显存占用</strong>：任意时刻 GPU 上只有当前正在执行的一个 stage 的数据。</li>
+</ol>
+<h4 id="roundpipe-stage-layer">RoundPipe 中 stage 的概念和与 layer 的关系</h4>
+<ul>
+<li><strong>Layer（层）</strong>：模型的基本组成单元，对应传入 <code>nn.Sequential</code> 的每个子模块。例如一个 transformer 模型的每个 transformer block 是一个 layer。</li>
+<li><strong>Stage（阶段）</strong>：一个或多个连续 layer 的组合，是流水线调度的基本单位。同一 stage 内的所有 layer 会被一起上传到 GPU 并连续执行。</li>
+</ul>
+<p>RoundPipe 的前向和反向使用<strong>非对称划分</strong>：由于一个 transformer layer 的前向计算时间约为反向（含重计算）的 1/3，前向 stage 包含更多层，反向 stage 包含更少层，使得每个 stage 的执行时间尽可能相等。例如，一个 12 层模型可能被划分为：</p>
+<ul>
+<li>前向：<code>[layer 0-2], [layer 3-5], [layer 6-8], [layer 9-11]</code>（每个 stage 3 层）</li>
+<li>反向：<code>[layer 11], [layer 10], [layer 9], ..., [layer 0]</code>（每个 stage 1 层）</li>
+</ul>
+<h2 id="_3">核心概念</h2>
+<h3 id="_4">串行编程，自动并行</h3>
+<p>RoundPipe 采用<strong>单控制器架构</strong>，用户只需编写串行的、单设备风格的训练脚本，RoundPipe 会自动将计算映射到所有可用的 GPU 上并行执行。</p>
+<p>用户与 RoundPipe 交互的核心 API 只有两个：</p>
+<ul>
+<li><code>model.forward_backward()</code>：执行前向和反向传播</li>
+<li><code>model.step()</code>：执行优化器更新</li>
+</ul>
+<p>一个典型的训练循环如下：</p>
+<div class="highlight"><pre><span></span><code><span class="k">for</span> <span class="n">data</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward_backward</span><span class="p">(</span>
+        <span class="n">input_args</span><span class="o">=</span><span class="p">(</span><span class="n">data</span><span class="p">,),</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+        <span class="n">loss_fn</span><span class="o">=</span><span class="n">my_loss_fn</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">(</span><span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">(),</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()))</span>
+</code></pre></div>
+<p>这段代码看起来和普通的单卡训练几乎一样，但 RoundPipe 在内部自动完成了微批次拆分、多 GPU 流水线调度、参数传输、梯度累积、异步优化器更新等所有并行化工作。</p>
+<h3 id="cpu">以 CPU 为中心的参数存储</h3>
+<p>RoundPipe 采用<strong>计算分发范式</strong>：</p>
+<ul>
+<li>CPU 内存是模型状态和中间激活的<strong>主存储位置</strong></li>
+<li>GPU 是<strong>无状态的计算加速器</strong>，只在执行某个 stage 时临时持有该 stage 的相关数据（显存即缓存）</li>
+<li>计算完成后，梯度下载回 CPU，GPU 上的参数副本立即释放</li>
+</ul>
+<p>这种设计使得可训练的模型规模大幅提升，显存限制仅与单一模型层有关，而非整个模型。用户使用时仅需要将模型参数和输入数据放在 CPU 上，由 RoundPipe 自动处理数据传输和计算调度，无需用户干预。</p>
+<h3 id="microbatch">输入分割与 microbatch 执行</h3>
+<p>RoundPipe 将每个训练批次自动拆分为多个<strong>微批次</strong>（microbatch），然后以流水线方式处理。每个微批次独立完成前向传播、loss 计算和反向传播，梯度在所有微批次上累积：</p>
+<div class="highlight"><pre><span></span><code>输入批次 (batch_size=12, num_microbatch=3)
+    ↓ 自动拆分
+microbatch 0: [样本 0-3]   ──forward──→ output_0 ──loss_fn──→ loss_0 ──backward──→ 梯度累积
+microbatch 1: [样本 4-7]   ──forward──→ output_1 ──loss_fn──→ loss_1 ──backward──→ 梯度累积
+microbatch 2: [样本 8-11]  ──forward──→ output_2 ──loss_fn──→ loss_2 ──backward──→ 梯度累积
+    ↓
+返回 loss = loss_0 + loss_1 + loss_2
+</code></pre></div>
+<p>注意：每个微批次的 loss 是<strong>独立计算、独立反向传播</strong>的，最终返回的 loss 是所有微批次 loss 的总和，梯度也是各微批次梯度的累加。这等价于将整个 batch 的 loss 求和后反向传播。</p>
+<p>如果希望得到与整个 batch 上计算等价的<strong>平均</strong> loss，需要在 <code>loss_fn</code> 中手动除以微批次数量：</p>
+<div class="highlight"><pre><span></span><code><span class="n">loss_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">criterion</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="o">/</span> <span class="n">num_microbatch</span>
+</code></pre></div>
+<h3 id="_5">激活重计算</h3>
+<p>反向传播需要用到前向传播的中间激活值（即每层的中间计算结果）。对于大模型和长序列，存储所有激活值会消耗大量显存。<strong>激活重计算</strong>（Activation Recomputation）是一种用计算换显存的技术：前向传播时不存储中间激活，只保存每层的输入；反向传播时重新执行一遍前向计算来恢复中间结果。虽然这带来了额外的计算开销，但显著降低了显存占用，使得可以以更大的 batch size 训练更大的模型，进而提高 GPU 利用率和整体训练效率。</p>
+<p>RoundPipe 集成了完全激活重计算，即反向传播时每层都重新执行前向计算，无需用户额外修改代码。</p>
 
 
 

@@ -2,168 +2,378 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/"/>
     </url>
     <url>
+        <loc>https://itcarrot.github.io/RoundPipe/model_zoo/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/model_zoo/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/model_zoo/"/>
+    </url>
+    <url>
         <loc>https://itcarrot.github.io/RoundPipe/API/context/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/API/context/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/API/context/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/API/grad_scaler/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/API/grad_scaler/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/API/grad_scaler/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/API/logging/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/API/logging/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/API/logging/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/API/model/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/API/model/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/API/model/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/API/optimizer/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/API/optimizer/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/API/optimizer/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/API/run_config/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/API/run_config/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/API/run_config/"/>
     </url>
     <url>
+        <loc>https://itcarrot.github.io/RoundPipe/Developer/contact/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/Developer/contact/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/Developer/contact/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/Developer/contribute_model/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/Developer/contribute_model/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/Developer/contribute_model/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/Developer/contribute_optimizer/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/Developer/contribute_optimizer/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/Developer/contribute_optimizer/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/Developer/contribute_roundpipe/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/Developer/contribute_roundpipe/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/Developer/contribute_roundpipe/"/>
+    </url>
+    <url>
         <loc>https://itcarrot.github.io/RoundPipe/Developer/internal_apis/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/Developer/internal_apis/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/Developer/internal_apis/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/UserGuide/overview/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/overview/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/overview/"/>
     </url>
     <url>
-        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/use_custom_io_type/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/custom_data_type/</loc>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
-        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/use_custom_io_type/"/>
-        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/use_custom_io_type/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/custom_data_type/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/custom_data_type/"/>
     </url>
     <url>
-        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/input_model_guideline/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/custom_microbatch_split/</loc>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
-        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/input_model_guideline/"/>
-        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/input_model_guideline/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/custom_microbatch_split/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/custom_microbatch_split/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/execute_plan/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/execute_plan/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/execute_plan/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/logging/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/logging/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/logging/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/recompute_data/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/recompute_data/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/recompute_data/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/resolve_oom/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/resolve_oom/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/resolve_oom/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/run_config/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/run_config/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/run_config/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/grad_scaler/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/grad_scaler/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/grad_scaler/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/multi_gpu/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/multi_gpu/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/multi_gpu/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/optimizer/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/optimizer/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/optimizer/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/training_loop/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/training_loop/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/training_loop/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/wrap_model/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/wrap_model/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/wrap_model/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/UserGuide/QuickStart/installation/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/QuickStart/installation/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/QuickStart/installation/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/zh/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/"/>
     </url>
     <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/model_zoo/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/model_zoo/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/model_zoo/"/>
+    </url>
+    <url>
         <loc>https://itcarrot.github.io/RoundPipe/zh/API/context/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/API/context/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/API/context/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/zh/API/grad_scaler/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/API/grad_scaler/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/API/grad_scaler/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/zh/API/logging/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/API/logging/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/API/logging/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/zh/API/model/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/API/model/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/API/model/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/zh/API/optimizer/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/API/optimizer/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/API/optimizer/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/zh/API/run_config/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/API/run_config/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/API/run_config/"/>
     </url>
     <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/Developer/contact/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/Developer/contact/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/Developer/contact/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/Developer/contribute_model/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/Developer/contribute_model/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/Developer/contribute_model/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/Developer/contribute_optimizer/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/Developer/contribute_optimizer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/Developer/contribute_optimizer/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/Developer/contribute_roundpipe/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/Developer/contribute_roundpipe/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/Developer/contribute_roundpipe/"/>
+    </url>
+    <url>
         <loc>https://itcarrot.github.io/RoundPipe/zh/Developer/internal_apis/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/Developer/internal_apis/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/Developer/internal_apis/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/overview/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/overview/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/overview/"/>
     </url>
     <url>
-        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/use_custom_io_type/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/custom_data_type/</loc>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
-        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/use_custom_io_type/"/>
-        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/use_custom_io_type/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/custom_data_type/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/custom_data_type/"/>
     </url>
     <url>
-        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/input_model_guideline/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/custom_microbatch_split/</loc>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
-        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/input_model_guideline/"/>
-        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/input_model_guideline/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/custom_microbatch_split/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/custom_microbatch_split/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/execute_plan/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/execute_plan/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/execute_plan/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/logging/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/logging/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/logging/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/recompute_data/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/recompute_data/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/recompute_data/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/resolve_oom/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/resolve_oom/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/resolve_oom/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/run_config/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/AdvancedUsage/run_config/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/AdvancedUsage/run_config/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/grad_scaler/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/grad_scaler/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/grad_scaler/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/multi_gpu/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/multi_gpu/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/multi_gpu/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/optimizer/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/optimizer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/optimizer/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/training_loop/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/training_loop/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/training_loop/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/wrap_model/</loc>
+        <lastmod>2026-04-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/wrap_model/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/BasicUsage/wrap_model/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/QuickStart/installation/</loc>
-        <lastmod>2026-03-28</lastmod>
+        <lastmod>2026-04-09</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/QuickStart/installation/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/QuickStart/installation/"/>
