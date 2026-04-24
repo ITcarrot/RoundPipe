@@ -76,12 +76,13 @@ RoundPipe 的优化器更新默认在后台线程异步执行（通过 `model.st
 如果需要在优化器更新前对梯度进行额外操作（如梯度裁剪），可以手动调用 `unscale_`：
 
 ```python
-model.step(lambda: (
-    scaler.unscale_(optimizer),
-    torch.nn.utils.clip_grad_norm_(optimizer.param_groups[0]['params'], max_norm=1.0),
-    scaler.step(optimizer),
-    optimizer.zero_grad(),
-))
+def step_fn():
+    scaler.unscale_(optimizer)
+    torch.nn.utils.clip_grad_norm_(optimizer.param_groups[0]['params'], max_norm=1.0)
+    scaler.step(optimizer)
+    optimizer.zero_grad()
+
+model.step(step_fn)
 ```
 
 如果没有手动调用 `unscale_`，`scaler.step()` 会自动执行，无需额外操作。

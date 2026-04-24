@@ -31,7 +31,7 @@ CUDA_VISIBLE_DEVICES=0 python train.py
 
 ## 多卡与单卡的行为一致性
 
-只要显式指定 `num_microbatch`，RoundPipe 可以保证程序语义不受卡数影响。也就是说，在相同的 `num_microbatch` 下，1 卡和 8 卡的训练结果（loss、梯度、参数更新）是完全一致的。
+只要显式指定 `num_microbatch`，RoundPipe 可以保证程序语义不受卡数影响。也就是说，在相同的 `num_microbatch` 下，1 卡和 8 卡的训练结果（loss、梯度、参数更新）是一致的。
 
 ```python
 # 固定 num_microbatch，确保跨卡数一致性
