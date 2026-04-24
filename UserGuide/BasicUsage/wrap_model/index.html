@@ -656,6 +656,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wrap Model
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -672,6 +690,125 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#using-model-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Model Presets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Models
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Custom Models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nnsequential-representation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        nn.Sequential Representation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#forward-function-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Forward Function Checklist
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Forward Function Checklist">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#variable-access-restrictions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variable Access Restrictions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporary-tensor-device-placement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Temporary Tensor Device Placement
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrapping-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wrapping the Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#automatic-model-wrapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Model Wrapping
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1534,6 +1671,114 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#using-model-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Model Presets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Models
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Custom Models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nnsequential-representation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        nn.Sequential Representation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#forward-function-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Forward Function Checklist
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Forward Function Checklist">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#variable-access-restrictions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variable Access Restrictions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporary-tensor-device-placement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Temporary Tensor Device Placement
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrapping-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wrapping the Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#automatic-model-wrapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Model Wrapping
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1553,6 +1798,192 @@
 
 
 <h1 id="wrap-model">Wrap Model</h1>
+<p>The first step to training with RoundPipe is wrapping your model into a RoundPipe instance. There are two approaches: for models with built-in presets (e.g., Qwen3, Llama), you can wrap them in one line; for custom models, you convert them to <code>nn.Sequential</code> form and wrap manually.</p>
+<h2 id="using-model-presets">Using Model Presets</h2>
+<p>RoundPipe ships with built-in presets for popular large language models, automatically converting them into the Sequential structure required for pipeline execution. See the <a href="../../../model_zoo/">Model Zoo</a> for the full list of supported models.</p>
+<p>Use <code>wrap_model_to_roundpipe()</code> for one-line wrapping:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoModelForCausalLM</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">wrap_model_to_roundpipe</span><span class="p">,</span> <span class="n">RoundPipeRunConfig</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">AutoModelForCausalLM</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+    <span class="s2">&quot;Qwen/Qwen3-1.7B&quot;</span><span class="p">,</span>
+    <span class="n">use_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>          <span class="c1"># KV cache must be disabled during training</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span>
+    <span class="n">_attn_implementation</span><span class="o">=</span><span class="s2">&quot;flash_attention_2&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">wrap_model_to_roundpipe</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">use_sequential_preset</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Force using preset lookup and conversion</span>
+    <span class="n">model_run_config</span><span class="o">=</span><span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">num_microbatch</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>  <span class="c1"># Optional: override default run config</span>
+    <span class="n">optim_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+    <span class="c1"># Additional RoundPipe() constructor arguments can be passed here</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><code>wrap_model_to_roundpipe()</code> automatically detects the model type. If a matching preset exists, it converts the model into an equivalent Sequential structure and returns a <code>RoundPipe</code> instance. After conversion, the original model's attributes (e.g., <code>model.vocab_size</code>, <code>model.config</code>) remain accessible.</p>
+<h2 id="custom-models">Custom Models</h2>
+<p>RoundPipe can train any deep neural network architecture. To enable correct distributed training with good performance, your model needs to follow a few conventions.</p>
+<h3 id="nnsequential-representation">nn.Sequential Representation</h3>
+<p>The model passed to RoundPipe must be organized as an <code>nn.Sequential</code>. RoundPipe treats each submodule in the Sequential as a model layer for scheduling, so how you partition the layers directly affects training efficiency.</p>
+<p>We recommend organizing the model as <strong>input adapter + repeated blocks + output adapter</strong>. Split points should be at the model's "narrow waists" — where the data passed between layers is smallest. For transformer models, the typical split looks like:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+
+<span class="c1"># Example: a simple transformer model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+    <span class="n">embedding_layer</span><span class="p">,</span>        <span class="c1"># Input adapter: token ids -&gt; hidden states</span>
+    <span class="n">transformer_layer_0</span><span class="p">,</span>    <span class="c1"># Repeated blocks</span>
+    <span class="n">transformer_layer_1</span><span class="p">,</span>
+    <span class="n">transformer_layer_2</span><span class="p">,</span>
+    <span class="c1"># ...</span>
+    <span class="n">transformer_layer_n</span><span class="p">,</span>
+    <span class="n">norm_and_lm_head</span><span class="p">,</span>       <span class="c1"># Output adapter: hidden states -&gt; logits</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Each transformer layer passes only the hidden-states tensor to the next, which is relatively small — an ideal split point.</p>
+<p><strong>What to avoid</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Not recommended: splitting within attention and MLP internals</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+    <span class="n">layer_0_qkv_proj</span><span class="p">,</span>
+    <span class="n">layer_0_attention</span><span class="p">,</span>
+    <span class="n">layer_0_out_proj</span><span class="p">,</span>
+    <span class="n">layer_0_mlp_up_proj</span><span class="p">,</span>
+    <span class="n">layer_0_mlp_down_proj</span><span class="p">,</span>
+    <span class="n">layer_1_qkv_proj</span><span class="p">,</span>
+    <span class="c1"># ...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>While this works, it causes large activation tensors to be transferred between layers, increasing inter-GPU data transfer overhead and hurting training efficiency.</p>
+<h3 id="forward-function-checklist">Forward Function Checklist</h3>
+<h4 id="variable-access-restrictions">Variable Access Restrictions</h4>
+<p>Because RoundPipe executes multiple layers in parallel across GPUs, there are restrictions on variable access inside <code>forward()</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Global variables</th>
+<th>Regular instance variables</th>
+<th>Parameters</th>
+<th>Standalone module buffers</th>
+<th>Shared module buffers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Read</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Write</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅</td>
+<td>❌</td>
+</tr>
+</tbody>
+</table>
+<p>What each category means:</p>
+<ul>
+<li><strong>Global variables</strong>: Variables defined outside the model. Multiple layers may run in different threads simultaneously, so writing to globals causes data races.</li>
+<li><strong>Regular instance variables</strong>: Accessed via <code>self.xxx</code> but not wrapped with <code>nn.Parameter</code> or registered via <code>register_buffer</code>. Subject to the same concurrency risk.</li>
+<li><strong>Parameters</strong>: Model parameters (<code>nn.Parameter</code>). RoundPipe manages their CPU-GPU transfers; they are read-only during forward execution. Parameter sharing within the same RoundPipe instance is supported, but not across different RoundPipe instances.</li>
+<li><strong>Standalone module buffers</strong>: Registered via <code>register_buffer</code> and belonging to a single layer (not shared across submodules of <code>nn.Sequential</code>). RoundPipe transfers them alongside parameters, so they can be written safely.</li>
+<li><strong>Shared module buffers</strong>: Registered via <code>register_buffer</code> but shared across multiple layers. Since they may be accessed concurrently by different layers, writing is not safe.</li>
+</ul>
+<p><strong>Example</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MyBlock</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">256</span><span class="p">))</span>  <span class="c1"># Standalone buffer, safe to write</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_count</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Regular instance variable — do NOT write!</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="c1"># ✅ Correct: read parameters, write to standalone buffer</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">acc</span><span class="o">.</span><span class="n">add_</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+        <span class="c1"># ❌ Wrong: writing to a regular instance variable</span>
+        <span class="c1"># self.call_count += 1  # Data race!</span>
+</code></pre></div>
+<h4 id="temporary-tensor-device-placement">Temporary Tensor Device Placement</h4>
+<p>Temporary tensors created in <code>forward()</code> must not hard-code a device. Infer the device from inputs or weights instead:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MyBlock</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="c1"># ❌ Wrong: hard-coded device</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="s1">&#39;cuda:0&#39;</span><span class="p">)</span>
+
+        <span class="c1"># ✅ Correct: infer device from input</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="c1"># ✅ Correct: infer device from weights</span>
+        <span class="n">bias</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                          <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+</code></pre></div>
+<p>RoundPipe schedules different layers on different GPUs. Hard-coding <code>cuda:0</code> will create the tensor on the wrong device.</p>
+<h3 id="wrapping-the-model">Wrapping the Model</h3>
+<p>Once your <code>nn.Sequential</code> model is ready, wrap it with <code>RoundPipe()</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoundPipe</span><span class="p">,</span> <span class="n">RoundPipeRunConfig</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">RoundPipe</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">my_sequential_model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">),</span>
+    <span class="n">optim_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+    <span class="n">model_run_config</span><span class="o">=</span><span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">num_microbatch</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+    <span class="n">pin_model</span><span class="o">=</span><span class="s2">&quot;alloc&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><strong>Parameter reference</strong>:</p>
+<p><code>model_run_config</code> sets the model-level default run configuration. See <a href="../../AdvancedUsage/run_config/">RoundPipeRunConfig Tuning</a> for details.</p>
+<p><code>pin_model</code> controls the page-locking strategy for model parameters in CPU memory, which affects CPU-to-GPU transfer performance:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+<th>When to use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"alloc"</code></td>
+<td>Allocates pinned memory via PyTorch's <code>pin_memory</code></td>
+<td><strong>Default</strong>. Best transfer performance, but CPU memory usage may roughly double (PyTorch aligns allocations to powers of 2)</td>
+</tr>
+<tr>
+<td><code>"register"</code></td>
+<td>Pins existing memory via <code>cudaHostRegister</code></td>
+<td>NVIDIA GPUs only. Useful for LoRA fine-tuning of large models when CPU memory is tight. ~10% slower transfers</td>
+</tr>
+<tr>
+<td><code>"off"</code></td>
+<td>No pinned memory</td>
+<td>For LoRA fine-tuning of very large models (e.g., 235B) that exceed CPU memory, used together with <code>mmap</code> loading</td>
+</tr>
+</tbody>
+</table>
+<p><code>optim_dtype</code> specifies the data type for optimizer parameters. A typical setup uses <code>torch.float16</code> for model parameters (saving VRAM and transfer bandwidth) and <code>torch.float32</code> for optimizer parameters (preserving numerical stability). If omitted, it defaults to the model parameter type.</p>
+<h3 id="automatic-model-wrapping">Automatic Model Wrapping</h3>
+<div class="admonition warning">
+<p class="admonition-title">Experimental Feature</p>
+<p>Automatic splitting is experimental. It does not support the fused <code>forward_backward()</code> and incurs a performance penalty.</p>
+</div>
+<p>For complex models that you prefer not to convert manually to Sequential form, you can try the automatic splitting mode of <code>wrap_model_to_roundpipe()</code>.
+We strongly recommend writing the Sequential conversion manually for better performance and full feature support (including <code>forward_backward()</code>). If the model is a well-known open-source model not yet in the preset list, consider opening an issue or PR to add a preset.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">wrap_model_to_roundpipe</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">wrap_model_to_roundpipe</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">use_sequential_preset</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># Skip preset lookup; use automatic splitting</span>
+    <span class="n">optim_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Automatic splitting recursively walks the model's submodule tree and decides how to wrap each module based on parameter-size thresholds. If the model ultimately cannot be split into Sequential form, it returns an <code>AutoRoundPipe</code> instance. This instance can still use RoundPipe's forward pass and optimizer features, but cannot use the fused <code>forward_backward()</code> and does not benefit from RoundPipe's pipeline scheduling optimizations.</p>
 
 
 

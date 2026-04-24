@@ -856,6 +856,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RoundPipeRunConfig
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -872,6 +890,69 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#model-level-config-vs-per-call-overrides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model-Level Config vs Per-Call Overrides
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#num_microbatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        num_microbatch
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recompute_grain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        recompute_grain
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output_device" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        output_device
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1534,6 +1615,58 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#model-level-config-vs-per-call-overrides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model-Level Config vs Per-Call Overrides
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#num_microbatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        num_microbatch
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recompute_grain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        recompute_grain
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output_device" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        output_device
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1553,6 +1686,80 @@
 
 
 <h1 id="roundpiperunconfig">RoundPipeRunConfig</h1>
+<p><code>RoundPipeRunConfig</code> is RoundPipe's runtime configuration class. It controls the number of microbatches, recomputation granularity, output device placement, and other behaviors.</p>
+<h2 id="model-level-config-vs-per-call-overrides">Model-Level Config vs Per-Call Overrides</h2>
+<p>Configuration can be specified at two levels:</p>
+<ul>
+<li><strong>Model-level</strong>: Passed via <code>model_run_config</code> when creating a <code>RoundPipe</code> instance. Acts as the default for all calls on that model.</li>
+<li><strong>Per-call</strong>: Passed to <code>forward()</code> or <code>forward_backward()</code>. Overrides the model-level defaults for that call only.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoundPipe</span><span class="p">,</span> <span class="n">RoundPipeRunConfig</span>
+
+<span class="c1"># Model-level: set default num_microbatch=4</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">RoundPipe</span><span class="p">(</span>
+    <span class="n">my_model</span><span class="p">,</span>
+    <span class="n">model_run_config</span><span class="o">=</span><span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">num_microbatch</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Per-call: use num_microbatch=8 for this call, overriding the model-level default</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward_backward</span><span class="p">(</span>
+    <span class="n">input_args</span><span class="o">=</span><span class="p">(</span><span class="n">data</span><span class="p">,),</span>
+    <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+    <span class="n">loss_fn</span><span class="o">=</span><span class="n">loss_fn</span><span class="p">,</span>
+    <span class="n">run_config</span><span class="o">=</span><span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">num_microbatch</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>When both levels specify the same parameter, the per-call value takes precedence. If neither level specifies a value (both are <code>None</code>), the built-in default is used.</p>
+<h2 id="num_microbatch">num_microbatch</h2>
+<p>Number of microbatches. Controls how many pieces the input data is split into for pipeline execution.</p>
+<p><strong>Default</strong>: <code>GPU count + 1</code></p>
+<p><strong>How to choose</strong>:</p>
+<ul>
+<li>Larger <code>num_microbatch</code> → smaller per-microbatch data → lower GPU peak memory.</li>
+<li>Too-small microbatches reduce GPU compute efficiency (kernel-launch overhead dominates, and matrix operations can't fully utilize GPU parallelism).</li>
+<li>Setting it to at least <code>GPU count + 1</code> ensures a bubble-free pipeline (no GPU idle time). If memory is tight, increase <code>num_microbatch</code> — but don't go excessively high.</li>
+</ul>
+<p><strong>Typical scenarios</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Plenty of VRAM — maximize throughput</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">num_microbatch</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">device_count</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Tight memory (long sequences / large models) — lower peak memory with more microbatches</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">num_microbatch</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="recompute_grain">recompute_grain</h2>
+<p>Granularity of activation recomputation during the backward pass.</p>
+<ul>
+<li><strong><code>"stage"</code> (default)</strong>: Recompute at the stage level. All layers in a stage recompute their forward pass first, then backward runs. Higher memory usage (activations for all layers in the stage must coexist), but fewer data transfers.</li>
+<li><strong><code>"layer"</code></strong>: Recompute one layer at a time. Each layer independently recomputes its forward pass, runs backward immediately, and releases its activations. Lower peak memory, but each layer requires a separate upload of its input, increasing data transfer overhead.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="c1"># Default: stage granularity</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">recompute_grain</span><span class="o">=</span><span class="s2">&quot;stage&quot;</span><span class="p">)</span>
+
+<span class="c1"># Tight memory: switch to layer granularity</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">recompute_grain</span><span class="o">=</span><span class="s2">&quot;layer&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Recommendations</strong>:</p>
+<ul>
+<li>Prefer <code>"stage"</code> (default) for better performance.</li>
+<li>If you hit GPU OOM, try increasing <code>num_microbatch</code> first.</li>
+<li>If OOM persists, switch to <code>"layer"</code>.</li>
+</ul>
+<h2 id="output_device">output_device</h2>
+<p>Device placement for model output tensors.</p>
+<ul>
+<li><strong>CPU (default)</strong>: Outputs are transferred back to CPU memory. Suitable for most training scenarios, since loss computation typically happens inside <code>loss_fn</code> (on the GPU) and the training loop doesn't need to manipulate outputs directly.</li>
+<li><strong>GPU</strong>: Outputs stay on the GPU. Useful when you need to post-process outputs on the GPU.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="c1"># Default: output on CPU</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">output_device</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>  <span class="c1"># equivalent to CPU</span>
+
+<span class="c1"># Output on GPU 0</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">output_device</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda:0&quot;</span><span class="p">))</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Keeping outputs on the GPU consumes additional VRAM. If you only need the loss, there's no need to set <code>output_device</code> — <code>forward_backward()</code>'s <code>loss_fn</code> already runs on the GPU.</p>
+</div>
 
 
 

@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#optimizer" class="md-skip">
+        <a href="#creating-an-optimizer" class="md-skip">
           Skip to content
         </a>
       
@@ -684,6 +684,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Optimizer
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -700,6 +718,47 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-optimizerctx-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What OptimizerCtx Does
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipe-cpu-optimizers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe CPU Optimizers
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1534,6 +1593,36 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-optimizerctx-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What OptimizerCtx Does
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipe-cpu-optimizers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe CPU Optimizers
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1552,7 +1641,55 @@
   
 
 
-<h1 id="optimizer">Optimizer</h1>
+<h1 id="creating-an-optimizer">Creating an Optimizer</h1>
+<p>RoundPipe works with any PyTorch optimizer. Because RoundPipe internally manages parameter transfers between CPU and GPU and handles optimizer-parameter dtype conversion, you need to use RoundPipe's parameter interface when creating the optimizer.</p>
+<p>There are two equivalent ways:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoundPipe</span><span class="p">,</span> <span class="n">OptimizerCtx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe.optim</span><span class="w"> </span><span class="kn">import</span> <span class="n">Adam</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">RoundPipe</span><span class="p">(</span><span class="n">my_model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">),</span> <span class="n">optim_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+<span class="c1"># Option 1: Use OptimizerCtx (recommended — feels like standard PyTorch)</span>
+<span class="k">with</span> <span class="n">OptimizerCtx</span><span class="p">():</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+
+<span class="c1"># Option 2: Use optim_parameters() directly (equivalent)</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">optim_parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+</code></pre></div>
+<p>Both are completely equivalent — use whichever feels more natural.</p>
+<h2 id="what-optimizerctx-does">What OptimizerCtx Does</h2>
+<p>RoundPipe maintains two sets of parameters internally:</p>
+<ul>
+<li><strong>Model parameters</strong> (low precision): used for forward and backward computation on the GPU.</li>
+<li><strong>Optimizer parameters</strong> (high precision): used for optimizer updates on the CPU.</li>
+</ul>
+<p>Standard PyTorch optimizers obtain parameters via <code>model.parameters()</code>. In RoundPipe, however, <code>model.parameters()</code> returns the model parameters (low precision) by default, while the optimizer needs the optimizer parameters (high precision).</p>
+<p><code>OptimizerCtx</code> solves this: within its scope, <code>model.parameters()</code> and <code>model.named_parameters()</code> are automatically redirected to <code>model.optim_parameters()</code> and <code>model.optim_named_parameters()</code>, returning the high-precision optimizer parameters.</p>
+<p>This means you can create optimizers exactly as you would with a regular PyTorch model, without worrying about RoundPipe's internal parameter management:</p>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">OptimizerCtx</span><span class="p">():</span>
+    <span class="c1"># model.parameters() returns FP32 optimizer parameters here</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">AdamW</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
+
+    <span class="c1"># Parameter groups are also supported</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">AdamW</span><span class="p">([</span>
+        <span class="p">{</span><span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="s1">&#39;lr&#39;</span><span class="p">:</span> <span class="mf">1e-4</span><span class="p">},</span>
+    <span class="p">])</span>
+</code></pre></div>
+<h2 id="roundpipe-cpu-optimizers">RoundPipe CPU Optimizers</h2>
+<p>RoundPipe's optimizer updates run on the CPU (since optimizer parameters live in CPU memory). PyTorch's built-in optimizers have poor CPU performance, so RoundPipe provides optimizers that are optimized for CPU instruction sets through compiler vectorization.</p>
+<p>See the <a href="../../../API/optimizer/">API reference</a> for the full list of available optimizers.</p>
+<p>Usage is identical to PyTorch's native optimizers:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe.optim</span><span class="w"> </span><span class="kn">import</span> <span class="n">Adam</span>
+
+<span class="k">with</span> <span class="n">OptimizerCtx</span><span class="p">():</span>
+    <span class="c1"># Same interface as torch.optim.Adam</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+
+    <span class="c1"># Supports decoupled_weight_decay (equivalent to AdamW)</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+                     <span class="n">weight_decay</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">decoupled_weight_decay</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<p>We recommend using RoundPipe's optimizers for best performance. You can also use PyTorch's native optimizers — they work correctly, just with slower CPU-side updates. For PyTorch optimizers that support a <code>fused</code> parameter, passing <code>fused=True</code> will improve performance.</p>
 
 
 

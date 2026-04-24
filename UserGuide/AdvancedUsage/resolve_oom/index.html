@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#resolve-oom" class="md-skip">
+        <a href="#resolving-oom-errors" class="md-skip">
           Skip to content
         </a>
       
@@ -884,6 +884,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resolve OOM
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -900,6 +918,114 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#gpu-oom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GPU OOM
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GPU OOM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-increase-num_microbatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Increase num_microbatch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-switch-recompute_grain-to-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Switch recompute_grain to "layer"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-reduce-layers-per-stage-in-the-execution-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Reduce layers per stage in the execution plan
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cpu-oom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CPU OOM
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CPU OOM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-choose-register-or-off-for-pin_model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Choose "register" or "off" for pin_model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-reduce-num_microbatch-and-use-manual-gradient-accumulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Reduce num_microbatch and use manual gradient accumulation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1534,6 +1660,103 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#gpu-oom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GPU OOM
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GPU OOM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-increase-num_microbatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Increase num_microbatch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-switch-recompute_grain-to-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Switch recompute_grain to "layer"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-reduce-layers-per-stage-in-the-execution-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Reduce layers per stage in the execution plan
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cpu-oom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CPU OOM
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CPU OOM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-choose-register-or-off-for-pin_model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Choose "register" or "off" for pin_model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-reduce-num_microbatch-and-use-manual-gradient-accumulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Reduce num_microbatch and use manual gradient accumulation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1552,7 +1775,91 @@
   
 
 
-<h1 id="resolve-oom">Resolve OOM</h1>
+<h1 id="resolving-oom-errors">Resolving OOM Errors</h1>
+<p>Out-of-memory errors — on GPU or CPU — are the most common issue when training large models. This section covers how to diagnose and fix each type.</p>
+<h2 id="gpu-oom">GPU OOM</h2>
+<p>GPU OOM manifests as <code>torch.cuda.OutOfMemoryError</code> or a <code>CUDA out of memory</code> message. The following solutions are listed in recommended priority order.</p>
+<h3 id="1-increase-num_microbatch">1. Increase num_microbatch</h3>
+<p>The most straightforward fix. A larger <code>num_microbatch</code> reduces per-microbatch data size, lowering the GPU's peak memory usage.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Start from the default and increase gradually</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">num_microbatch</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>  <span class="c1"># or 32, 64, ...</span>
+</code></pre></div>
+<p>The trade-off is that smaller microbatches may lower GPU compute efficiency. In most cases, 2-4x the default value is enough to resolve the problem.</p>
+<h3 id="2-switch-recompute_grain-to-layer">2. Switch recompute_grain to "layer"</h3>
+<p>Changing the recomputation granularity from the default <code>"stage"</code> to <code>"layer"</code> can significantly reduce GPU peak memory:</p>
+<div class="highlight"><pre><span></span><code><span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">recompute_grain</span><span class="o">=</span><span class="s2">&quot;layer&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>In <code>"stage"</code> mode, activations for all layers in a stage must reside on the GPU simultaneously. In <code>"layer"</code> mode, each layer is recomputed and backpropagated independently, then its activations are released — dramatically lowering peak memory. The trade-off is increased data transfer, since each layer's input must be uploaded separately.</p>
+<h3 id="3-reduce-layers-per-stage-in-the-execution-plan">3. Reduce layers per stage in the execution plan</h3>
+<p>If you're using a custom execution plan, reduce the number of layers per stage to lower each stage's parameter and activation footprint. See <a href="../execute_plan/">Custom Execution Plans</a>.</p>
+<p>You can also adjust <code>model_memory_limit</code> in <code>ModelExecutePlan.auto()</code> to constrain per-stage memory:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelExecutePlan</span>
+
+<span class="c1"># Lower the memory limit to force smaller stages</span>
+<span class="n">plan</span> <span class="o">=</span> <span class="n">ModelExecutePlan</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span>
+    <span class="s2">&quot;fused&quot;</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span>
+    <span class="n">model_memory_limit</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span>  <span class="c1"># Limit to 8 GB (default is 60% of GPU VRAM)</span>
+<span class="p">)</span>
+</code></pre></div>
+<h2 id="cpu-oom">CPU OOM</h2>
+<p>CPU OOM typically shows up as the process being killed by the system's OOM killer (<code>Killed</code>), a <code>MemoryError</code>, or the system swapping heavily and making training extremely slow.</p>
+<h3 id="1-choose-register-or-off-for-pin_model">1. Choose "register" or "off" for pin_model</h3>
+<p>The default <code>pin_model="alloc"</code> uses PyTorch's <code>pin_memory</code> to allocate page-locked memory. PyTorch aligns each allocation to a power of 2, which can nearly double CPU memory usage compared to the actual model size.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Reduce CPU memory usage (~10% slower transfers)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">RoundPipe</span><span class="p">(</span><span class="n">my_model</span><span class="p">,</span> <span class="n">pin_model</span><span class="o">=</span><span class="s2">&quot;register&quot;</span><span class="p">)</span>
+
+<span class="c1"># When the model exceeds CPU memory, use mmap loading</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">AutoModelForCausalLM</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+    <span class="n">model_path</span><span class="p">,</span>
+    <span class="n">torch_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span>
+    <span class="c1"># mmap loading: Linux reads from disk on demand and automatically swaps memory pages</span>
+<span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">RoundPipe</span><span class="p">(</span><span class="n">my_model_sequential</span><span class="p">,</span> <span class="n">pin_model</span><span class="o">=</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>Comparison of the three modes:</p>
+<table>
+<thead>
+<tr>
+<th>pin_model</th>
+<th>CPU memory usage</th>
+<th>H2D transfer speed</th>
+<th>When to use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"alloc"</code></td>
+<td>Highest (~1.5x model size)</td>
+<td>Fastest</td>
+<td>Default; when CPU memory is plentiful</td>
+</tr>
+<tr>
+<td><code>"register"</code></td>
+<td>Moderate (~1x model size)</td>
+<td>~10% slower</td>
+<td>Large models with tight CPU memory</td>
+</tr>
+<tr>
+<td><code>"off"</code></td>
+<td>Lowest (on-demand loading)</td>
+<td>Slowest</td>
+<td>Very large model LoRA fine-tuning; model exceeds CPU memory</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2-reduce-num_microbatch-and-use-manual-gradient-accumulation">2. Reduce num_microbatch and use manual gradient accumulation</h3>
+<p>Intermediate activations (data passed between layers) for each microbatch are cached in CPU memory. More microbatches mean more cached activations and higher CPU memory usage.</p>
+<p>If CPU memory is tight, lower <code>num_microbatch</code> and perform gradient accumulation manually across multiple <code>forward_backward</code> calls:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Before: one pass with a large batch, num_microbatch=16</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward_backward</span><span class="p">(</span><span class="n">input_args</span><span class="o">=</span><span class="p">(</span><span class="n">large_batch</span><span class="p">,),</span> <span class="o">...</span><span class="p">)</span>
+
+<span class="c1"># After: two passes, each with num_microbatch=8</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">num_microbatch</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">loss1</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward_backward</span><span class="p">(</span><span class="n">input_args</span><span class="o">=</span><span class="p">(</span><span class="n">batch_part1</span><span class="p">,),</span> <span class="o">...</span><span class="p">,</span> <span class="n">run_config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+<span class="n">loss2</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward_backward</span><span class="p">(</span><span class="n">input_args</span><span class="o">=</span><span class="p">(</span><span class="n">batch_part2</span><span class="p">,),</span> <span class="o">...</span><span class="p">,</span> <span class="n">run_config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+<span class="c1"># Gradients accumulate automatically; then update once</span>
+<span class="n">model</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">(</span><span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">(),</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()))</span>
+</code></pre></div>
 
 
 

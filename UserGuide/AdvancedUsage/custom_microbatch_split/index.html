@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#custom-microbatch-split" class="md-skip">
+        <a href="#custom-microbatch-splitting" class="md-skip">
           Skip to content
         </a>
       
@@ -912,6 +912,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Microbatch Split
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -928,6 +946,203 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#default-splitting-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Default Splitting Behavior
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Default Splitting Behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automatic-input-splitting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Input Splitting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#automatic-label-splitting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Label Splitting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#automatic-output-merging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Output Merging
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#split_input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        split_input
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="split_input">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#approach-1-split-spec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Approach 1: Split Spec
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#approach-2-custom-function" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Approach 2: Custom Function
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#split_label" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        split_label
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="split_label">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#split-spec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Split Spec
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-function" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Function
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#merge_output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        merge_output
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="merge_output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#split-spec_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Split Spec
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-function_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Function
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disabling-merging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Disabling Merging
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1534,6 +1749,192 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#default-splitting-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Default Splitting Behavior
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Default Splitting Behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automatic-input-splitting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Input Splitting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#automatic-label-splitting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Label Splitting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#automatic-output-merging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Output Merging
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#split_input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        split_input
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="split_input">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#approach-1-split-spec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Approach 1: Split Spec
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#approach-2-custom-function" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Approach 2: Custom Function
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#split_label" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        split_label
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="split_label">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#split-spec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Split Spec
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-function" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Function
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#merge_output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        merge_output
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="merge_output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#split-spec_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Split Spec
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-function_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Function
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disabling-merging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Disabling Merging
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1552,7 +1953,156 @@
   
 
 
-<h1 id="custom-microbatch-split">Custom Microbatch Split</h1>
+<h1 id="custom-microbatch-splitting">Custom Microbatch Splitting</h1>
+<p>RoundPipe splits input data into microbatches for pipeline execution. By default it infers the splitting strategy automatically, but non-standard input/output formats may require you to specify custom split and merge strategies.</p>
+<h2 id="default-splitting-behavior">Default Splitting Behavior</h2>
+<h3 id="automatic-input-splitting">Automatic Input Splitting</h3>
+<p>When <code>split_input</code> is <code>None</code> (default), RoundPipe recursively traverses the nested input structure (tuples, lists, dicts) and applies these rules to each leaf node:</p>
+<ul>
+<li><strong>Multi-dimensional tensors</strong>: split evenly along dimension 0 (the batch dimension).</li>
+<li><strong>Scalar tensors and non-tensor types</strong>: replicated to every microbatch.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="c1"># Example: automatic splitting</span>
+<span class="c1"># input args = (images,), images.shape = (12, 3, 224, 224)</span>
+<span class="c1"># num_microbatch = 4</span>
+<span class="c1"># → each microbatch gets images.shape = (3, 3, 224, 224)</span>
+</code></pre></div>
+<h3 id="automatic-label-splitting">Automatic Label Splitting</h3>
+<p>When <code>split_label</code> is <code>None</code> (default), the same rules as input splitting apply.</p>
+<h3 id="automatic-output-merging">Automatic Output Merging</h3>
+<p>When <code>merge_output</code> is <code>None</code> or <code>True</code> (default), RoundPipe recursively traverses the output structure and applies these rules to each leaf node:</p>
+<ul>
+<li><strong>Multi-dimensional tensors</strong>: concatenated along dimension 0 (<code>torch.cat</code>).</li>
+<li><strong>Scalar tensors</strong>: averaged across microbatches.</li>
+<li><strong>Non-tensor types</strong>: checked for equality across all microbatches; returns the value if equal, raises an error otherwise.</li>
+</ul>
+<h2 id="split_input">split_input</h2>
+<p>When the defaults don't fit your needs, use <code>split_input</code> to specify a custom strategy. There are two approaches:</p>
+<h3 id="approach-1-split-spec">Approach 1: Split Spec</h3>
+<p>Use <code>TensorChunkSpec</code> and <code>_Replicate</code> to annotate how each input should be split:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.pipelining.microbatch</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorChunkSpec</span><span class="p">,</span> <span class="n">_Replicate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoundPipeRunConfig</span>
+
+<span class="c1"># Scenario: model takes (images, scale_factor)</span>
+<span class="c1"># Split images along the batch dim; replicate scale_factor to every microbatch</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span>
+    <span class="n">split_input</span><span class="o">=</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">TensorChunkSpec</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">_Replicate</span><span class="p">),</span>  <span class="c1"># args spec</span>
+        <span class="kc">None</span><span class="p">,</span>                               <span class="c1"># kwargs spec (auto-infer)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Scenario: an input needs splitting along a non-batch dimension</span>
+<span class="c1"># e.g., (tokens, position_ids) where position_ids splits along dim=1</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span>
+    <span class="n">split_input</span><span class="o">=</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">TensorChunkSpec</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">TensorChunkSpec</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span>  <span class="c1"># args spec</span>
+        <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>The spec structure must match the input structure one-to-one. The <code>args</code> spec is a tuple and the <code>kwargs</code> spec is a dict (or <code>None</code> for auto-inference).</p>
+<h3 id="approach-2-custom-function">Approach 2: Custom Function</h3>
+<p>When specs aren't expressive enough, provide a fully custom split function:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">custom_split</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    args: original positional argument tuple</span>
+<span class="sd">    kwargs: original keyword argument dict</span>
+<span class="sd">    num_microbatch: number of microbatches</span>
+<span class="sd">    Returns: (args_list, kwargs_list), each of length num_microbatch</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">images</span><span class="p">,</span> <span class="n">masks</span> <span class="o">=</span> <span class="n">args</span>
+    <span class="n">chunks_images</span> <span class="o">=</span> <span class="n">images</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">num_microbatch</span><span class="p">)</span>
+    <span class="n">chunks_masks</span> <span class="o">=</span> <span class="n">masks</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">num_microbatch</span><span class="p">)</span>
+    <span class="n">args_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">img</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span> <span class="k">for</span> <span class="n">img</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chunks_images</span><span class="p">,</span> <span class="n">chunks_masks</span><span class="p">)]</span>
+    <span class="n">kwargs_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">kwargs</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_microbatch</span>  <span class="c1"># replicate kwargs to every microbatch</span>
+    <span class="k">return</span> <span class="n">args_list</span><span class="p">,</span> <span class="n">kwargs_list</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">split_input</span><span class="o">=</span><span class="n">custom_split</span><span class="p">)</span>
+</code></pre></div>
+<p>A more complex example — input is a dict with per-field splitting strategies:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">split_transformer_input</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="p">):</span>
+    <span class="c1"># kwargs = {&quot;input_ids&quot;: ..., &quot;attention_mask&quot;: ..., &quot;position_ids&quot;: ...}</span>
+    <span class="n">input_ids_chunks</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">num_microbatch</span><span class="p">)</span>
+    <span class="n">mask_chunks</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">num_microbatch</span><span class="p">)</span>
+    <span class="n">pos_chunks</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;position_ids&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">num_microbatch</span><span class="p">)</span>
+    <span class="n">args_list</span> <span class="o">=</span> <span class="p">[()]</span> <span class="o">*</span> <span class="n">num_microbatch</span>
+    <span class="n">kwargs_list</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="n">ids</span><span class="p">,</span> <span class="s2">&quot;attention_mask&quot;</span><span class="p">:</span> <span class="n">mask</span><span class="p">,</span> <span class="s2">&quot;position_ids&quot;</span><span class="p">:</span> <span class="n">pos</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">ids</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">input_ids_chunks</span><span class="p">,</span> <span class="n">mask_chunks</span><span class="p">,</span> <span class="n">pos_chunks</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="n">args_list</span><span class="p">,</span> <span class="n">kwargs_list</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">split_input</span><span class="o">=</span><span class="n">split_transformer_input</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="split_label">split_label</h2>
+<p>Similar to <code>split_input</code>, <code>split_label</code> controls how labels are split.</p>
+<h3 id="split-spec">Split Spec</h3>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.pipelining.microbatch</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorChunkSpec</span><span class="p">,</span> <span class="n">_Replicate</span>
+
+<span class="c1"># Label is a tuple: (targets, sample_weights)</span>
+<span class="c1"># Both split along the batch dimension</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span>
+    <span class="n">split_label</span><span class="o">=</span><span class="p">(</span><span class="n">TensorChunkSpec</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">TensorChunkSpec</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="p">)</span>
+
+<span class="c1"># Label is a tuple: (targets, class_weights)</span>
+<span class="c1"># targets split along batch dim; class_weights replicated (shared across samples)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span>
+    <span class="n">split_label</span><span class="o">=</span><span class="p">(</span><span class="n">TensorChunkSpec</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">_Replicate</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div>
+<h3 id="custom-function">Custom Function</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">custom_split_label</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">num_microbatch</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    label: original label</span>
+<span class="sd">    num_microbatch: number of microbatches</span>
+<span class="sd">    Returns: List[label] of length num_microbatch</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">targets</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="n">label</span>
+    <span class="n">chunks_targets</span> <span class="o">=</span> <span class="n">targets</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">num_microbatch</span><span class="p">)</span>
+    <span class="n">chunks_weights</span> <span class="o">=</span> <span class="n">weights</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">num_microbatch</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[(</span><span class="n">t</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chunks_targets</span><span class="p">,</span> <span class="n">chunks_weights</span><span class="p">)]</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">split_label</span><span class="o">=</span><span class="n">custom_split_label</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="merge_output">merge_output</h2>
+<p>Controls how per-microbatch outputs are combined into the final output.</p>
+<h3 id="split-spec_1">Split Spec</h3>
+<p>Similar to splitting, you can use specs to annotate how each output field should be merged:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.pipelining.microbatch</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorChunkSpec</span><span class="p">,</span> <span class="n">_Replicate</span><span class="p">,</span> <span class="n">_CustomReducer</span>
+
+<span class="c1"># Output is (logits, hidden_states)</span>
+<span class="c1"># Both concatenated along the batch dimension</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span>
+    <span class="n">merge_output</span><span class="o">=</span><span class="p">(</span><span class="n">TensorChunkSpec</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">TensorChunkSpec</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="p">)</span>
+
+<span class="c1"># Custom reducer: sum the losses</span>
+<span class="n">sum_reducer</span> <span class="o">=</span> <span class="n">_CustomReducer</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.0</span><span class="p">),</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">merge_output</span><span class="o">=</span><span class="n">sum_reducer</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="custom-function_1">Custom Function</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">custom_merge</span><span class="p">(</span><span class="n">outputs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    outputs: List[output], one per microbatch</span>
+<span class="sd">    Returns: merged output</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Example: HuggingFace model output is an object; only logits are needed</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">out</span><span class="o">.</span><span class="n">logits</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">logits</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">merge_output</span><span class="o">=</span><span class="n">custom_merge</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="disabling-merging">Disabling Merging</h3>
+<p>Set <code>merge_output=False</code> to disable output merging. Each leaf variable in the output will be returned as a <code>RoundPipePackedData</code> (a list subclass) containing per-microbatch outputs along with their CUDA transfer events.</p>
+<div class="highlight"><pre><span></span><code><span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">merge_output</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">roundpipe_run_config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+<span class="c1"># Tensors in the output are RoundPipePackedData objects</span>
+<span class="n">output</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>  <span class="c1"># Wait for all transfers to complete</span>
+<span class="c1"># Then access per-microbatch outputs like a regular list</span>
+</code></pre></div>
+<p>This is useful when piping one RoundPipe model's output directly into another, avoiding unnecessary synchronization and data copies. <code>wrap_model_to_roundpipe</code> automatically sets <code>merge_output=False</code> when recursively wrapping non-final modules.</p>
 
 
 

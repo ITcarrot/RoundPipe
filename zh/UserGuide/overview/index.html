@@ -1861,7 +1861,7 @@
 <ul>
 <li><strong>GPU 显存不足以训练大模型</strong>：消费级 GPU（如 RTX 4090）仅有 24GB 显存，而一个 8B 参数模型在混合精度训练下需要约 128GB 存储模型状态（参数、梯度、优化器状态），远超单卡容量。RoundPipe 将模型状态存储在 CPU 内存中，按需将计算任务分发到 GPU 执行，突破显存限制。</li>
 <li><strong>没有 NVLink 的 GPU 间通信瓶颈</strong>：消费级服务器使用 PCIe 互联，带宽不到 NVLink 的 20%。数据并行方案需要在每次迭代中通过集合通信同步全部参数，导致大量时间花在通信上。RoundPipe 采用<a href="#dispatch-pp">分发式流水线并行</a>，每个阶段只需将参数从 CPU 上传到单个 GPU，大幅减少GPU间通信开销。</li>
-<li><strong>但 RoundPipe 不适用于小模型（&lt; 0.5B）的分布式训练</strong>：对于单卡显存足以开展训练的小模型，数据并行方案更简单高效。RoundPipe 的优势在于模型状态超出<strong>单一 GPU 显存</strong>时的场景。</li>
+<li><strong>但 RoundPipe 不适用于小模型（&lt; 0.5B）的分布式训练</strong>：对于单卡显存足以开展训练的小模型，数据并行方案更简单高效。RoundPipe 的优势在于模型训练需要超出<strong>单一 GPU 显存</strong>时的场景。</li>
 </ul>
 <h2 id="dispatch-pp">分发式流水线并行</h2>
 <h3 id="_2">什么是流水线并行</h3>

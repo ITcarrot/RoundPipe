@@ -1732,7 +1732,7 @@
 <p>反向传播时激活重计算的粒度。</p>
 <ul>
 <li><strong><code>"stage"</code>（默认）</strong>：以 stage 为单位重计算。一个 stage 内的所有层先全部重计算前向，再执行反向。显存占用较高（需要同时持有 stage 内所有层的激活），但数据传输次数少。</li>
-<li><strong><code>"layer"</code></strong>：以单层为单位重计算。每层独立重计算前向并立即执行反向，然后释放激活。峰值显存更低，但每层都需要单独上传参数，增加了数据传输开销。</li>
+<li><strong><code>"layer"</code></strong>：以单层为单位重计算。每层独立重计算前向并立即执行反向，然后释放激活。峰值显存更低，但每层都需要单独上传层的输入，增加了数据传输开销。</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="c1"># 默认：stage 粒度</span>
 <span class="n">config</span> <span class="o">=</span> <span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">recompute_grain</span><span class="o">=</span><span class="s2">&quot;stage&quot;</span><span class="p">)</span>

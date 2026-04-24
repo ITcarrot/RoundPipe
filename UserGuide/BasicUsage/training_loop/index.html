@@ -712,6 +712,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training Loop
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -728,6 +746,69 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#forward_backward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        forward_backward()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modelstep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        model.step()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modelsynchronize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        model.synchronize()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inference-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inference / Evaluation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1534,6 +1615,58 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#forward_backward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        forward_backward()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modelstep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        model.step()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modelsynchronize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        model.synchronize()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inference-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inference / Evaluation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1553,6 +1686,200 @@
 
 
 <h1 id="training-loop">Training Loop</h1>
+<p>This section covers how to write a complete training loop with RoundPipe, including forward/backward passes, optimizer updates, synchronization, and inference/evaluation.</p>
+<h2 id="forward_backward">forward_backward()</h2>
+<p><code>forward_backward()</code> is RoundPipe's core training API. It fuses forward and backward passes into a single call. Compared to calling <code>forward()</code> and <code>backward()</code> separately, fused execution allows forward and backward stages to interleave in the pipeline, eliminating pipeline bubbles and significantly improving performance.</p>
+<div class="highlight"><pre><span></span><code><span class="n">loss</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward_backward</span><span class="p">(</span>
+    <span class="n">input_args</span><span class="o">=</span><span class="p">(</span><span class="n">images</span><span class="p">,),</span>
+    <span class="n">input_kwargs</span><span class="o">=</span><span class="p">{},</span>
+    <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+    <span class="n">loss_fn</span><span class="o">=</span><span class="n">my_loss_fn</span><span class="p">,</span>
+    <span class="n">return_outputs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">run_config</span><span class="o">=</span><span class="n">RoundPipeRunConfig</span><span class="p">(),</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li>
+<p><strong><code>input_args</code></strong>: Positional arguments for the model's forward pass, as a tuple. For example, if <code>forward(x)</code> takes one input, pass <code>input_args=(x,)</code>.</p>
+</li>
+<li>
+<p><strong><code>input_kwargs</code></strong>: Keyword arguments for the model's forward pass, as a dict. For example, HuggingFace models typically accept <code>input_ids</code> and <code>attention_mask</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">loss</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward_backward</span><span class="p">(</span>
+    <span class="n">input_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="n">ids</span><span class="p">,</span> <span class="s2">&quot;attention_mask&quot;</span><span class="p">:</span> <span class="n">mask</span><span class="p">},</span>
+    <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+    <span class="n">loss_fn</span><span class="o">=</span><span class="n">my_loss_fn</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+</li>
+<li>
+<p><strong><code>label</code></strong>: Label data. Automatically split into microbatches aligned with the inputs and passed to <code>loss_fn</code>.</p>
+</li>
+<li>
+<p><strong><code>loss_fn</code></strong>: Loss function that takes <code>(outputs, labels)</code> and returns a loss tensor. RoundPipe calls <code>loss_fn</code> independently for each microbatch and backpropagates, then returns the sum of all microbatch losses.</p>
+</li>
+</ul>
+<div class="admonition info">
+<p class="admonition-title">Loss computation</p>
+<p>Since the returned loss is the sum across microbatches, divide by the microbatch count inside <code>loss_fn</code> if you want the mean loss equivalent to computing over the full batch:</p>
+<div class="highlight"><pre><span></span><code><span class="n">loss_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">criterion</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="o">/</span> <span class="n">num_microbatch</span>
+</code></pre></div>
+<p>When using GradScaler:</p>
+<div class="highlight"><pre><span></span><code><span class="n">loss_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">scaler</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span>
+    <span class="n">criterion</span><span class="p">(</span><span class="n">outputs</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">labels</span><span class="p">)</span>
+<span class="p">)</span> <span class="o">/</span> <span class="n">num_microbatch</span>
+</code></pre></div>
+</div>
+<ul>
+<li>
+<p><strong><code>return_outputs</code></strong>: Whether to also return the model outputs. Defaults to <code>False</code> (returns loss only). Set to <code>True</code> to get a <code>(loss, outputs)</code> tuple. Returning outputs adds extra memory overhead and synchronization.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Loss only</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward_backward</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+
+<span class="c1"># Loss and outputs (e.g., for computing accuracy)</span>
+<span class="n">loss</span><span class="p">,</span> <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward_backward</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">return_outputs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+</li>
+<li>
+<p><strong><code>run_config</code></strong>: Run configuration for this call, overriding the model-level defaults. See <a href="../../AdvancedUsage/run_config/">RoundPipeRunConfig Tuning</a>.</p>
+</li>
+</ul>
+<h2 id="modelstep">model.step()</h2>
+<p><code>model.step()</code> performs the optimizer update. It takes a callable that runs on the optimizer thread:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">step_fn</span><span class="p">():</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">step_fn</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>What goes in <code>step_fn</code></strong>:</p>
+<p><code>step_fn</code> is a zero-argument callable where you perform any optimizer-related operations. Common patterns:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Basic usage</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">step_fn</span><span class="p">():</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">step_fn</span><span class="p">)</span>
+
+<span class="c1"># With GradScaler</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">step_fn</span><span class="p">():</span>
+    <span class="n">scaler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">optimizer</span><span class="p">)</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">step_fn</span><span class="p">)</span>
+
+<span class="c1"># With gradient clipping</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">step_fn</span><span class="p">():</span>
+    <span class="n">scaler</span><span class="o">.</span><span class="n">unscale_</span><span class="p">(</span><span class="n">optimizer</span><span class="p">)</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span><span class="n">optimizer</span><span class="o">.</span><span class="n">param_groups</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;params&#39;</span><span class="p">],</span> <span class="n">max_norm</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">scaler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">optimizer</span><span class="p">)</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">step_fn</span><span class="p">)</span>
+</code></pre></div>
+<div class="admonition info">
+<p class="admonition-title">parameter() redirection</p>
+<p>Inside <code>step_fn</code>, calls to <code>model.parameters()</code> and <code>model.named_parameters()</code> are automatically redirected to the optimizer parameters (high precision), ensuring the optimizer update accesses the correct parameter set.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Data races</p>
+<p><code>step_fn</code> runs on the optimizer thread in parallel with GPU computation. Only access optimizer parameters and gradients inside <code>step_fn</code>; accessing other shared data requires care to avoid data races.</p>
+</div>
+<p><strong>The <code>is_async</code> parameter</strong>:</p>
+<ul>
+<li><code>is_async=True</code> (default): <code>step()</code> returns immediately and the optimizer update runs asynchronously in a background thread. Parameters used in the next iteration are one step behind (staleness-1), which does not affect convergence in practice. This is the recommended mode because the optimizer update time is fully hidden behind the next step's GPU computation.</li>
+<li><code>is_async=False</code>: <code>step()</code> blocks until the optimizer update finishes. Every iteration uses up-to-date parameters, but performance drops significantly. Typically not recommended.</li>
+</ul>
+<h2 id="modelsynchronize">model.synchronize()</h2>
+<p><code>synchronize()</code> waits for all asynchronous operations to complete and syncs the optimizer parameters back to the model parameters. After the call:</p>
+<ul>
+<li>Model parameters reflect the latest optimizer update.</li>
+<li>The <code>.grad</code> attribute on parameters contains the accumulated gradients.</li>
+</ul>
+<p><strong>When to call it</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. Before evaluation — ensure parameters are up to date</span>
+<span class="n">model</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">test_data</span><span class="p">)</span>
+
+<span class="c1"># 2. Before saving a checkpoint</span>
+<span class="n">model</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
+<span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="s2">&quot;checkpoint.pt&quot;</span><span class="p">)</span>
+
+<span class="c1"># 3. When you need to inspect gradients</span>
+<span class="n">model</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: grad norm = </span><span class="si">{</span><span class="n">param</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>During normal training (<code>forward_backward</code> → <code>step</code> loop), you do <strong>not</strong> need to call <code>synchronize()</code> — RoundPipe handles parameter consistency internally.</p>
+<h2 id="inference-evaluation">Inference / Evaluation</h2>
+<p>For evaluation, use <code>model.eval()</code> + <code>torch.no_grad()</code> + <code>model.forward()</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">model</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>  <span class="c1"># Ensure parameters are up to date</span>
+<span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+<span class="n">correct</span><span class="p">,</span> <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+<span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">images</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">test_loader</span><span class="p">:</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="n">images</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>  <span class="c1"># Use forward() — no backward pass needed</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">predicted</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">correct</span> <span class="o">+=</span> <span class="n">predicted</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="n">total</span> <span class="o">+=</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">accuracy</span> <span class="o">=</span> <span class="n">correct</span> <span class="o">/</span> <span class="n">total</span>
+<span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>  <span class="c1"># Switch back to training mode</span>
+</code></pre></div>
+<p><strong><code>forward()</code> vs <code>forward_backward()</code></strong>:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>forward()</code></th>
+<th><code>forward_backward()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Purpose</td>
+<td>Inference / evaluation</td>
+<td>Training</td>
+</tr>
+<tr>
+<td>Backward pass</td>
+<td>Not performed, but supported</td>
+<td>Automatic</td>
+</tr>
+<tr>
+<td>Return value</td>
+<td>Model output</td>
+<td>Loss (or loss + output)</td>
+</tr>
+<tr>
+<td>Calling convention</td>
+<td><code>model(x)</code> or <code>model.forward(x)</code></td>
+<td><code>model.forward_backward(...)</code></td>
+</tr>
+<tr>
+<td>Gradients</td>
+<td>Optional (use with <code>torch.no_grad()</code>)</td>
+<td>Automatically accumulated</td>
+</tr>
+</tbody>
+</table>
+<p><code>forward()</code> supports the same calling conventions as a regular PyTorch model:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># These two are equivalent</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">attention_mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">attention_mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
+
+<span class="c1"># You can also override the config per-call</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">roundpipe_run_config</span><span class="o">=</span><span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">num_microbatch</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+
+<span class="c1"># The output supports backward as usual</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+<span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+</code></pre></div>
 
 
 

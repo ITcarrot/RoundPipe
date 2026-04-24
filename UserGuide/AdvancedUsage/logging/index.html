@@ -1024,6 +1024,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logging
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -1040,6 +1058,36 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#per-layer-timing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Layer Timing
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1534,6 +1582,25 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#per-layer-timing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Layer Timing
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1553,6 +1620,29 @@
 
 
 <h1 id="logging-and-profiling">Logging and Profiling</h1>
+<h2 id="per-layer-timing">Per-Layer Timing</h2>
+<p>RoundPipe has built-in per-layer timing that reports the execution time of each layer's forward pass, backward pass, and recomputation. This is invaluable for identifying pipeline bottlenecks and tuning execution plans.</p>
+<p>To enable timing output:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe.timer</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelTimer</span>
+
+<span class="n">ModelTimer</span><span class="o">.</span><span class="n">VERBOSE</span> <span class="o">=</span> <span class="kc">True</span>
+</code></pre></div>
+<p>Once enabled, timing information is printed to <code>stderr</code> after each iteration:</p>
+<div class="highlight"><pre><span></span><code>Layer 0 fwd  new record: 1.234 ms  new estimate: 1.200 ms
+Layer 0 re   new record: 1.180 ms  new estimate: 1.150 ms
+Layer 0 bwd  new record: 2.456 ms  new estimate: 2.400 ms
+Layer 1 fwd  new record: 1.567 ms  new estimate: 1.530 ms
+Layer 1 re   new record: 1.520 ms  new estimate: 1.500 ms
+Layer 1 bwd  new record: 2.890 ms  new estimate: 2.850 ms
+...
+</code></pre></div>
+<p>Field meanings:</p>
+<ul>
+<li><strong>Layer N</strong>: Layer index.</li>
+<li><strong>fwd / re / bwd</strong>: Forward / recomputation / backward.</li>
+<li><strong>new record</strong>: Actual measured time for this iteration.</li>
+<li><strong>new estimate</strong>: Moving-average estimate (used by RoundPipe's automatic stage partitioning).</li>
+</ul>
 
 
 

@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#recompute-data" class="md-skip">
+        <a href="#saving-data-for-recomputation" class="md-skip">
           Skip to content
         </a>
       
@@ -996,6 +996,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recompute Data
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -1012,6 +1030,136 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#when-you-need-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When You Need This
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#save_for_recomputedata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        save_for_recompute(*data)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#doing_recompute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        doing_recompute()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_recompute_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_recompute_data()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#moe-expert-routing-replay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MoE Expert Routing Replay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#avoiding-gpu-cpu-synchronization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Avoiding GPU-CPU Synchronization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conditional-branches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conditional Branches
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1534,6 +1682,125 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#when-you-need-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When You Need This
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#save_for_recomputedata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        save_for_recompute(*data)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#doing_recompute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        doing_recompute()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_recompute_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_recompute_data()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#moe-expert-routing-replay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MoE Expert Routing Replay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#avoiding-gpu-cpu-synchronization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Avoiding GPU-CPU Synchronization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conditional-branches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conditional Branches
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1552,7 +1819,108 @@
   
 
 
-<h1 id="recompute-data">Recompute Data</h1>
+<h1 id="saving-data-for-recomputation">Saving Data for Recomputation</h1>
+<h2 id="when-you-need-this">When You Need This</h2>
+<p>By default, RoundPipe uses activation recomputation: it re-executes the forward pass during backward to recover intermediate activations. In most cases, recomputation produces results identical to the original forward pass (with <code>preserve_rng_state=True</code> ensuring consistent random behavior).</p>
+<p>However, some model layers contain <strong>non-deterministic operations</strong> in their <code>forward()</code>: even with the same input, two executions may produce different results, or certain operations trigger GPU-CPU synchronization that hurts performance. Typical scenarios:</p>
+<ul>
+<li><strong>MoE expert routing</strong>: Routing decisions may depend on <code>torch.topk</code> selections that must stay consistent across recomputation.</li>
+<li><strong>Dynamic-shape operations</strong>: Operations like <code>torch.nonzero()</code> return tensors whose shape depends on input values and trigger GPU-CPU sync.</li>
+<li><strong>Conditional branches</strong>: A <code>forward()</code> that chooses different execution paths based on intermediate results.</li>
+</ul>
+<p>For these cases, RoundPipe provides the <code>save_for_recompute</code> API, allowing you to save critical data during the forward pass and reuse it during recomputation instead of recomputing it.</p>
+<h2 id="api">API</h2>
+<h3 id="save_for_recomputedata">save_for_recompute(*data)</h3>
+<p>Saves data during the forward pass for use during recomputation.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_for_recompute</span>
+
+<span class="n">save_for_recompute</span><span class="p">(</span><span class="n">routing_indices</span><span class="p">,</span> <span class="n">expert_mask</span><span class="p">)</span>
+</code></pre></div>
+<ul>
+<li>May be called at most once per layer's <code>forward()</code>.</li>
+<li>Saved tensors must not require gradients (<code>requires_grad=False</code>).</li>
+<li>This is a no-op when gradient computation is disabled.</li>
+</ul>
+<h3 id="doing_recompute">doing_recompute()</h3>
+<p>Checks whether the current execution is a recomputation pass.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">doing_recompute</span>
+
+<span class="k">if</span> <span class="n">doing_recompute</span><span class="p">():</span>
+    <span class="c1"># Currently in a recomputation pass</span>
+    <span class="o">...</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="c1"># Normal forward pass</span>
+    <span class="o">...</span>
+</code></pre></div>
+<h3 id="get_recompute_data">get_recompute_data()</h3>
+<p>Retrieves data previously saved via <code>save_for_recompute</code> during a recomputation pass.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_recompute_data</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">get_recompute_data</span><span class="p">()</span>  <span class="c1"># Returns a tuple</span>
+</code></pre></div>
+<ul>
+<li>Can only be called during recomputation; raises <code>AssertionError</code> otherwise.</li>
+<li>Always returns a tuple, even if only one value was saved.</li>
+</ul>
+<h2 id="examples">Examples</h2>
+<h3 id="moe-expert-routing-replay">MoE Expert Routing Replay</h3>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_for_recompute</span><span class="p">,</span> <span class="n">doing_recompute</span><span class="p">,</span> <span class="n">get_recompute_data</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MoELayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_experts</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">expert_size</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gate</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">num_experts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">experts</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">([</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">expert_size</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_experts</span><span class="p">)</span>
+        <span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">doing_recompute</span><span class="p">():</span>
+            <span class="c1"># Recomputation: reuse the saved routing result</span>
+            <span class="n">selected_experts</span><span class="p">,</span> <span class="o">=</span> <span class="n">get_recompute_data</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Normal forward: compute routing and save it</span>
+            <span class="n">gate_logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">routing_weights</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">gate_logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">selected_experts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="n">routing_weights</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">indices</span>
+            <span class="n">save_for_recompute</span><span class="p">(</span><span class="n">selected_experts</span><span class="p">)</span>
+
+        <span class="c1"># Use routing result for expert computation</span>
+        <span class="c1"># ...</span>
+        <span class="k">return</span> <span class="n">output</span>
+</code></pre></div>
+<h3 id="avoiding-gpu-cpu-synchronization">Avoiding GPU-CPU Synchronization</h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SparseLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">doing_recompute</span><span class="p">():</span>
+            <span class="n">mask</span><span class="p">,</span> <span class="o">=</span> <span class="n">get_recompute_data</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># torch.nonzero() triggers GPU-CPU sync (needs the count of non-zero elements)</span>
+            <span class="c1"># Save the result to avoid re-syncing during recomputation</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">)</span>
+            <span class="n">save_for_recompute</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+
+        <span class="c1"># Use mask for sparse computation</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+</code></pre></div>
+<h3 id="conditional-branches">Conditional Branches</h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ConditionalLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">doing_recompute</span><span class="p">():</span>
+            <span class="n">use_branch_a</span><span class="p">,</span> <span class="o">=</span> <span class="n">get_recompute_data</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Choose branch based on input statistics</span>
+            <span class="n">use_branch_a</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>  <span class="c1"># Triggers GPU-CPU sync</span>
+            <span class="n">save_for_recompute</span><span class="p">(</span><span class="n">use_branch_a</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">use_branch_a</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">branch_a</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">branch_b</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</code></pre></div>
 
 
 

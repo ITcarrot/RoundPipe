@@ -740,6 +740,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-GPU Training
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -756,6 +774,47 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#automatic-multi-gpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Multi-GPU
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consistent-behavior-across-gpu-counts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consistent Behavior Across GPU Counts
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1534,6 +1593,36 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#automatic-multi-gpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Multi-GPU
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consistent-behavior-across-gpu-counts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consistent Behavior Across GPU Counts
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1553,6 +1642,43 @@
 
 
 <h1 id="multi-gpu-training">Multi-GPU Training</h1>
+<h2 id="automatic-multi-gpu">Automatic Multi-GPU</h2>
+<p>RoundPipe supports multi-GPU training out of the box with <strong>zero code changes</strong>. The same training script behaves identically on one GPU and on eight. RoundPipe automatically detects all available CUDA devices and dispatches pipeline stages across them.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># This code runs on 1 GPU or 8 GPUs — no modifications needed</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">RoundPipe</span><span class="p">(</span><span class="n">my_model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">),</span> <span class="n">optim_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">data</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward_backward</span><span class="p">(</span>
+        <span class="n">input_args</span><span class="o">=</span><span class="p">(</span><span class="n">data</span><span class="p">,),</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+        <span class="n">loss_fn</span><span class="o">=</span><span class="n">my_loss_fn</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">(</span><span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">(),</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()))</span>
+</code></pre></div>
+<p>No <code>torch.distributed.init_process_group()</code>. No <code>DistributedDataParallel</code>. No <code>RANK</code> or <code>WORLD_SIZE</code> environment variables. RoundPipe manages all GPUs within a single process.</p>
+<p>To restrict which GPUs are used, set the <code>CUDA_VISIBLE_DEVICES</code> environment variable:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Use only GPU 0 and GPU 1</span>
+<span class="nv">CUDA_VISIBLE_DEVICES</span><span class="o">=</span><span class="m">0</span>,1<span class="w"> </span>python<span class="w"> </span>train.py
+
+<span class="c1"># Use a single GPU</span>
+<span class="nv">CUDA_VISIBLE_DEVICES</span><span class="o">=</span><span class="m">0</span><span class="w"> </span>python<span class="w"> </span>train.py
+</code></pre></div>
+<h2 id="consistent-behavior-across-gpu-counts">Consistent Behavior Across GPU Counts</h2>
+<p>When <code>num_microbatch</code> is set explicitly, RoundPipe guarantees that program semantics are independent of the number of GPUs. That is, with the same <code>num_microbatch</code>, training on 1 GPU and 8 GPUs produces consistent results (loss, gradients, and parameter updates).</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Fix num_microbatch to ensure consistency across GPU counts</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">RoundPipe</span><span class="p">(</span>
+    <span class="n">my_model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">),</span>
+    <span class="n">optim_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+    <span class="n">model_run_config</span><span class="o">=</span><span class="n">RoundPipeRunConfig</span><span class="p">(</span><span class="n">num_microbatch</span><span class="o">=</span><span class="mi">9</span><span class="p">),</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>If <code>num_microbatch</code> is not specified, the default is <code>GPU count + 1</code>. In that case, different GPU counts lead to different microbatch counts, and training semantics may differ (since the loss is the sum of per-microbatch losses, and consistency depends on how <code>loss_fn</code> is implemented).</p>
+<p><strong>Guidelines for choosing num_microbatch</strong>:</p>
+<ul>
+<li><strong>Default</strong>: <code>num_devices + 1</code> (e.g., 9 for 8 GPUs). This is the minimum value that keeps the pipeline bubble-free.</li>
+<li><strong>If you fix this value</strong>: it should always be at least <code>max GPU count + 1</code>. If <code>num_microbatch</code> is less than the GPU count + 1, some GPUs will idle at times, creating pipeline bubbles.</li>
+<li><strong>Increasing num_microbatch</strong>: reduces per-microbatch data size, lowering GPU peak memory usage. Useful for long sequences or tight memory budgets. However, overly large <code>num_microbatch</code> makes each microbatch too small, reducing GPU compute efficiency.</li>
+</ul>
 
 
 

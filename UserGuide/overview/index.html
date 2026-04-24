@@ -81,6 +81,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#overview" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -480,6 +485,26 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RoundPipe Overview
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -497,6 +522,153 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipe-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe For ...
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dispatch-pp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dispatch Pipeline Parallelism
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dispatch Pipeline Parallelism">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-pipeline-parallelism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Is Pipeline Parallelism
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundpipes-dispatch-pipeline-parallelism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe's Dispatch Pipeline Parallelism
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RoundPipe&#39;s Dispatch Pipeline Parallelism">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stages-and-layers-in-roundpipe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stages and Layers in RoundPipe
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Concepts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Concepts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sequential-code-parallel-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sequential Code, Parallel Run
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cpu-centric-parameter-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CPU-Centric Parameter Storage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#input-splitting-and-microbatch-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input Splitting and Microbatch Execution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#activation-recomputation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Activation Recomputation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1524,6 +1696,144 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#roundpipe-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe For ...
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dispatch-pp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dispatch Pipeline Parallelism
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dispatch Pipeline Parallelism">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-pipeline-parallelism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Is Pipeline Parallelism
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundpipes-dispatch-pipeline-parallelism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RoundPipe's Dispatch Pipeline Parallelism
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RoundPipe&#39;s Dispatch Pipeline Parallelism">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stages-and-layers-in-roundpipe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stages and Layers in RoundPipe
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Concepts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Concepts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sequential-code-parallel-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sequential Code, Parallel Run
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cpu-centric-parameter-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CPU-Centric Parameter Storage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#input-splitting-and-microbatch-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input Splitting and Microbatch Execution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#activation-recomputation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Activation Recomputation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1543,9 +1853,94 @@
   
 
 
-  <h1>RoundPipe Overview</h1>
+<h1 id="overview">Overview</h1>
+<p>RoundPipe is a high-performance deep neural network training framework designed for training large-scale models on consumer-grade GPUs. Built entirely on PyTorch, it natively supports any GPU platform compatible with PyTorch, including NVIDIA, AMD, and Huawei Ascend.</p>
+<h2 id="roundpipe-for">RoundPipe For ...</h2>
+<ul>
+<li><strong>GPU memory is too small for large models</strong>: Consumer GPUs like the RTX 4090 have only 24 GB of VRAM, yet an 8B-parameter model requires roughly 128 GB to store its full training state (parameters, gradients, and optimizer states) in mixed precision — far exceeding a single card's capacity. RoundPipe keeps model state in CPU memory and dispatches computation to GPUs on demand, breaking through the VRAM barrier.</li>
+<li><strong>Communication bottleneck without NVLink</strong>: Consumer-grade servers use PCIe interconnects, which offer less than 20% of NVLink bandwidth. Data-parallel approaches must synchronize all parameters via collective communication every iteration, spending most of their time on transfers. RoundPipe uses <a href="#dispatch-pp">Dispatch Pipeline Parallelism</a>, where each stage only needs to upload its parameters from CPU to a single GPU, dramatically reducing inter-GPU communication overhead.</li>
+<li><strong>RoundPipe is not intended for small models (&lt; 0.5B)</strong>: When a model fits comfortably in a single GPU's memory, data parallelism is simpler and more efficient. RoundPipe's advantage emerges when model training requires more than  <strong>a single GPU's VRAM</strong>.</li>
+</ul>
+<h2 id="dispatch-pp">Dispatch Pipeline Parallelism</h2>
+<h3 id="what-is-pipeline-parallelism">What Is Pipeline Parallelism</h3>
+<p>Pipeline Parallelism is a model-parallel strategy that partitions a model by layers into multiple <strong>stages</strong>, splits training data into multiple <strong>microbatches</strong>, and processes those microbatches through the stages in a pipelined fashion.</p>
+<p>A simple example: suppose a model has 4 layers partitioned into 2 stages (2 layers each), using GPipe scheduling with 2 microbatches:</p>
+<div class="highlight"><pre><span></span><code>Time →
 
+GPU 0 (stage 0): [mb0 F][mb1 F]              [mb1 B][mb0 B]
+GPU 1 (stage 1):        [mb0 F][mb1 F][mb1 B][mb0 B]
 
+F = forward pass, B = backward pass
+</code></pre></div>
+<p>After GPU 0 finishes the stage-0 forward pass for mb0, GPU 1 begins the stage-1 forward for mb0, while GPU 0 can start the stage-0 forward for mb1 — both GPUs work in parallel. However, between the end of all forward passes and the start of backward passes, there are idle <strong>pipeline bubbles</strong> where GPUs sit waiting.</p>
+<h3 id="roundpipes-dispatch-pipeline-parallelism">RoundPipe's Dispatch Pipeline Parallelism</h3>
+<p>In traditional pipeline parallelism, each stage is pinned to a fixed GPU (stage 0 always runs on GPU 0, stage 1 on GPU 1), which constrains how stages can be partitioned.</p>
+<p>RoundPipe breaks this stage-to-GPU binding. Model parameters live in CPU memory; each time a stage runs, its parameters are uploaded from CPU to a GPU, and released after computation. Any stage can therefore run on any GPU.</p>
+<p>RoundPipe treats GPUs as a <strong>stateless compute pool</strong> and dispatches stages to them in round-robin order:</p>
+<div class="highlight"><pre><span></span><code>Time →
+GPU 0: [F stage0] [F stage3] [B stage2] ...
+GPU 1:   [F stage1] [B stage4] [B stage1] ...
+GPU 2:     [F stage2] [B stage3] [B stage0] ...
+</code></pre></div>
+<p>This yields several key advantages:</p>
+<ol>
+<li><strong>Flexible stage partitioning</strong>: The number of stages can be any integer, independent of the GPU count. Forward and backward passes can even use different partitions (asymmetric partitioning) for better load balancing.</li>
+<li><strong>Fewer pipeline bubbles</strong>: Round-robin dispatch lets forward and backward stages interleave tightly, eliminating inter-GPU synchronization waits.</li>
+<li><strong>Lower memory footprint</strong>: At any moment, a GPU holds data for only the single stage currently executing.</li>
+</ol>
+<h4 id="stages-and-layers-in-roundpipe">Stages and Layers in RoundPipe</h4>
+<ul>
+<li><strong>Layer</strong>: The basic building block of the model — each submodule passed to <code>nn.Sequential</code>. For example, each transformer block is a layer.</li>
+<li><strong>Stage</strong>: A group of one or more consecutive layers that forms the scheduling unit for the pipeline. All layers in a stage are uploaded to a GPU together and executed sequentially.</li>
+</ul>
+<p>RoundPipe uses <strong>asymmetric partitioning</strong> for forward and backward passes: because a transformer layer's forward computation takes roughly 1/3 the time of its backward pass (including recomputation), forward stages contain more layers and backward stages fewer, so that every stage takes approximately the same time. For example, a 12-layer model might be partitioned as:</p>
+<ul>
+<li>Forward: <code>[layer 0-2], [layer 3-5], [layer 6-8], [layer 9-11]</code> (3 layers per stage)</li>
+<li>Backward: <code>[layer 11], [layer 10], [layer 9], ..., [layer 0]</code> (1 layer per stage)</li>
+</ul>
+<h2 id="core-concepts">Core Concepts</h2>
+<h3 id="sequential-code-parallel-run">Sequential Code, Parallel Run</h3>
+<p>RoundPipe uses a <strong>single-controller architecture</strong>: you write a plain, single-device training script, and RoundPipe automatically maps the computation across all available GPUs.</p>
+<p>The core API boils down to two calls:</p>
+<ul>
+<li><code>model.forward_backward()</code> — run the forward and backward passes</li>
+<li><code>model.step()</code> — run the optimizer update</li>
+</ul>
+<p>A typical training loop looks like this:</p>
+<div class="highlight"><pre><span></span><code><span class="k">for</span> <span class="n">data</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward_backward</span><span class="p">(</span>
+        <span class="n">input_args</span><span class="o">=</span><span class="p">(</span><span class="n">data</span><span class="p">,),</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+        <span class="n">loss_fn</span><span class="o">=</span><span class="n">my_loss_fn</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">(</span><span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">(),</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()))</span>
+</code></pre></div>
+<p>This reads almost identically to standard single-GPU training, but under the hood RoundPipe handles microbatch splitting, multi-GPU pipeline scheduling, parameter transfers, gradient accumulation, and asynchronous optimizer updates — all automatically.</p>
+<h3 id="cpu-centric-parameter-storage">CPU-Centric Parameter Storage</h3>
+<p>RoundPipe follows a <strong>compute-dispatch paradigm</strong>:</p>
+<ul>
+<li>CPU memory is the <strong>primary store</strong> for model state and intermediate activations.</li>
+<li>GPUs are <strong>stateless compute accelerators</strong> that temporarily hold a stage's data only while executing it (VRAM acts as a cache).</li>
+<li>After computation, gradients are downloaded back to CPU and the GPU-side parameter copy is released immediately.</li>
+</ul>
+<p>This design vastly increases the trainable model size: the VRAM limit depends only on the size of a single model layer, not the entire model. You simply keep model parameters and input data on the CPU; RoundPipe takes care of all data transfers and scheduling.</p>
+<h3 id="input-splitting-and-microbatch-execution">Input Splitting and Microbatch Execution</h3>
+<p>RoundPipe automatically splits each training batch into multiple <strong>microbatches</strong> and processes them in a pipeline. Each microbatch independently performs its forward pass, loss computation, and backward pass, with gradients accumulated across all microbatches:</p>
+<div class="highlight"><pre><span></span><code>Input batch (batch_size=12, num_microbatch=3)
+    ↓ automatic split
+microbatch 0: [samples 0-3]   ──forward──→ output_0 ──loss_fn──→ loss_0 ──backward──→ accumulate grads
+microbatch 1: [samples 4-7]   ──forward──→ output_1 ──loss_fn──→ loss_1 ──backward──→ accumulate grads
+microbatch 2: [samples 8-11]  ──forward──→ output_2 ──loss_fn──→ loss_2 ──backward──→ accumulate grads
+    ↓
+returns loss = loss_0 + loss_1 + loss_2
+</code></pre></div>
+<p>Note: each microbatch's loss is <strong>computed and backpropagated independently</strong>. The returned loss is the sum of all microbatch losses, and the gradients are the sum of per-microbatch gradients. This is mathematically equivalent to computing the loss over the entire batch and backpropagating once.</p>
+<p>If you want the <strong>mean</strong> loss (equivalent to averaging over the full batch), divide by the number of microbatches inside <code>loss_fn</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">loss_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">criterion</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="o">/</span> <span class="n">num_microbatch</span>
+</code></pre></div>
+<h3 id="activation-recomputation">Activation Recomputation</h3>
+<p>Backward passes need the intermediate activations (per-layer computation results) from the forward pass. For large models and long sequences, storing all activations consumes enormous amounts of memory. <strong>Activation recomputation</strong> trades compute for memory: during the forward pass, only each layer's input is saved (not intermediate activations); during the backward pass, the forward computation is re-executed to recover intermediate results. Although this adds computational overhead, it significantly reduces memory usage, enabling larger batch sizes and larger models, which in turn improves GPU utilization and overall training efficiency.</p>
+<p>RoundPipe integrates full activation recomputation — every layer's forward computation is re-executed during the backward pass — with no additional code changes required.</p>
 
 
 

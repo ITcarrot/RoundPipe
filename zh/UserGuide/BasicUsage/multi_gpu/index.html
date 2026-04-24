@@ -1666,7 +1666,7 @@
 <span class="nv">CUDA_VISIBLE_DEVICES</span><span class="o">=</span><span class="m">0</span><span class="w"> </span>python<span class="w"> </span>train.py
 </code></pre></div>
 <h2 id="_2">多卡与单卡的行为一致性</h2>
-<p>只要显式指定 <code>num_microbatch</code>，RoundPipe 可以保证程序语义不受卡数影响。也就是说，在相同的 <code>num_microbatch</code> 下，1 卡和 8 卡的训练结果（loss、梯度、参数更新）是完全一致的。</p>
+<p>只要显式指定 <code>num_microbatch</code>，RoundPipe 可以保证程序语义不受卡数影响。也就是说，在相同的 <code>num_microbatch</code> 下，1 卡和 8 卡的训练结果（loss、梯度、参数更新）是一致的。</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># 固定 num_microbatch，确保跨卡数一致性</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">RoundPipe</span><span class="p">(</span>
     <span class="n">my_model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">),</span>

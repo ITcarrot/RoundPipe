@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#custom-data-type" class="md-skip">
+        <a href="#registering-custom-data-types" class="md-skip">
           Skip to content
         </a>
       
@@ -940,6 +940,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Data Type
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -956,6 +974,108 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#background" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Background
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#registering-flattenunflatten-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registering Flatten/Unflatten Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Registering Flatten/Unflatten Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interface
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-registering-a-dataclass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example: Registering a Dataclass
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-optional-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example: Optional Fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-nested-structures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example: Nested Structures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#important-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Important Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1534,6 +1654,97 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#background" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Background
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#registering-flattenunflatten-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registering Flatten/Unflatten Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Registering Flatten/Unflatten Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interface
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-registering-a-dataclass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example: Registering a Dataclass
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-optional-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example: Optional Fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-nested-structures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example: Nested Structures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#important-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Important Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1552,7 +1763,125 @@
   
 
 
-<h1 id="custom-data-type">Custom Data Type</h1>
+<h1 id="registering-custom-data-types">Registering Custom Data Types</h1>
+<h2 id="background">Background</h2>
+<p>During training, RoundPipe needs to perform the following operations on each layer's inputs and outputs:</p>
+<ul>
+<li><strong>Splitting and merging</strong>: split inputs into microbatches and merge outputs back.</li>
+<li><strong>Device transfers</strong>: move activations between CPU and GPU.</li>
+</ul>
+<p>To do this, RoundPipe needs to "unpack" data structures, find every tensor inside, and operate on them individually. It relies on PyTorch's built-in pytree mechanism (<code>torch.utils._pytree</code>) for this.</p>
+<p>By default, pytree only recognizes Python built-in container types: <code>tuple</code>, <code>list</code>, <code>dict</code>, <code>namedtuple</code>, and <code>OrderedDict</code>. If a model's inputs or outputs contain <strong>custom data types</strong> (e.g., dataclasses, custom classes), pytree treats them as opaque leaf nodes — tensors inside them won't be transferred to the right device or split correctly.</p>
+<p>For example, suppose a layer produces an output using a custom class:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ModelOutput</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logits</span><span class="p">,</span> <span class="n">hidden_states</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logits</span> <span class="o">=</span> <span class="n">logits</span>            <span class="c1"># tensor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hidden_states</span> <span class="o">=</span> <span class="n">hidden_states</span>  <span class="c1"># tensor</span>
+</code></pre></div>
+<p>Without registering an unpack function, RoundPipe sees the entire <code>ModelOutput</code> object as a single leaf. When it tries to transfer the object from GPU to CPU, the internal tensors are not moved, causing downstream layers to access data on the wrong device.</p>
+<h2 id="registering-flattenunflatten-functions">Registering Flatten/Unflatten Functions</h2>
+<p>Use <code>torch.utils._pytree.register_pytree_node</code> to register flatten and unflatten functions for your custom type, so that pytree can recognize and process it.</p>
+<h3 id="interface">Interface</h3>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils._pytree</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_pytree_node</span>
+
+<span class="n">register_pytree_node</span><span class="p">(</span>
+    <span class="bp">cls</span><span class="p">,</span>                <span class="c1"># The class to register</span>
+    <span class="n">flatten_fn</span><span class="p">,</span>         <span class="c1"># Flatten: cls -&gt; (children, context)</span>
+    <span class="n">unflatten_fn</span><span class="p">,</span>       <span class="c1"># Unflatten: (children, context) -&gt; cls</span>
+<span class="p">)</span>
+</code></pre></div>
+<ul>
+<li><strong><code>flatten_fn(obj)</code></strong>: Takes an instance of the custom type and returns <code>(children, context)</code>. <code>children</code> is a list of all elements that pytree should recursively process (typically tensors); <code>context</code> is any extra information needed for reconstruction (e.g., field names, non-tensor attributes).</li>
+<li><strong><code>unflatten_fn(children, context)</code></strong>: Takes <code>children</code> and <code>context</code> and reconstructs the original type.</li>
+</ul>
+<h3 id="example-registering-a-dataclass">Example: Registering a Dataclass</h3>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils._pytree</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_pytree_node</span>
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TransformerOutput</span><span class="p">:</span>
+    <span class="n">logits</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="n">hidden_states</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="n">loss</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># Non-tensor field</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">flatten_transformer_output</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="c1"># children: elements for pytree to process (tensors)</span>
+    <span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">logits</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">hidden_states</span><span class="p">]</span>
+    <span class="c1"># context: extra info needed for reconstruction</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;loss&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">loss</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">children</span><span class="p">,</span> <span class="n">context</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">unflatten_transformer_output</span><span class="p">(</span><span class="n">children</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="n">logits</span><span class="p">,</span> <span class="n">hidden_states</span> <span class="o">=</span> <span class="n">children</span>
+    <span class="k">return</span> <span class="n">TransformerOutput</span><span class="p">(</span>
+        <span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">,</span>
+        <span class="n">hidden_states</span><span class="o">=</span><span class="n">hidden_states</span><span class="p">,</span>
+        <span class="n">loss</span><span class="o">=</span><span class="n">context</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
+
+<span class="n">register_pytree_node</span><span class="p">(</span>
+    <span class="n">TransformerOutput</span><span class="p">,</span>
+    <span class="n">flatten_transformer_output</span><span class="p">,</span>
+    <span class="n">unflatten_transformer_output</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>After registration, RoundPipe correctly handles <code>TransformerOutput</code>:</p>
+<ul>
+<li>During splitting, <code>logits</code> and <code>hidden_states</code> are split along the batch dimension into microbatches.</li>
+<li>During transfers, both tensors are moved between CPU and GPU correctly.</li>
+<li>During merging, per-microbatch tensors are concatenated, and the <code>loss</code> field is checked for consistency.</li>
+</ul>
+<h3 id="example-optional-fields">Example: Optional Fields</h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">FlexibleOutput</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logits</span><span class="p">,</span> <span class="n">attentions</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logits</span> <span class="o">=</span> <span class="n">logits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attentions</span> <span class="o">=</span> <span class="n">attentions</span>  <span class="c1"># May be None</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">flatten_flexible</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">logits</span><span class="p">]</span>
+    <span class="n">has_attentions</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">attentions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">has_attentions</span><span class="p">:</span>
+        <span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">attentions</span><span class="p">)</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;has_attentions&quot;</span><span class="p">:</span> <span class="n">has_attentions</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">children</span><span class="p">,</span> <span class="n">context</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">unflatten_flexible</span><span class="p">(</span><span class="n">children</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;has_attentions&quot;</span><span class="p">]:</span>
+        <span class="n">logits</span><span class="p">,</span> <span class="n">attentions</span> <span class="o">=</span> <span class="n">children</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logits</span> <span class="o">=</span> <span class="n">children</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">attentions</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">FlexibleOutput</span><span class="p">(</span><span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">,</span> <span class="n">attentions</span><span class="o">=</span><span class="n">attentions</span><span class="p">)</span>
+
+<span class="n">register_pytree_node</span><span class="p">(</span><span class="n">FlexibleOutput</span><span class="p">,</span> <span class="n">flatten_flexible</span><span class="p">,</span> <span class="n">unflatten_flexible</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="example-nested-structures">Example: Nested Structures</h3>
+<p>If your custom type contains other custom types or containers, simply include them in <code>children</code> — pytree handles them recursively:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">BatchResult</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span> <span class="o">=</span> <span class="n">outputs</span>    <span class="c1"># list of tensors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span>  <span class="c1"># dict, may contain tensors</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">flatten_batch_result</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="c1"># Put both into children; pytree will recurse into them</span>
+    <span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">outputs</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">metadata</span><span class="p">]</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">children</span><span class="p">,</span> <span class="n">context</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">unflatten_batch_result</span><span class="p">(</span><span class="n">children</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="n">outputs</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">children</span>
+    <span class="k">return</span> <span class="n">BatchResult</span><span class="p">(</span><span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
+
+<span class="n">register_pytree_node</span><span class="p">(</span><span class="n">BatchResult</span><span class="p">,</span> <span class="n">flatten_batch_result</span><span class="p">,</span> <span class="n">unflatten_batch_result</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="important-notes">Important Notes</h3>
+<ul>
+<li>Registration must happen <strong>before</strong> creating the <code>RoundPipe</code> instance — typically at the top of the model definition file.</li>
+<li>The order of elements in <code>children</code> must match the unpacking order in <code>unflatten_fn</code>.</li>
+<li><code>context</code> must be serializable (no tensors or other non-picklable objects).</li>
+<li>HuggingFace Transformers model output classes (e.g., <code>CausalLMOutputWithPast</code>) are already registered by the transformers library — no manual registration needed.</li>
+</ul>
 
 
 

@@ -1763,12 +1763,13 @@
 </div>
 <h3 id="unscale">手动 unscale</h3>
 <p>如果需要在优化器更新前对梯度进行额外操作（如梯度裁剪），可以手动调用 <code>unscale_</code>：</p>
-<div class="highlight"><pre><span></span><code><span class="n">model</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">(</span>
-    <span class="n">scaler</span><span class="o">.</span><span class="n">unscale_</span><span class="p">(</span><span class="n">optimizer</span><span class="p">),</span>
-    <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span><span class="n">optimizer</span><span class="o">.</span><span class="n">param_groups</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;params&#39;</span><span class="p">],</span> <span class="n">max_norm</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>
-    <span class="n">scaler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">optimizer</span><span class="p">),</span>
-    <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(),</span>
-<span class="p">))</span>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">step_fn</span><span class="p">():</span>
+    <span class="n">scaler</span><span class="o">.</span><span class="n">unscale_</span><span class="p">(</span><span class="n">optimizer</span><span class="p">)</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span><span class="n">optimizer</span><span class="o">.</span><span class="n">param_groups</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;params&#39;</span><span class="p">],</span> <span class="n">max_norm</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">scaler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">optimizer</span><span class="p">)</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">step_fn</span><span class="p">)</span>
 </code></pre></div>
 <p>如果没有手动调用 <code>unscale_</code>，<code>scaler.step()</code> 会自动执行，无需额外操作。</p>
 
