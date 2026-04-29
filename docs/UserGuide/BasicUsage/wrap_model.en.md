@@ -4,7 +4,7 @@ The first step to training with RoundPipe is wrapping your model into a RoundPip
 
 ## Using Model Presets
 
-RoundPipe ships with built-in presets for popular large language models, automatically converting them into the Sequential structure required for pipeline execution. See the [Model Zoo](../../model_zoo.md) for the full list of supported models.
+RoundPipe ships with built-in presets for popular large language models, automatically converting them into the Sequential structure required for pipeline execution. See the [Model Zoo](../../ModelZoo/model_presets.md) for the full list of supported models.
 
 Use `wrap_model_to_roundpipe()` for one-line wrapping:
 

@@ -30,7 +30,8 @@ nav:
       - Optimizer: API/optimizer.md
       - GradScaler: API/grad_scaler.md
       - Logging: API/logging.md
-  - Model Zoo: model_zoo.md
+  - Model Zoo:
+      - Model Presets: ModelZoo/model_presets.md
   - Developer:
       - Contact: Developer/contact.md
       - Contribute Model Zoo: Developer/contribute_model.md
@@ -110,6 +111,7 @@ plugins:
             Optimizer: 优化器
             GradScaler: 梯度缩放器
             Model Zoo: 模型库
+            Model Presets: 预设模型
             Developer: 开发者
             Contact: 联系我们
             Contribute Model Zoo: 贡献模型库

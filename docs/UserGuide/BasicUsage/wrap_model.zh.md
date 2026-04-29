@@ -4,7 +4,7 @@
 
 ## 使用预设模型
 
-RoundPipe 为常见的大语言模型提供了内置预设，可以自动将模型转换为适合流水线执行的 Sequential 结构。支持的模型列表见[预设模型清单](../../model_zoo.md)。
+RoundPipe 为常见的大语言模型提供了内置预设，可以自动将模型转换为适合流水线执行的 Sequential 结构。支持的模型列表见[预设模型清单](../../ModelZoo/model_presets.md)。
 
 使用 `wrap_model_to_roundpipe()` 即可一键包装：
 
