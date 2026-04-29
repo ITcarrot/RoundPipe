@@ -89,7 +89,7 @@ pip install roundpipe
 
 ### Examples
 
-See the [`example/`](https://github.com/ITcarrot/RoundPipe/tree/main/example) directory. More examples and tutorials will be added soon.
+See the [`example/`](https://github.com/ITcarrot/RoundPipe/tree/main/example) directory for interactive jupyter notebook.
 
 ## Documentation
 

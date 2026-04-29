@@ -7,6 +7,8 @@ nav:
       - RoundPipe Overview: UserGuide/overview.md
       - Quick Start:
         - Installation: UserGuide/QuickStart/installation.md
+        - "Fine-Tune Qwen3-1.7B": UserGuide/QuickStart/qwen3_nekoqa.md
+        - "Train a Custom Model": UserGuide/QuickStart/resnet_cifar100.md
       - Basic Usage:
         - Wrap Model: UserGuide/BasicUsage/wrap_model.md
         - Optimizer: UserGuide/BasicUsage/optimizer.md
@@ -86,6 +88,8 @@ plugins:
             RoundPipe Overview: RoundPipe概览
             Quick Start: 快速开始
             Installation: 安装
+            "Train a Custom Model": 训练自定义模型
+            "Fine-Tune Qwen3-1.7B": 微调 Qwen3-1.7B
             Basic Usage: 基本用法
             Wrap Model: 包装模型
             Optimizer: 创建优化器
