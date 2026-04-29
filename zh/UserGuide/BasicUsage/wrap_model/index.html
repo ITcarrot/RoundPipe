@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/BasicUsage/wrap_model/">
       
       
-        <link rel="prev" href="../../QuickStart/installation/">
+        <link rel="prev" href="../../QuickStart/resnet_cifar100/">
       
       
         <link rel="next" href="../optimizer/">
@@ -314,17 +314,18 @@
   
   
   
-    <li class="md-tabs__item">
-      <a href="../../../model_zoo/" class="md-tabs__link">
-        
-  
-  
     
+    
+      <li class="md-tabs__item">
+        <a href="../../../ModelZoo/model_presets/" class="md-tabs__link">
+          
+  
   
   模型库
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
@@ -569,6 +570,62 @@
     
   
     安装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../QuickStart/qwen3_nekoqa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    微调 Qwen3-1.7B
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../QuickStart/resnet_cifar100/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练自定义模型
   
 
     
@@ -1433,9 +1490,25 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../../model_zoo/" class="md-nav__link">
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
         
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -1449,7 +1522,51 @@
   
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型库
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../ModelZoo/model_presets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    预设模型
+  
+
+    
+  </span>
+  
+  
+
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -1802,7 +1919,7 @@
 <h1 id="_1">包装模型</h1>
 <p>使用 RoundPipe 训练模型的第一步是将模型包装为 RoundPipe 实例。RoundPipe 提供了两种方式：对于已有预设的模型（如 Qwen3、Llama）可以一键包装；对于自定义模型，需要将其转换为 <code>nn.Sequential</code> 形式后手动包装。</p>
 <h2 id="_2">使用预设模型</h2>
-<p>RoundPipe 为常见的大语言模型提供了内置预设，可以自动将模型转换为适合流水线执行的 Sequential 结构。支持的模型列表见<a href="../../../model_zoo/">预设模型清单</a>。</p>
+<p>RoundPipe 为常见的大语言模型提供了内置预设，可以自动将模型转换为适合流水线执行的 Sequential 结构。支持的模型列表见<a href="../../../ModelZoo/model_presets/">预设模型清单</a>。</p>
 <p>使用 <code>wrap_model_to_roundpipe()</code> 即可一键包装：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoModelForCausalLM</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">roundpipe</span><span class="w"> </span><span class="kn">import</span> <span class="n">wrap_model_to_roundpipe</span><span class="p">,</span> <span class="n">RoundPipeRunConfig</span>

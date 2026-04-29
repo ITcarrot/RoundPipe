@@ -8,13 +8,6 @@
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/"/>
     </url>
     <url>
-        <loc>https://itcarrot.github.io/RoundPipe/model_zoo/</loc>
-        <lastmod>2026-04-29</lastmod>
-        <changefreq>daily</changefreq>
-        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/model_zoo/"/>
-        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/model_zoo/"/>
-    </url>
-    <url>
         <loc>https://itcarrot.github.io/RoundPipe/API/context/</loc>
         <lastmod>2026-04-29</lastmod>
         <changefreq>daily</changefreq>
@@ -90,6 +83,13 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/Developer/internal_apis/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/Developer/internal_apis/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/ModelZoo/model_presets/</loc>
+        <lastmod>2026-04-29</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/ModelZoo/model_presets/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/ModelZoo/model_presets/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/UserGuide/overview/</loc>
@@ -190,18 +190,25 @@
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/QuickStart/installation/"/>
     </url>
     <url>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/QuickStart/qwen3_nekoqa/</loc>
+        <lastmod>2026-04-29</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/QuickStart/qwen3_nekoqa/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/QuickStart/qwen3_nekoqa/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/UserGuide/QuickStart/resnet_cifar100/</loc>
+        <lastmod>2026-04-29</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/QuickStart/resnet_cifar100/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/QuickStart/resnet_cifar100/"/>
+    </url>
+    <url>
         <loc>https://itcarrot.github.io/RoundPipe/zh/</loc>
         <lastmod>2026-04-29</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/"/>
-    </url>
-    <url>
-        <loc>https://itcarrot.github.io/RoundPipe/zh/model_zoo/</loc>
-        <lastmod>2026-04-29</lastmod>
-        <changefreq>daily</changefreq>
-        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/model_zoo/"/>
-        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/model_zoo/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/zh/API/context/</loc>
@@ -279,6 +286,13 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/Developer/internal_apis/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/Developer/internal_apis/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/ModelZoo/model_presets/</loc>
+        <lastmod>2026-04-29</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/ModelZoo/model_presets/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/ModelZoo/model_presets/"/>
     </url>
     <url>
         <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/overview/</loc>
@@ -377,5 +391,19 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/QuickStart/installation/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/QuickStart/installation/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/QuickStart/qwen3_nekoqa/</loc>
+        <lastmod>2026-04-29</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/QuickStart/qwen3_nekoqa/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/QuickStart/qwen3_nekoqa/"/>
+    </url>
+    <url>
+        <loc>https://itcarrot.github.io/RoundPipe/zh/UserGuide/QuickStart/resnet_cifar100/</loc>
+        <lastmod>2026-04-29</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://itcarrot.github.io/RoundPipe/zh/UserGuide/QuickStart/resnet_cifar100/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://itcarrot.github.io/RoundPipe/UserGuide/QuickStart/resnet_cifar100/"/>
     </url>
 </urlset>
