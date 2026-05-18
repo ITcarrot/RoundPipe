@@ -1,6 +1,6 @@
 site_name: RoundPipe
-site_url: https://itcarrot.github.io/RoundPipe/
-repo_url: https://github.com/ITcarrot/RoundPipe/
+site_url: https://thustorage.github.io/RoundPipe/
+repo_url: https://github.com/thustorage/RoundPipe/
 nav:
   - Home: index.md
   - User Guide:

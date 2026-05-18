@@ -16,7 +16,7 @@ pip install roundpipe
 ## 源码安装
 
 ```bash
-git clone https://github.com/ITcarrot/RoundPipe.git
+git clone https://github.com/thustorage/RoundPipe.git
 cd RoundPipe
 pip install -e .
 ```

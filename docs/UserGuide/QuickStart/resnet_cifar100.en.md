@@ -1,7 +1,7 @@
 # Train a Custom Model
 
 !!! tip "Interactive Notebook"
-    Run this example yourself: [resnet_cifar100.en.ipynb](https://github.com/ITcarrot/RoundPipe/blob/main/example/resnet_cifar100.en.ipynb)
+    Run this example yourself: [resnet_cifar100.en.ipynb](https://github.com/thustorage/RoundPipe/blob/main/example/resnet_cifar100.en.ipynb)
 
 This tutorial shows how to train a custom ResNet on CIFAR-100 with **RoundPipe** from scratch.
 

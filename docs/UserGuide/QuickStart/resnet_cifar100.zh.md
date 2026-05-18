@@ -1,7 +1,7 @@
 # 训练自定义模型
 
 !!! tip "交互式 Notebook"
-    自己动手试试: [resnet_cifar100.zh.ipynb](https://github.com/ITcarrot/RoundPipe/blob/main/example/resnet_cifar100.zh.ipynb)
+    自己动手试试: [resnet_cifar100.zh.ipynb](https://github.com/thustorage/RoundPipe/blob/main/example/resnet_cifar100.zh.ipynb)
 
 本教程演示如何使用 **RoundPipe** 在 CIFAR-100 数据集上从零训练一个自定义的 ResNet。
 

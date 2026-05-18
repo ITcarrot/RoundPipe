@@ -1,7 +1,7 @@
 # 微调 Qwen3-1.7B
 
 !!! tip "交互式 Notebook"
-    自己动手试试: [qwen3_nekoqa.zh.ipynb](https://github.com/ITcarrot/RoundPipe/blob/main/example/qwen3_nekoqa.zh.ipynb)
+    自己动手试试: [qwen3_nekoqa.zh.ipynb](https://github.com/thustorage/RoundPipe/blob/main/example/qwen3_nekoqa.zh.ipynb)
 
 本教程演示如何使用 **RoundPipe** 在猫娘对话 [liumindmind/NekoQA-10K](https://huggingface.co/datasets/liumindmind/NekoQA-10K) 数据集上全参微调 Qwen3-1.7B，训练完成后展示模型的生成效果。
 

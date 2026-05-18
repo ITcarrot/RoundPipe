@@ -1,8 +1,8 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/ITcarrot/RoundPipe/raw/main/docs/assets/banner.dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://github.com/ITcarrot/RoundPipe/raw/main/docs/assets/banner.light.svg">
-    <img src="https://github.com/ITcarrot/RoundPipe/raw/main/docs/assets/banner.light.svg" alt="RoundPipe Banner" width="400">
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/thustorage/RoundPipe/raw/main/docs/assets/banner.dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://github.com/thustorage/RoundPipe/raw/main/docs/assets/banner.light.svg">
+    <img src="https://github.com/thustorage/RoundPipe/raw/main/docs/assets/banner.light.svg" alt="RoundPipe Banner" width="400">
   </picture>
 </p>
 
@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://pypi.org/project/roundpipe/"><img src="https://img.shields.io/pypi/v/roundpipe.svg" alt="PyPI"></a>
   <a href="https://pypi.org/project/roundpipe/"><img src="https://img.shields.io/pypi/pyversions/roundpipe.svg" alt="Python"></a>
-  <a href="https://github.com/ITcarrot/RoundPipe/blob/main/COPYING.LESSER"><img src="https://img.shields.io/badge/license-LGPL--3.0-blue.svg" alt="License"></a>
+  <a href="https://github.com/thustorage/RoundPipe/blob/main/COPYING.LESSER"><img src="https://img.shields.io/badge/license-LGPL--3.0-blue.svg" alt="License"></a>
   <a href="https://github.com/psf/black"><img src="https://img.shields.io/badge/code%20style-black-000000.svg" alt="Code style: black"></a>
   <a href="https://clang.llvm.org/docs/ClangFormat.html"><img src="https://img.shields.io/badge/code%20style-clang--format-blue.svg" alt="Code style: clang-format"></a>
   <a href="https://linux.do" alt="LINUX DO">
@@ -21,10 +21,10 @@
 </p>
 
 <p align="center">
-  <a href="https://itcarrot.github.io/RoundPipe/">Documentation</a> ·
-  <a href="https://itcarrot.github.io/RoundPipe/zh">中文文档</a> ·
+  <a href="https://thustorage.github.io/RoundPipe/">Documentation</a> ·
+  <a href="https://thustorage.github.io/RoundPipe/zh">中文文档</a> ·
   <a href="#benchmarks">Benchmarks</a> ·
-  <a href="https://github.com/ITcarrot/RoundPipe/tree/main/example">Examples</a>
+  <a href="https://github.com/thustorage/RoundPipe/tree/main/example">Examples</a>
 </p>
 
 ---
@@ -93,13 +93,13 @@ pip install roundpipe
 
 ### Examples
 
-See the [`example/`](https://github.com/ITcarrot/RoundPipe/tree/main/example) directory for interactive jupyter notebook.
+See the [`example/`](https://github.com/thustorage/RoundPipe/tree/main/example) directory for interactive jupyter notebook.
 
 ## Documentation
 
-Full documentation is available at **[itcarrot.github.io/RoundPipe](https://itcarrot.github.io/RoundPipe/)**.
+Full documentation is available at **[thustorage.github.io/RoundPipe](https://thustorage.github.io/RoundPipe/)**.
 
-中文文档请访问 **[itcarrot.github.io/RoundPipe/index.zh.html](https://itcarrot.github.io/RoundPipe/zh)**。
+中文文档请访问 **[thustorage.github.io/RoundPipe/zh](https://thustorage.github.io/RoundPipe/zh)**。
 
 ## License
 

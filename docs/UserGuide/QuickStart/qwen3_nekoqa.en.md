@@ -1,7 +1,7 @@
 # Fine-Tune Qwen3-1.7B
 
 !!! tip "Interactive Notebook"
-    Run this example yourself: [qwen3_nekoqa.en.ipynb](https://github.com/ITcarrot/RoundPipe/blob/main/example/qwen3_nekoqa.en.ipynb)
+    Run this example yourself: [qwen3_nekoqa.en.ipynb](https://github.com/thustorage/RoundPipe/blob/main/example/qwen3_nekoqa.en.ipynb)
 
 This tutorial shows how to use **RoundPipe** to fully fine-tune Qwen3-1.7B on the catgirl dialogue dataset [liumindmind/NekoQA-10K](https://huggingface.co/datasets/liumindmind/NekoQA-10K), then preview the model's generation quality after training.
 
